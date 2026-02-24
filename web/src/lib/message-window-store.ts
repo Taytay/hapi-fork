@@ -438,10 +438,21 @@ export function setAtBottom(sessionId: string, atBottom: boolean): void {
 
 export function appendOptimisticMessage(sessionId: string, message: DecryptedMessage): void {
     updateState(sessionId, (prev) => {
-        const merged = mergeMessages(prev.messages, [message])
+        // Flush pending messages atomically with the optimistic message to prevent
+        // the jarring effect where old pending messages suddenly appear in a separate
+        // render cycle when forceScrollToken triggers scrollToBottom → flushPending.
+        const merged = mergeMessages(prev.messages, [...prev.pending, message])
         const trimmed = trimVisible(merged, 'append')
-        const pending = filterPendingAgainstVisible(prev.pending, trimmed)
-        return buildState(prev, { messages: trimmed, pending, atBottom: true })
+        const hadOverflow = prev.pendingOverflowVisibleCount > 0
+        return buildState(prev, {
+            messages: trimmed,
+            pending: [],
+            pendingOverflowCount: 0,
+            pendingVisibleCount: 0,
+            pendingOverflowVisibleCount: 0,
+            atBottom: true,
+            warning: hadOverflow ? prev.warning : null,
+        })
     })
 }
 

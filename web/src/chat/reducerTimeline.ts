@@ -17,8 +17,23 @@ export function reduceTimeline(
     const blocks: ChatBlock[] = []
     const toolBlocksById = new Map<string, ToolCallBlock>()
     let hasReadyEvent = false
+    let currentTurnId: string | null = null
 
     for (const msg of messages) {
+        // Insert turn separator when turnId changes between agent messages
+        const msgTurnId = msg.turnId ?? null
+        if (msgTurnId && currentTurnId && msgTurnId !== currentTurnId && msg.role !== 'user') {
+            blocks.push({
+                kind: 'turn-separator',
+                id: `turn-sep-${msgTurnId}`,
+                createdAt: msg.createdAt,
+                turnId: msgTurnId
+            })
+        }
+        if (msgTurnId) {
+            currentTurnId = msgTurnId
+        }
+
         if (msg.role === 'event') {
             if (msg.content.type === 'ready') {
                 hasReadyEvent = true

@@ -14,8 +14,21 @@ export function HappySystemMessage() {
         const event = custom?.kind === 'event' ? custom.event : undefined
         return event ? getEventPresentation(event).icon : null
     })
+    const isTurnSeparator = useAssistantState(({ message }) => {
+        if (message.role !== 'system') return false
+        const custom = message.metadata.custom as Partial<HappyChatMessageMetadata> | undefined
+        return custom?.kind === 'turn-separator'
+    })
 
     if (role !== 'system') return null
+
+    if (isTurnSeparator) {
+        return (
+            <div className="py-2">
+                <div className="mx-auto max-w-content border-t border-[var(--app-border)]" />
+            </div>
+        )
+    }
 
     return (
         <div className="py-1">

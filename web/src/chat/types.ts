@@ -84,6 +84,7 @@ export type NormalizedMessage = ({
     usage?: UsageData
     status?: MessageStatus
     originalText?: string
+    turnId?: string | null
 }
 
 export type ToolPermission = {
@@ -170,4 +171,11 @@ export type ToolCallBlock = {
     meta?: unknown
 }
 
-export type ChatBlock = UserTextBlock | AgentTextBlock | AgentReasoningBlock | CliOutputBlock | ToolCallBlock | AgentEventBlock
+export type TurnSeparatorBlock = {
+    kind: 'turn-separator'
+    id: string
+    createdAt: number
+    turnId: string
+}
+
+export type ChatBlock = UserTextBlock | AgentTextBlock | AgentReasoningBlock | CliOutputBlock | ToolCallBlock | AgentEventBlock | TurnSeparatorBlock

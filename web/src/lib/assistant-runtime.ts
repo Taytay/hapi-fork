@@ -8,7 +8,7 @@ import type { AgentEvent, ToolCallBlock } from '@/chat/types'
 import type { AttachmentMetadata, MessageStatus as HappyMessageStatus, Session } from '@/types/api'
 
 export type HappyChatMessageMetadata = {
-    kind: 'user' | 'assistant' | 'tool' | 'event' | 'cli-output'
+    kind: 'user' | 'assistant' | 'tool' | 'event' | 'cli-output' | 'turn-separator'
     status?: HappyMessageStatus
     localId?: string | null
     originalText?: string
@@ -86,6 +86,19 @@ function toThreadMessageLike(block: ChatBlock): ThreadMessageLike {
             content: [{ type: 'text', text: block.text }],
             metadata: {
                 custom: { kind: 'cli-output', source: block.source } satisfies HappyChatMessageMetadata
+            }
+        }
+    }
+
+    if (block.kind === 'turn-separator') {
+        const messageId = `turn-sep:${block.id}`
+        return {
+            role: 'system',
+            id: messageId,
+            createdAt: new Date(block.createdAt),
+            content: [{ type: 'text', text: '' }],
+            metadata: {
+                custom: { kind: 'turn-separator' } satisfies HappyChatMessageMetadata
             }
         }
     }
