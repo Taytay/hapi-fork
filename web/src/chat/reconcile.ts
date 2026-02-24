@@ -7,6 +7,7 @@ import type {
     CliOutputBlock,
     ToolCallBlock,
     ToolPermission,
+    TurnSeparatorBlock,
     UserTextBlock,
 } from '@/chat/types'
 
@@ -209,6 +210,10 @@ function reconcileBlock(block: ChatBlock, prevById: ChatBlocksById): ChatBlock {
     if (block.kind === 'agent-reasoning') {
         const prevBlock = prev as AgentReasoningBlock
         return areAgentReasoningBlocksEqual(prevBlock, block) ? prevBlock : block
+    }
+
+    if (block.kind === 'turn-separator') {
+        return prev === block ? prev : block
     }
 
     const prevBlock = prev as AgentEventBlock

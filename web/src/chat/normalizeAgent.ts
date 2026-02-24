@@ -41,6 +41,7 @@ function normalizeAssistantOutput(
     const uuid = asString(data.uuid) ?? messageId
     const parentUUID = asString(data.parentUuid) ?? null
     const isSidechain = Boolean(data.isSidechain)
+    const turnId = asString(data.turnId) ?? null
 
     const message = isObject(data.message) ? data.message : null
     if (!message) return null
@@ -82,6 +83,7 @@ function normalizeAssistantOutput(
         isSidechain,
         content: blocks,
         meta,
+        turnId,
         usage: inputTokens !== null && outputTokens !== null ? {
             input_tokens: inputTokens,
             output_tokens: outputTokens,
@@ -102,6 +104,7 @@ function normalizeUserOutput(
     const uuid = asString(data.uuid) ?? messageId
     const parentUUID = asString(data.parentUuid) ?? null
     const isSidechain = Boolean(data.isSidechain)
+    const turnId = asString(data.turnId) ?? null
 
     const message = isObject(data.message) ? data.message : null
     if (!message) return null
@@ -115,7 +118,8 @@ function normalizeUserOutput(
             createdAt,
             role: 'agent',
             isSidechain: true,
-            content: [{ type: 'sidechain', uuid, prompt: messageContent }]
+            content: [{ type: 'sidechain', uuid, prompt: messageContent }],
+            turnId
         }
     }
 
@@ -127,7 +131,8 @@ function normalizeUserOutput(
             role: 'user',
             isSidechain: false,
             content: { type: 'text', text: messageContent },
-            meta
+            meta,
+            turnId
         }
     }
 
@@ -167,7 +172,8 @@ function normalizeUserOutput(
         role: 'agent',
         isSidechain,
         content: blocks,
-        meta
+        meta,
+        turnId
     }
 }
 
@@ -199,6 +205,8 @@ export function normalizeAgentRecord(
         if (data.isMeta) return null
         if (data.isCompactSummary) return null
 
+        const turnId = asString(data.turnId) ?? null
+
         if (data.type === 'assistant') {
             return normalizeAssistantOutput(messageId, localId, createdAt, data, meta)
         }
@@ -213,7 +221,8 @@ export function normalizeAgentRecord(
                 role: 'agent',
                 isSidechain: false,
                 content: [{ type: 'summary', summary: data.summary }],
-                meta
+                meta,
+                turnId
             }
         }
         if (data.type === 'system' && data.subtype === 'api_error') {
@@ -229,7 +238,8 @@ export function normalizeAgentRecord(
                     error: data.error
                 },
                 isSidechain: false,
-                meta
+                meta,
+                turnId
             }
         }
         if (data.type === 'system' && data.subtype === 'turn_duration') {
@@ -243,7 +253,8 @@ export function normalizeAgentRecord(
                     durationMs: asNumber(data.durationMs) ?? 0
                 },
                 isSidechain: false,
-                meta
+                meta,
+                turnId
             }
         }
         if (data.type === 'system' && data.subtype === 'microcompact_boundary') {
@@ -260,7 +271,8 @@ export function normalizeAgentRecord(
                     tokensSaved: asNumber(metadata?.tokensSaved) ?? 0
                 },
                 isSidechain: false,
-                meta
+                meta,
+                turnId
             }
         }
         if (data.type === 'system' && data.subtype === 'compact_boundary') {
@@ -276,7 +288,8 @@ export function normalizeAgentRecord(
                     preTokens: asNumber(metadata?.preTokens) ?? 0
                 },
                 isSidechain: false,
-                meta
+                meta,
+                turnId
             }
         }
         return null

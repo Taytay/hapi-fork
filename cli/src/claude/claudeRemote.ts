@@ -2,6 +2,7 @@ import { EnhancedMode, PermissionMode } from "./loop";
 import { query, type QueryOptions as Options, type SDKMessage, type SDKSystemMessage, AbortError, SDKUserMessage } from '@/claude/sdk'
 import { claudeCheckSession } from "./utils/claudeCheckSession";
 import { join } from 'node:path';
+import { randomUUID } from 'node:crypto';
 import { parseSpecialCommand } from "@/parsers/specialCommands";
 import { logger } from "@/lib";
 import { PushableAsyncIterable } from "@/utils/PushableAsyncIterable";
@@ -32,7 +33,7 @@ export async function claudeRemote(opts: {
     // Callbacks
     onSessionFound: (id: string) => void,
     onThinkingChange?: (thinking: boolean) => void,
-    onMessage: (message: SDKMessage) => void,
+    onMessage: (message: SDKMessage, turnId: string) => void,
     onCompletionEvent?: (message: string) => void,
     onSessionReset?: () => void
 }) {
@@ -149,6 +150,9 @@ export async function claudeRemote(opts: {
         },
     });
 
+    // Generate turnId for the initial turn
+    let currentTurnId = randomUUID();
+
     // Start the loop
     const response = query({
         prompt: messages,
@@ -163,7 +167,7 @@ export async function claudeRemote(opts: {
             logger.debugLargeJson(`[claudeRemote] Message ${message.type}`, message);
 
             // Handle messages
-            opts.onMessage(message);
+            opts.onMessage(message, currentTurnId);
 
             // Handle special system messages
             if (message.type === 'system' && message.subtype === 'init') {
@@ -206,6 +210,8 @@ export async function claudeRemote(opts: {
                     messages.end();
                     return;
                 }
+                // New user message starts a new turn
+                currentTurnId = randomUUID();
                 mode = next.mode;
                 messages.push({ type: 'user', message: { role: 'user', content: next.message } });
             }
