@@ -12,7 +12,7 @@
     "scripts": {
         "build:site": "bun run --cwd website build && bun run --cwd docs docs:build && cp -r docs/.vitepress/dist website/dist/public/docs",
         "dev": "concurrently \"bun run dev:hub\" \"bun run dev:web\" --kill-others-on-exit",
-        "build": "bun run build:cli && bun run build:hub && bun run build:web",
+        "build": "bun run check && bun run build:cli && bun run build:hub && bun run build:web",
         "build:cli": "cd cli && bun run build",
         "build:single-exe": "bun run download:tunwg && bun run build:web && (cd hub && bun run generate:embedded-web-assets) && (cd cli && bun run build:exe:allinone)",
         "build:single-exe:all": "bun run download:tunwg && bun run build:web && (cd hub && bun run generate:embedded-web-assets) && (cd cli && bun run build:exe:allinone:all)",
@@ -31,6 +31,7 @@
         "lint:fix": "biome lint --fix .",
         "check": "biome check .",
         "check:fix": "biome check --fix .",
+        "ci": "bun run check && bun run typecheck && bun run test",
         "test": "bun run test:cli && bun run test:hub && bun run test:web",
         "test:cli": "cd cli && bun run test",
         "test:hub": "cd hub && bun run test",

@@ -30,27 +30,34 @@ bun run build:cli    # CLI only
 bun run build:hub    # Hub only
 bun run build:web    # Web only
 
-# Quality
-bun run format       # Format with Prettier
-bun run format:check # Check formatting
-bun run lint         # ESLint
-bun run lint:fix     # ESLint with auto-fix
+# Quality (Biome)
+bun run format       # Format with Biome (auto-fix)
+bun run format:check # Check formatting (no changes)
+bun run lint         # Lint with Biome
+bun run lint:fix     # Lint with auto-fix
+bun run check        # Format + lint + import sorting (all-in-one)
+bun run check:fix    # Format + lint + import sorting with auto-fix
 bun run typecheck    # TypeScript checks (cli + web + hub)
 
+# CI / pre-commit
+bun run ci           # Full CI check: format, lint, typecheck, test
+
 # Testing
-bun run test         # All tests (cli + shared + hub + web)
+bun run test         # All tests (cli + hub + web)
 bun run test:cli     # CLI tests only
-bun run test:shared  # Shared package tests only
 bun run test:hub     # Hub tests only
 bun run test:web     # Web tests only
 ```
 
 ## Code Style
 
-- **No semicolons**, single quotes, 4-space indent, 120-char print width
-- Prettier enforces formatting (config: `.prettierrc`)
-- ESLint enforces TypeScript best practices (config: `eslint.config.js`)
-- Website has its own Prettier config (2-space indent, semicolons, double quotes)
+Biome handles both formatting and linting (config: `biome.json`).
+
+- Single quotes, 4-space indent, 120-char line width
+- Semicolons enforced (Biome default)
+- Trailing commas enforced (Biome default)
+- Import sorting via Biome's `organizeImports`
+- Website has its own override (2-space indent, double quotes, 80-char width)
 
 ## Testing
 
