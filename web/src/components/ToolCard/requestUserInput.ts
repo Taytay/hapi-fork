@@ -52,7 +52,7 @@ export function parseRequestUserInputInput(input: unknown): { questions: Request
         questions.push({
             id,
             question,
-            options
+            options,
         })
     }
 
@@ -72,7 +72,7 @@ export function extractRequestUserInputQuestionsInfo(input: unknown): RequestUse
         if (!id) continue
         questions.push({
             id,
-            question: question && question.length > 0 ? question : null
+            question: question && question.length > 0 ? question : null,
         })
     }
     return questions

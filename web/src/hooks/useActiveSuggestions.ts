@@ -5,15 +5,15 @@ export interface Suggestion {
     text: string
     label: string
     description?: string
-    content?: string  // Expanded content for Codex user prompts
+    content?: string // Expanded content for Codex user prompts
     source?: 'builtin' | 'user' | 'plugin'
 }
 
 interface SuggestionOptions {
-    clampSelection?: boolean   // If true, clamp instead of preserving exact position
-    autoSelectFirst?: boolean  // If true, automatically select first item when suggestions appear
-    wrapAround?: boolean       // If true, wrap around when reaching top/bottom
-    allowEmptyQuery?: boolean  // If true, allow empty string queries
+    clampSelection?: boolean // If true, clamp instead of preserving exact position
+    autoSelectFirst?: boolean // If true, automatically select first item when suggestions appear
+    wrapAround?: boolean // If true, wrap around when reaching top/bottom
+    allowEmptyQuery?: boolean // If true, allow empty string queries
 }
 
 /**
@@ -71,12 +71,7 @@ export function useActiveSuggestions(
     handler: (query: string) => Promise<Suggestion[]>,
     options: SuggestionOptions = {}
 ) {
-    const {
-        clampSelection = true,
-        autoSelectFirst = true,
-        wrapAround = true,
-        allowEmptyQuery = false
-    } = options
+    const { clampSelection = true, autoSelectFirst = true, wrapAround = true, allowEmptyQuery = false } = options
 
     // State for suggestions
     const [state, setState] = useState<{
@@ -84,7 +79,7 @@ export function useActiveSuggestions(
         selected: number
     }>({
         suggestions: [],
-        selected: -1
+        selected: -1,
     })
 
     const moveUp = useCallback(() => {
@@ -164,7 +159,7 @@ export function useActiveSuggestions(
                     // Try to preserve selection by key (old behavior)
                     if (prev.selected >= 0 && prev.selected < prev.suggestions.length) {
                         const previousKey = prev.suggestions[prev.selected].key
-                        const newIndex = suggestions.findIndex(s => s.key === previousKey)
+                        const newIndex = suggestions.findIndex((s) => s.key === previousKey)
                         if (newIndex !== -1) {
                             // Found the same key, keep it selected
                             return { suggestions, selected: newIndex }
@@ -175,7 +170,8 @@ export function useActiveSuggestions(
                     const clampedSelection = Math.min(prev.selected, suggestions.length - 1)
                     return {
                         suggestions,
-                        selected: clampedSelection < 0 && suggestions.length > 0 && autoSelectFirst ? 0 : clampedSelection
+                        selected:
+                            clampedSelection < 0 && suggestions.length > 0 && autoSelectFirst ? 0 : clampedSelection,
                     }
                 }
             })

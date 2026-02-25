@@ -61,13 +61,13 @@ Have an idea to improve HAPI? Open an issue with:
 
 1. Fork and clone the repository
 2. Install dependencies:
-   ```bash
-   bun install
-   ```
+    ```bash
+    bun install
+    ```
 3. Start development:
-   ```bash
-   bun run dev
-   ```
+    ```bash
+    bun run dev
+    ```
 
 See the [README](README.md) for more build options.
 

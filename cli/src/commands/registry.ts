@@ -24,7 +24,7 @@ const COMMANDS: CommandDefinition[] = [
     hookForwarderCommand,
     doctorCommand,
     runnerCommand,
-    notifyCommand
+    notifyCommand,
 ]
 
 const commandMap = new Map<string, CommandDefinition>()
@@ -43,7 +43,7 @@ export function resolveCommand(args: string[]): { command: CommandDefinition; co
         context: {
             args,
             subcommand,
-            commandArgs
-        }
+            commandArgs,
+        },
     }
 }

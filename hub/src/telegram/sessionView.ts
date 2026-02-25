@@ -53,17 +53,11 @@ export function createNotificationKeyboard(session: Session, publicUrl: string):
             .text('Deny', createCallbackData(ACTIONS.DENY, session.id, reqPrefix))
         keyboard.row()
 
-        keyboard.webApp(
-            'Details',
-            buildMiniAppDeepLink(publicUrl, `session_${session.id}`)
-        )
+        keyboard.webApp('Details', buildMiniAppDeepLink(publicUrl, `session_${session.id}`))
         return keyboard
     }
 
-    keyboard.webApp(
-        'Open Session',
-        buildMiniAppDeepLink(publicUrl, `session_${session.id}`)
-    )
+    keyboard.webApp('Open Session', buildMiniAppDeepLink(publicUrl, `session_${session.id}`))
     return keyboard
 }
 

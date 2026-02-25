@@ -11,7 +11,7 @@ function parseToolUseError(message: string): { isToolUseError: boolean; errorMes
     if (match) {
         return {
             isToolUseError: true,
-            errorMessage: typeof match[1] === 'string' ? match[1].trim() : ''
+            errorMessage: typeof match[1] === 'string' ? match[1].trim() : '',
         }
     }
 
@@ -100,13 +100,18 @@ function parseCodexBashOutput(text: string): CodexBashOutput | null {
     return {
         exitCode: exitMatch ? parseInt(exitMatch[1], 10) : null,
         wallTime: wallMatch ? wallMatch[1].trim() : null,
-        output: outputMatch ? outputMatch[1] : text
+        output: outputMatch ? outputMatch[1] : text,
     }
 }
 
 function looksLikeHtml(text: string): boolean {
     const trimmed = text.trimStart()
-    return trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html') || trimmed.startsWith('<div') || trimmed.startsWith('<span')
+    return (
+        trimmed.startsWith('<!DOCTYPE') ||
+        trimmed.startsWith('<html') ||
+        trimmed.startsWith('<div') ||
+        trimmed.startsWith('<span')
+    )
 }
 
 function looksLikeJson(text: string): boolean {
@@ -142,9 +147,7 @@ function RawJsonDevOnly(props: { value: unknown }) {
 
     return (
         <details className="mt-3">
-            <summary className="cursor-pointer text-xs font-medium text-[var(--app-hint)]">
-                Raw JSON
-            </summary>
+            <summary className="cursor-pointer text-xs font-medium text-[var(--app-hint)]">Raw JSON</summary>
             <div className="mt-2">
                 <CodeBlock code={safeStringify(props.value)} language="json" />
             </div>
@@ -181,11 +184,8 @@ function extractReadFileContent(result: unknown): { filePath: string | null; con
     const content = typeof file.content === 'string' ? file.content : null
     if (content === null) return null
 
-    const filePath = typeof file.filePath === 'string'
-        ? file.filePath
-        : typeof file.file_path === 'string'
-            ? file.file_path
-            : null
+    const filePath =
+        typeof file.filePath === 'string' ? file.filePath : typeof file.file_path === 'string' ? file.file_path : null
 
     return { filePath, content }
 }
@@ -352,9 +352,7 @@ const ReadResultView: ToolViewComponent = (props: ToolViewProps) => {
         return (
             <>
                 {path ? (
-                    <div className="mb-2 text-xs text-[var(--app-hint)] font-mono break-all">
-                        {basename(path)}
-                    </div>
+                    <div className="mb-2 text-xs text-[var(--app-hint)] font-mono break-all">{basename(path)}</div>
                 ) : null}
                 <CodeBlock code={file.content} language="text" />
                 <RawJsonDevOnly value={result} />
@@ -405,9 +403,7 @@ const MutationResultView: ToolViewComponent = (props: ToolViewProps) => {
 
     return (
         <>
-            <div className="text-sm text-[var(--app-hint)]">
-                {state === 'completed' ? 'Done' : '(no output)'}
-            </div>
+            <div className="text-sm text-[var(--app-hint)]">{state === 'completed' ? 'Done' : '(no output)'}</div>
             <RawJsonDevOnly value={result} />
         </>
     )
@@ -426,9 +422,11 @@ const CodexPatchResultView: ToolViewComponent = (props: ToolViewProps) => {
     }
 
     if (result === undefined || result === null) {
-        return props.block.tool.state === 'completed'
-            ? <div className="text-sm text-[var(--app-hint)]">Done</div>
-            : <div className="text-sm text-[var(--app-hint)]">{placeholderForState(props.block.tool.state)}</div>
+        return props.block.tool.state === 'completed' ? (
+            <div className="text-sm text-[var(--app-hint)]">Done</div>
+        ) : (
+            <div className="text-sm text-[var(--app-hint)]">{placeholderForState(props.block.tool.state)}</div>
+        )
     }
 
     return (
@@ -466,9 +464,11 @@ const CodexReasoningResultView: ToolViewComponent = (props: ToolViewProps) => {
 const CodexDiffResultView: ToolViewComponent = (props: ToolViewProps) => {
     const result = props.block.tool.result
     if (result === undefined || result === null) {
-        return props.block.tool.state === 'completed'
-            ? <div className="text-sm text-[var(--app-hint)]">Done</div>
-            : <div className="text-sm text-[var(--app-hint)]">{placeholderForState(props.block.tool.state)}</div>
+        return props.block.tool.state === 'completed' ? (
+            <div className="text-sm text-[var(--app-hint)]">Done</div>
+        ) : (
+            <div className="text-sm text-[var(--app-hint)]">{placeholderForState(props.block.tool.state)}</div>
+        )
     }
 
     const text = extractTextFromResult(result)
@@ -497,26 +497,23 @@ type TodoItem = {
 }
 
 function extractTodos(input: unknown, result: unknown): TodoItem[] {
-    const todosFromInput = isObject(input) && Array.isArray(input.todos)
-        ? input.todos.filter(isObject)
-        : []
+    const todosFromInput = isObject(input) && Array.isArray(input.todos) ? input.todos.filter(isObject) : []
     if (todosFromInput.length > 0) {
         return todosFromInput.map((t) => ({
             id: typeof t.id === 'string' ? t.id : undefined,
             content: typeof t.content === 'string' ? t.content : undefined,
-            status: t.status === 'pending' || t.status === 'in_progress' || t.status === 'completed' ? t.status : undefined,
-            priority: t.priority === 'high' || t.priority === 'medium' || t.priority === 'low' ? t.priority : undefined
+            status:
+                t.status === 'pending' || t.status === 'in_progress' || t.status === 'completed' ? t.status : undefined,
+            priority: t.priority === 'high' || t.priority === 'medium' || t.priority === 'low' ? t.priority : undefined,
         }))
     }
 
-    const newTodos = isObject(result) && Array.isArray(result.newTodos)
-        ? result.newTodos.filter(isObject)
-        : []
+    const newTodos = isObject(result) && Array.isArray(result.newTodos) ? result.newTodos.filter(isObject) : []
     return newTodos.map((t) => ({
         id: typeof t.id === 'string' ? t.id : undefined,
         content: typeof t.content === 'string' ? t.content : undefined,
         status: t.status === 'pending' || t.status === 'in_progress' || t.status === 'completed' ? t.status : undefined,
-        priority: t.priority === 'high' || t.priority === 'medium' || t.priority === 'low' ? t.priority : undefined
+        priority: t.priority === 'high' || t.priority === 'medium' || t.priority === 'low' ? t.priority : undefined,
     }))
 }
 
@@ -614,7 +611,7 @@ export const toolResultViewRegistry: Record<string, ToolViewComponent> = {
     AskUserQuestion: AskUserQuestionResultView,
     ExitPlanMode: MarkdownResultView,
     ask_user_question: AskUserQuestionResultView,
-    exit_plan_mode: MarkdownResultView
+    exit_plan_mode: MarkdownResultView,
 }
 
 export function getToolResultViewComponent(toolName: string): ToolViewComponent {

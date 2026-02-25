@@ -76,7 +76,7 @@ export class HappyBot implements NotificationChannel {
         this.bot.start({
             onStart: (botInfo) => {
                 console.log(`[HAPIBot] Bot @${botInfo.username} started`)
-            }
+            },
         })
     }
 
@@ -115,11 +115,9 @@ export class HappyBot implements NotificationChannel {
         // /start - Simple welcome with Mini App link
         this.bot.command('start', async (ctx) => {
             const keyboard = new InlineKeyboard().webApp('Open App', this.publicUrl)
-            await ctx.reply(
-                'Welcome to HAPI Bot!\n\n' +
-                'Use the Mini App for full session management.',
-                { reply_markup: keyboard }
-            )
+            await ctx.reply('Welcome to HAPI Bot!\n\n' + 'Use the Mini App for full session management.', {
+                reply_markup: keyboard,
+            })
         })
     }
 
@@ -149,9 +147,9 @@ export class HappyBot implements NotificationChannel {
                 },
                 editMessage: async (text, keyboard) => {
                     await ctx.editMessageText(text, {
-                        reply_markup: keyboard
+                        reply_markup: keyboard,
                     })
-                }
+                },
             }
 
             await handleCallback(data, callbackContext)
@@ -191,8 +189,7 @@ export class HappyBot implements NotificationChannel {
 
         const agentName = getAgentName(session)
         const url = buildMiniAppDeepLink(this.publicUrl, `session_${session.id}`)
-        const keyboard = new InlineKeyboard()
-            .webApp('Open Session', url)
+        const keyboard = new InlineKeyboard().webApp('Open Session', url)
 
         const chatIds = this.getBoundChatIds(session.namespace)
         if (chatIds.length === 0) {
@@ -201,11 +198,9 @@ export class HappyBot implements NotificationChannel {
 
         for (const chatId of chatIds) {
             try {
-                await this.bot.api.sendMessage(
-                    chatId,
-                    `It's ready!\n\n${agentName} is waiting for your command`,
-                    { reply_markup: keyboard }
-                )
+                await this.bot.api.sendMessage(chatId, `It's ready!\n\n${agentName} is waiting for your command`, {
+                    reply_markup: keyboard,
+                })
             } catch (error) {
                 console.error(`[HAPIBot] Failed to send ready notification to chat ${chatId}:`, error)
             }
@@ -231,7 +226,7 @@ export class HappyBot implements NotificationChannel {
         for (const chatId of chatIds) {
             try {
                 await this.bot.api.sendMessage(chatId, text, {
-                    reply_markup: keyboard
+                    reply_markup: keyboard,
                 })
             } catch (error) {
                 console.error(`[HAPIBot] Failed to send notification to chat ${chatId}:`, error)

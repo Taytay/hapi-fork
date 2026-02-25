@@ -41,7 +41,7 @@ export function SpawnSession(props: {
                 machineId: props.machineId,
                 directory: trimmed,
                 sessionType,
-                worktreeName: sessionType === 'worktree' ? (worktreeName.trim() || undefined) : undefined
+                worktreeName: sessionType === 'worktree' ? worktreeName.trim() || undefined : undefined,
             })
             if (result.type === 'success') {
                 haptic.notification('success')
@@ -61,9 +61,7 @@ export function SpawnSession(props: {
             <Card>
                 <CardHeader className="pb-2">
                     <CardTitle>Create Session</CardTitle>
-                    <CardDescription className="truncate">
-                        {machineTitle}
-                    </CardDescription>
+                    <CardDescription className="truncate">{machineTitle}</CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0">
                     <div className="flex flex-col gap-3">
@@ -76,9 +74,7 @@ export function SpawnSession(props: {
                         />
 
                         <div className="flex flex-col gap-2">
-                            <label className="text-xs font-medium text-[var(--app-hint)]">
-                                Session type
-                            </label>
+                            <label className="text-xs font-medium text-[var(--app-hint)]">Session type</label>
                             <div className="flex flex-col gap-3 text-sm">
                                 {(['simple', 'worktree'] as const).map((type) => (
                                     <div key={type} className="flex flex-col gap-2">
@@ -114,7 +110,9 @@ export function SpawnSession(props: {
                                                             </label>
                                                         )}
                                                     </div>
-                                                    <span className={`block text-xs text-[var(--app-hint)] ${sessionType === 'worktree' ? 'invisible' : ''}`}>
+                                                    <span
+                                                        className={`block text-xs text-[var(--app-hint)] ${sessionType === 'worktree' ? 'invisible' : ''}`}
+                                                    >
                                                         Create a new worktree next to the repo
                                                     </span>
                                                 </div>
@@ -143,23 +141,14 @@ export function SpawnSession(props: {
                         </div>
 
                         {(error ?? spawnError) ? (
-                            <div className="text-sm text-red-600">
-                                {error ?? spawnError}
-                            </div>
+                            <div className="text-sm text-red-600">{error ?? spawnError}</div>
                         ) : null}
 
                         <div className="flex gap-2">
-                            <Button
-                                variant="secondary"
-                                onClick={props.onCancel}
-                                disabled={isPending}
-                            >
+                            <Button variant="secondary" onClick={props.onCancel} disabled={isPending}>
                                 Cancel
                             </Button>
-                            <Button
-                                onClick={spawn}
-                                disabled={isPending || !directory.trim()}
-                            >
+                            <Button onClick={spawn} disabled={isPending || !directory.trim()}>
                                 {isPending ? 'Creating…' : 'Create Session'}
                             </Button>
                         </div>

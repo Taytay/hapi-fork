@@ -43,6 +43,11 @@ export function useSpawnSession(api: ApiClient | null): {
     return {
         spawnSession: mutation.mutateAsync,
         isPending: mutation.isPending,
-        error: mutation.error instanceof Error ? mutation.error.message : mutation.error ? 'Failed to spawn session' : null,
+        error:
+            mutation.error instanceof Error
+                ? mutation.error.message
+                : mutation.error
+                  ? 'Failed to spawn session'
+                  : null,
     }
 }

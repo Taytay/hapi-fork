@@ -51,4 +51,3 @@ export function markSkillUsed(skillName: string): void {
         // Ignore storage errors
     }
 }
-

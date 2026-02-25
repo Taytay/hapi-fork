@@ -7,7 +7,7 @@ import {
     isRequestUserInputToolName,
     parseRequestUserInputInput,
     formatRequestUserInputAnswers,
-    type RequestUserInputQuestion
+    type RequestUserInputQuestion,
 } from '@/components/ToolCard/requestUserInput'
 import { cn } from '@/lib/utils'
 import { usePlatform } from '@/hooks/usePlatform'
@@ -16,11 +16,7 @@ import { useTranslation } from '@/lib/use-translation'
 
 function SelectionMark(props: { checked: boolean }) {
     const mark = props.checked ? '●' : '○'
-    return (
-        <span className="mt-0.5 w-4 shrink-0 text-center text-[var(--app-hint)]">
-            {mark}
-        </span>
-    )
+    return <span className="mt-0.5 w-4 shrink-0 text-center text-[var(--app-hint)]">{mark}</span>
 }
 
 function OptionRow(props: {
@@ -44,9 +40,7 @@ function OptionRow(props: {
             <span className="min-w-0 flex-1">
                 <div className="font-medium text-[var(--app-fg)] break-words">{props.title}</div>
                 {props.description ? (
-                    <div className="mt-0.5 text-xs text-[var(--app-hint)] break-words">
-                        {props.description}
-                    </div>
+                    <div className="mt-0.5 text-xs text-[var(--app-hint)] break-words">{props.description}</div>
                 ) : null}
             </span>
         </button>
@@ -163,8 +157,8 @@ export function RequestUserInputFooter(props: {
             ...prev,
             [questionId]: {
                 ...prev[questionId],
-                selected: optionLabel
-            }
+                selected: optionLabel,
+            },
         }))
     }
 
@@ -173,8 +167,8 @@ export function RequestUserInputFooter(props: {
             ...prev,
             [questionId]: {
                 ...prev[questionId],
-                userNote: value
-            }
+                userNote: value,
+            },
         }))
     }
 
@@ -186,9 +180,7 @@ export function RequestUserInputFooter(props: {
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                        <Badge variant="default">
-                            {t('tool.question')}
-                        </Badge>
+                        <Badge variant="default">{t('tool.question')}</Badge>
                         <span className="font-mono text-xs text-[var(--app-hint)]">
                             [{clampedStep + 1}/{total}]
                         </span>
@@ -196,18 +188,12 @@ export function RequestUserInputFooter(props: {
                 </div>
             </div>
 
-            {error ? (
-                <div className="mt-2 text-xs text-red-600">
-                    {error}
-                </div>
-            ) : null}
+            {error ? <div className="mt-2 text-xs text-red-600">{error}</div> : null}
 
             {currentQuestion ? (
                 <div className="mt-3">
                     {currentQuestion.question ? (
-                        <div className="text-sm text-[var(--app-fg)] break-words">
-                            {currentQuestion.question}
-                        </div>
+                        <div className="text-sm text-[var(--app-fg)] break-words">{currentQuestion.question}</div>
                     ) : null}
 
                     {isPureTextQuestion ? (

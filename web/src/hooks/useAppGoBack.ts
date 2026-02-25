@@ -24,9 +24,8 @@ export function useAppGoBack(): () => void {
         if (pathname.match(/^\/sessions\/[^/]+\/file$/)) {
             const filesPath = pathname.replace(/\/file$/, '/files')
 
-            const tab = (search && typeof search === 'object' && 'tab' in search)
-                ? (search as { tab?: unknown }).tab
-                : undefined
+            const tab =
+                search && typeof search === 'object' && 'tab' in search ? (search as { tab?: unknown }).tab : undefined
             const nextSearch = tab === 'directories' ? { tab: 'directories' as const } : {}
 
             navigate({ to: filesPath, search: nextSearch })

@@ -10,7 +10,7 @@ import {
     useEffect,
     useMemo,
     useRef,
-    useState
+    useState,
 } from 'react'
 import type { AgentState, ModelMode, PermissionMode } from '@/types/api'
 import type { Suggestion } from '@/hooks/useActiveSuggestions'
@@ -80,7 +80,7 @@ export function HappyComposer(props: {
         voiceStatus = 'disconnected',
         voiceMicMuted = false,
         onVoiceToggle,
-        onVoiceMicToggle
+        onVoiceMicToggle,
     } = props
 
     // Use ?? so missing values fall back to default (destructuring defaults only handle undefined)
@@ -97,21 +97,23 @@ export function HappyComposer(props: {
     const trimmed = composerText.trim()
     const hasText = trimmed.length > 0
     const hasAttachments = attachments.length > 0
-    const attachmentsReady = !hasAttachments || attachments.every((attachment) => {
-        if (attachment.status.type === 'complete') {
-            return true
-        }
-        if (attachment.status.type !== 'requires-action') {
-            return false
-        }
-        const path = (attachment as { path?: string }).path
-        return typeof path === 'string' && path.length > 0
-    })
+    const attachmentsReady =
+        !hasAttachments ||
+        attachments.every((attachment) => {
+            if (attachment.status.type === 'complete') {
+                return true
+            }
+            if (attachment.status.type !== 'requires-action') {
+                return false
+            }
+            const path = (attachment as { path?: string }).path
+            return typeof path === 'string' && path.length > 0
+        })
     const canSend = (hasText || hasAttachments) && attachmentsReady && !controlsDisabled && !threadIsRunning
 
     const [inputState, setInputState] = useState<TextInputState>({
         text: '',
-        selection: { start: 0, end: 0 }
+        selection: { start: 0, end: 0 },
     })
     const [showSettings, setShowSettings] = useState(false)
     const [isAborting, setIsAborting] = useState(false)
@@ -153,58 +155,64 @@ export function HappyComposer(props: {
         { clampSelection: true, wrapAround: true }
     )
 
-    const haptic = useCallback((type: 'light' | 'success' | 'error' = 'light') => {
-        if (type === 'light') {
-            platformHaptic.impact('light')
-        } else if (type === 'success') {
-            platformHaptic.notification('success')
-        } else {
-            platformHaptic.notification('error')
-        }
-    }, [platformHaptic])
-
-    const handleSuggestionSelect = useCallback((index: number) => {
-        const suggestion = suggestions[index]
-        if (!suggestion || !textareaRef.current) return
-        if (suggestion.text.startsWith('$')) {
-            markSkillUsed(suggestion.text.slice(1))
-        }
-
-        // For Codex user prompts with content, expand the content instead of command name
-        let textToInsert = suggestion.text
-        let addSpace = true
-        if (agentFlavor === 'codex' && suggestion.source === 'user' && suggestion.content) {
-            textToInsert = suggestion.content
-            addSpace = false
-        }
-
-        const result = applySuggestion(
-            inputState.text,
-            inputState.selection,
-            textToInsert,
-            autocompletePrefixes,
-            addSpace
-        )
-
-        api.composer().setText(result.text)
-        setInputState({
-            text: result.text,
-            selection: { start: result.cursorPosition, end: result.cursorPosition }
-        })
-
-        setTimeout(() => {
-            const el = textareaRef.current
-            if (!el) return
-            el.setSelectionRange(result.cursorPosition, result.cursorPosition)
-            try {
-                el.focus({ preventScroll: true })
-            } catch {
-                el.focus()
+    const haptic = useCallback(
+        (type: 'light' | 'success' | 'error' = 'light') => {
+            if (type === 'light') {
+                platformHaptic.impact('light')
+            } else if (type === 'success') {
+                platformHaptic.notification('success')
+            } else {
+                platformHaptic.notification('error')
             }
-        }, 0)
+        },
+        [platformHaptic]
+    )
 
-        haptic('light')
-    }, [api, suggestions, inputState, autocompletePrefixes, haptic, agentFlavor])
+    const handleSuggestionSelect = useCallback(
+        (index: number) => {
+            const suggestion = suggestions[index]
+            if (!suggestion || !textareaRef.current) return
+            if (suggestion.text.startsWith('$')) {
+                markSkillUsed(suggestion.text.slice(1))
+            }
+
+            // For Codex user prompts with content, expand the content instead of command name
+            let textToInsert = suggestion.text
+            let addSpace = true
+            if (agentFlavor === 'codex' && suggestion.source === 'user' && suggestion.content) {
+                textToInsert = suggestion.content
+                addSpace = false
+            }
+
+            const result = applySuggestion(
+                inputState.text,
+                inputState.selection,
+                textToInsert,
+                autocompletePrefixes,
+                addSpace
+            )
+
+            api.composer().setText(result.text)
+            setInputState({
+                text: result.text,
+                selection: { start: result.cursorPosition, end: result.cursorPosition },
+            })
+
+            setTimeout(() => {
+                const el = textareaRef.current
+                if (!el) return
+                el.setSelectionRange(result.cursorPosition, result.cursorPosition)
+                try {
+                    el.focus({ preventScroll: true })
+                } catch {
+                    el.focus()
+                }
+            }, 0)
+
+            haptic('light')
+        },
+        [api, suggestions, inputState, autocompletePrefixes, haptic, agentFlavor]
+    )
 
     const abortDisabled = controlsDisabled || isAborting || !threadIsRunning
     const switchDisabled = controlsDisabled || isSwitching || !controlledByUser
@@ -241,81 +249,78 @@ export function HappyComposer(props: {
         }
     }, [switchDisabled, onSwitchToRemote, haptic])
 
-    const permissionModeOptions = useMemo(
-        () => getPermissionModeOptionsForFlavor(agentFlavor),
-        [agentFlavor]
+    const permissionModeOptions = useMemo(() => getPermissionModeOptionsForFlavor(agentFlavor), [agentFlavor])
+    const permissionModes = useMemo(() => permissionModeOptions.map((option) => option.mode), [permissionModeOptions])
+
+    const handleKeyDown = useCallback(
+        (e: ReactKeyboardEvent<HTMLTextAreaElement>) => {
+            const key = e.key
+
+            // Avoid intercepting IME composition keystrokes (Enter, arrows, etc.)
+            if (e.nativeEvent.isComposing) {
+                return
+            }
+
+            if (suggestions.length > 0) {
+                if (key === 'ArrowUp') {
+                    e.preventDefault()
+                    moveUp()
+                    return
+                }
+                if (key === 'ArrowDown') {
+                    e.preventDefault()
+                    moveDown()
+                    return
+                }
+                if ((key === 'Enter' || key === 'Tab') && !e.shiftKey) {
+                    e.preventDefault()
+                    const indexToSelect = selectedIndex >= 0 ? selectedIndex : 0
+                    handleSuggestionSelect(indexToSelect)
+                    return
+                }
+                if (key === 'Escape') {
+                    e.preventDefault()
+                    clearSuggestions()
+                    return
+                }
+            }
+
+            if (key === 'Escape' && threadIsRunning) {
+                e.preventDefault()
+                handleAbort()
+                return
+            }
+
+            if (key === 'Tab' && e.shiftKey && onPermissionModeChange && permissionModes.length > 0) {
+                e.preventDefault()
+                const currentIndex = permissionModes.indexOf(permissionMode)
+                const nextIndex = (currentIndex + 1) % permissionModes.length
+                const nextMode = permissionModes[nextIndex] ?? 'default'
+                onPermissionModeChange(nextMode)
+                haptic('light')
+            }
+        },
+        [
+            suggestions,
+            selectedIndex,
+            moveUp,
+            moveDown,
+            clearSuggestions,
+            handleSuggestionSelect,
+            threadIsRunning,
+            handleAbort,
+            onPermissionModeChange,
+            permissionMode,
+            permissionModes,
+            haptic,
+        ]
     )
-    const permissionModes = useMemo(
-        () => permissionModeOptions.map((option) => option.mode),
-        [permissionModeOptions]
-    )
-
-    const handleKeyDown = useCallback((e: ReactKeyboardEvent<HTMLTextAreaElement>) => {
-        const key = e.key
-
-        // Avoid intercepting IME composition keystrokes (Enter, arrows, etc.)
-        if (e.nativeEvent.isComposing) {
-            return
-        }
-
-        if (suggestions.length > 0) {
-            if (key === 'ArrowUp') {
-                e.preventDefault()
-                moveUp()
-                return
-            }
-            if (key === 'ArrowDown') {
-                e.preventDefault()
-                moveDown()
-                return
-            }
-            if ((key === 'Enter' || key === 'Tab') && !e.shiftKey) {
-                e.preventDefault()
-                const indexToSelect = selectedIndex >= 0 ? selectedIndex : 0
-                handleSuggestionSelect(indexToSelect)
-                return
-            }
-            if (key === 'Escape') {
-                e.preventDefault()
-                clearSuggestions()
-                return
-            }
-        }
-
-        if (key === 'Escape' && threadIsRunning) {
-            e.preventDefault()
-            handleAbort()
-            return
-        }
-
-        if (key === 'Tab' && e.shiftKey && onPermissionModeChange && permissionModes.length > 0) {
-            e.preventDefault()
-            const currentIndex = permissionModes.indexOf(permissionMode)
-            const nextIndex = (currentIndex + 1) % permissionModes.length
-            const nextMode = permissionModes[nextIndex] ?? 'default'
-            onPermissionModeChange(nextMode)
-            haptic('light')
-        }
-    }, [
-        suggestions,
-        selectedIndex,
-        moveUp,
-        moveDown,
-        clearSuggestions,
-        handleSuggestionSelect,
-        threadIsRunning,
-        handleAbort,
-        onPermissionModeChange,
-        permissionMode,
-        permissionModes,
-        haptic
-    ])
 
     useEffect(() => {
         const handleGlobalKeyDown = (e: globalThis.KeyboardEvent) => {
             if (e.key === 'm' && (e.metaKey || e.ctrlKey) && onModelModeChange && !isCodexFamilyFlavor(agentFlavor)) {
                 e.preventDefault()
-                const currentIndex = MODEL_MODES.indexOf(modelMode as typeof MODEL_MODES[number])
+                const currentIndex = MODEL_MODES.indexOf(modelMode as (typeof MODEL_MODES)[number])
                 const nextIndex = (currentIndex + 1) % MODEL_MODES.length
                 onModelModeChange(MODEL_MODES[nextIndex])
                 haptic('light')
@@ -329,62 +334,74 @@ export function HappyComposer(props: {
     const handleChange = useCallback((e: ReactChangeEvent<HTMLTextAreaElement>) => {
         const selection = {
             start: e.target.selectionStart,
-            end: e.target.selectionEnd
+            end: e.target.selectionEnd,
         }
         setInputState({ text: e.target.value, selection })
     }, [])
 
     const handleSelect = useCallback((e: ReactSyntheticEvent<HTMLTextAreaElement>) => {
         const target = e.target as HTMLTextAreaElement
-        setInputState(prev => ({
+        setInputState((prev) => ({
             ...prev,
-            selection: { start: target.selectionStart, end: target.selectionEnd }
+            selection: { start: target.selectionStart, end: target.selectionEnd },
         }))
     }, [])
 
-    const handlePaste = useCallback(async (e: ReactClipboardEvent<HTMLTextAreaElement>) => {
-        const files = Array.from(e.clipboardData?.files || [])
-        const imageFiles = files.filter(file => file.type.startsWith('image/'))
+    const handlePaste = useCallback(
+        async (e: ReactClipboardEvent<HTMLTextAreaElement>) => {
+            const files = Array.from(e.clipboardData?.files || [])
+            const imageFiles = files.filter((file) => file.type.startsWith('image/'))
 
-        if (imageFiles.length === 0) return
+            if (imageFiles.length === 0) return
 
-        e.preventDefault()
+            e.preventDefault()
 
-        try {
-            for (const file of imageFiles) {
-                await api.composer().addAttachment(file)
+            try {
+                for (const file of imageFiles) {
+                    await api.composer().addAttachment(file)
+                }
+            } catch (error) {
+                console.error('Error adding pasted image:', error)
             }
-        } catch (error) {
-            console.error('Error adding pasted image:', error)
-        }
-    }, [api])
+        },
+        [api]
+    )
 
     const handleSettingsToggle = useCallback(() => {
         haptic('light')
-        setShowSettings(prev => !prev)
+        setShowSettings((prev) => !prev)
     }, [haptic])
 
-    const handleSubmit = useCallback((event?: ReactFormEvent<HTMLFormElement>) => {
-        if (event && !attachmentsReady) {
-            event.preventDefault()
-            return
-        }
-        setShowContinueHint(false)
-    }, [attachmentsReady])
+    const handleSubmit = useCallback(
+        (event?: ReactFormEvent<HTMLFormElement>) => {
+            if (event && !attachmentsReady) {
+                event.preventDefault()
+                return
+            }
+            setShowContinueHint(false)
+        },
+        [attachmentsReady]
+    )
 
-    const handlePermissionChange = useCallback((mode: PermissionMode) => {
-        if (!onPermissionModeChange || controlsDisabled) return
-        onPermissionModeChange(mode)
-        setShowSettings(false)
-        haptic('light')
-    }, [onPermissionModeChange, controlsDisabled, haptic])
+    const handlePermissionChange = useCallback(
+        (mode: PermissionMode) => {
+            if (!onPermissionModeChange || controlsDisabled) return
+            onPermissionModeChange(mode)
+            setShowSettings(false)
+            haptic('light')
+        },
+        [onPermissionModeChange, controlsDisabled, haptic]
+    )
 
-    const handleModelChange = useCallback((mode: ModelMode) => {
-        if (!onModelModeChange || controlsDisabled) return
-        onModelModeChange(mode)
-        setShowSettings(false)
-        haptic('light')
-    }, [onModelModeChange, controlsDisabled, haptic])
+    const handleModelChange = useCallback(
+        (mode: ModelMode) => {
+            if (!onModelModeChange || controlsDisabled) return
+            onModelModeChange(mode)
+            setShowSettings(false)
+            haptic('light')
+        },
+        [onModelModeChange, controlsDisabled, haptic]
+    )
 
     const showPermissionSettings = Boolean(onPermissionModeChange && permissionModeOptions.length > 0)
     const showModelSettings = Boolean(onModelModeChange && !isCodexFamilyFlavor(agentFlavor))
@@ -430,7 +447,9 @@ export function HappyComposer(props: {
                                                 <div className="h-2 w-2 rounded-full bg-[var(--app-link)]" />
                                             )}
                                         </div>
-                                        <span className={permissionMode === option.mode ? 'text-[var(--app-link)]' : ''}>
+                                        <span
+                                            className={permissionMode === option.mode ? 'text-[var(--app-link)]' : ''}
+                                        >
                                             {option.label}
                                         </span>
                                     </button>
@@ -510,7 +529,7 @@ export function HappyComposer(props: {
         permissionModeOptions,
         handlePermissionChange,
         handleModelChange,
-        handleSuggestionSelect
+        handleSuggestionSelect,
     ])
 
     return (

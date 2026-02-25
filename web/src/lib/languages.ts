@@ -1,16 +1,46 @@
 // ElevenLabs supported language codes
-export type ElevenLabsLanguage = "en" | "ja" | "zh" | "de" | "hi" | "fr" | "ko" |
-    "pt" | "pt-br" | "it" | "es" | "id" | "nl" | "tr" | "pl" | "sv" | "bg" |
-    "ro" | "ar" | "cs" | "el" | "fi" | "ms" | "da" | "ta" | "uk" | "ru" |
-    "hu" | "hr" | "sk" | "no" | "vi" | "tl";
+export type ElevenLabsLanguage =
+    | 'en'
+    | 'ja'
+    | 'zh'
+    | 'de'
+    | 'hi'
+    | 'fr'
+    | 'ko'
+    | 'pt'
+    | 'pt-br'
+    | 'it'
+    | 'es'
+    | 'id'
+    | 'nl'
+    | 'tr'
+    | 'pl'
+    | 'sv'
+    | 'bg'
+    | 'ro'
+    | 'ar'
+    | 'cs'
+    | 'el'
+    | 'fi'
+    | 'ms'
+    | 'da'
+    | 'ta'
+    | 'uk'
+    | 'ru'
+    | 'hu'
+    | 'hr'
+    | 'sk'
+    | 'no'
+    | 'vi'
+    | 'tl'
 
 // Language type definition
 export interface Language {
-    code: string | null; // null for autodetect
-    name: string;
-    nativeName: string;
-    region?: string;
-    elevenLabsCode?: ElevenLabsLanguage; // ElevenLabs language code mapping
+    code: string | null // null for autodetect
+    name: string
+    nativeName: string
+    region?: string
+    elevenLabsCode?: ElevenLabsLanguage // ElevenLabs language code mapping
 }
 
 // Comprehensive language list with locale codes, names, and regions
@@ -63,55 +93,53 @@ export const LANGUAGES: Language[] = [
     { code: 'et-EE', name: 'Estonian', nativeName: 'Eesti' }, // Not supported by ElevenLabs
     { code: 'lv-LV', name: 'Latvian', nativeName: 'Latviešu' }, // Not supported by ElevenLabs
     { code: 'lt-LT', name: 'Lithuanian', nativeName: 'Lietuvių' }, // Not supported by ElevenLabs
-];
+]
 
 /**
  * Format display name for a language
  */
 export const getLanguageDisplayName = (language: Language) => {
-    const parts = [];
+    const parts = []
 
     if (language.name !== language.nativeName) {
-        parts.push(`${language.name} (${language.nativeName})`);
+        parts.push(`${language.name} (${language.nativeName})`)
     } else {
-        parts.push(language.name);
+        parts.push(language.name)
     }
 
     if (language.region) {
-        parts.push(language.region);
+        parts.push(language.region)
     }
 
-    return parts.join(' - ');
-};
+    return parts.join(' - ')
+}
 
 /**
  * Find a language by its code (including null for autodetect)
  */
 export const findLanguageByCode = (code: string | null): Language | undefined => {
-    return LANGUAGES.find(lang => lang.code === code);
-};
+    return LANGUAGES.find((lang) => lang.code === code)
+}
 
 /**
  * Get the ElevenLabs language code for a given language
  */
 export const getElevenLabsCode = (language: Language): ElevenLabsLanguage | undefined => {
-    return language.elevenLabsCode;
-};
+    return language.elevenLabsCode
+}
 
 /**
  * Get ElevenLabs code from user's language preference (handles null/autodetect)
  */
-export const getElevenLabsCodeFromPreference = (
-    languageCode: string | null
-): ElevenLabsLanguage | undefined => {
-    if (!languageCode) return undefined; // Auto-detect case
-    const language = findLanguageByCode(languageCode);
-    return language?.elevenLabsCode;
-};
+export const getElevenLabsCodeFromPreference = (languageCode: string | null): ElevenLabsLanguage | undefined => {
+    if (!languageCode) return undefined // Auto-detect case
+    const language = findLanguageByCode(languageCode)
+    return language?.elevenLabsCode
+}
 
 /**
  * Get all languages that support ElevenLabs (including auto-detect)
  */
 export const getElevenLabsSupportedLanguages = (): Language[] => {
-    return LANGUAGES.filter(lang => lang.code === null || lang.elevenLabsCode !== undefined);
-};
+    return LANGUAGES.filter((lang) => lang.code === null || lang.elevenLabsCode !== undefined)
+}

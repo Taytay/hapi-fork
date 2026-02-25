@@ -77,7 +77,7 @@ function extractTodosFromAcpMessage(content: Record<string, unknown>): TodoItem[
             content: contentValue,
             priority: priorityValue,
             status: statusValue,
-            id: idValue
+            id: idValue,
         })
     })
 
@@ -93,7 +93,9 @@ export function extractTodoWriteTodosFromMessageContent(messageContent: unknown)
 
     if (!isObject(record.content) || typeof record.content.type !== 'string') return null
 
-    return extractTodosFromClaudeOutput(record.content)
-        ?? extractTodosFromCodexMessage(record.content)
-        ?? extractTodosFromAcpMessage(record.content)
+    return (
+        extractTodosFromClaudeOutput(record.content) ??
+        extractTodosFromCodexMessage(record.content) ??
+        extractTodosFromAcpMessage(record.content)
+    )
 }

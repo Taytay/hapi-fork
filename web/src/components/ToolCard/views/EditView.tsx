@@ -10,11 +10,5 @@ export function EditView(props: ToolViewProps) {
     const newString = typeof input.new_string === 'string' ? input.new_string : null
     if (oldString === null || newString === null) return null
 
-    return (
-        <DiffView
-            oldString={oldString}
-            newString={newString}
-            variant="inline"
-        />
-    )
+    return <DiffView oldString={oldString} newString={newString} variant="inline" />
 }

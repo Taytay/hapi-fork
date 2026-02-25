@@ -49,9 +49,7 @@ export async function readSettings(settingsFile: string): Promise<Settings | nul
 export async function readSettingsOrThrow(settingsFile: string): Promise<Settings> {
     const settings = await readSettings(settingsFile)
     if (settings === null) {
-        throw new Error(
-            `Cannot read ${settingsFile}. Please fix or remove the file and restart.`
-        )
+        throw new Error(`Cannot read ${settingsFile}. Please fix or remove the file and restart.`)
     }
     return settings
 }

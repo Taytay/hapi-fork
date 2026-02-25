@@ -7,21 +7,21 @@ const toastVariants = cva(
     {
         variants: {
             variant: {
-                default: 'border-[var(--app-border)] bg-[var(--app-bg)]'
-            }
+                default: 'border-[var(--app-border)] bg-[var(--app-bg)]',
+            },
         },
         defaultVariants: {
-            variant: 'default'
-        }
+            variant: 'default',
+        },
     }
 )
 
 export type ToastProps = React.HTMLAttributes<HTMLDivElement> &
     VariantProps<typeof toastVariants> & {
-    title: string
-    body: string
-    onClose?: () => void
-}
+        title: string
+        body: string
+        onClose?: () => void
+    }
 
 export function Toast({ title, body, onClose, className, variant, ...props }: ToastProps) {
     const handleClose = (event: React.MouseEvent<HTMLButtonElement>) => {

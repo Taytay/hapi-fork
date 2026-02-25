@@ -49,22 +49,18 @@ function validateFilePath(filePath: string, workingDirectory: string): string | 
     return null
 }
 
-async function runGitCommand(
-    args: string[],
-    cwd: string,
-    timeout?: number
-): Promise<GitCommandResponse> {
+async function runGitCommand(args: string[], cwd: string, timeout?: number): Promise<GitCommandResponse> {
     try {
         const options: ExecFileOptions = {
             cwd,
-            timeout: timeout ?? 10_000
+            timeout: timeout ?? 10_000,
         }
         const { stdout, stderr } = await execFileAsync('git', args, options)
         return {
             success: true,
             stdout: stdout ? stdout.toString() : '',
             stderr: stderr ? stderr.toString() : '',
-            exitCode: 0
+            exitCode: 0,
         }
     } catch (error) {
         const execError = error as NodeJS.ErrnoException & {
@@ -78,14 +74,14 @@ async function runGitCommand(
             return rpcError('Command timed out', {
                 stdout: execError.stdout ? execError.stdout.toString() : '',
                 stderr: execError.stderr ? execError.stderr.toString() : '',
-                exitCode: typeof execError.code === 'number' ? execError.code : -1
+                exitCode: typeof execError.code === 'number' ? execError.code : -1,
             })
         }
 
         return rpcError(execError.message || 'Command failed', {
             stdout: execError.stdout ? execError.stdout.toString() : '',
             stderr: execError.stderr ? execError.stderr.toString() : execError.message || 'Command failed',
-            exitCode: typeof execError.code === 'number' ? execError.code : 1
+            exitCode: typeof execError.code === 'number' ? execError.code : 1,
         })
     }
 }
@@ -108,9 +104,7 @@ export function registerGitHandlers(rpcHandlerManager: RpcHandlerManager, workin
         if (resolved.error) {
             return rpcError(resolved.error)
         }
-        const args = data.staged
-            ? ['diff', '--cached', '--numstat']
-            : ['diff', '--numstat']
+        const args = data.staged ? ['diff', '--cached', '--numstat'] : ['diff', '--numstat']
         return await runGitCommand(args, resolved.cwd, data.timeout)
     })
 

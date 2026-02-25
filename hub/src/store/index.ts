@@ -14,7 +14,7 @@ export type {
     StoredPushSubscription,
     StoredSession,
     StoredUser,
-    VersionedUpdateResult
+    VersionedUpdateResult,
 } from './types'
 export { MachineStore } from './machineStore'
 export { MessageStore } from './messageStore'
@@ -23,13 +23,7 @@ export { SessionStore } from './sessionStore'
 export { UserStore } from './userStore'
 
 const SCHEMA_VERSION: number = 3
-const REQUIRED_TABLES = [
-    'sessions',
-    'machines',
-    'messages',
-    'users',
-    'push_subscriptions'
-] as const
+const REQUIRED_TABLES = ['sessions', 'machines', 'messages', 'users', 'push_subscriptions'] as const
 
 export class Store {
     private db: Database
@@ -48,15 +42,13 @@ export class Store {
             mkdirSync(dir, { recursive: true, mode: 0o700 })
             try {
                 chmodSync(dir, 0o700)
-            } catch {
-            }
+            } catch {}
 
             if (!existsSync(dbPath)) {
                 try {
                     const fd = openSync(dbPath, 'a', 0o600)
                     closeSync(fd)
-                } catch {
-                }
+                } catch {}
             }
         }
 
@@ -71,8 +63,7 @@ export class Store {
             for (const path of [dbPath, `${dbPath}-wal`, `${dbPath}-shm`]) {
                 try {
                     chmodSync(path, 0o600)
-                } catch {
-                }
+                } catch {}
             }
         }
 
@@ -200,7 +191,9 @@ export class Store {
         const hasRunner = columns.has('runner_state') || columns.has('runner_state_version')
 
         if (hasDaemon && hasRunner) {
-            throw new Error('SQLite schema has both daemon_state and runner_state columns in machines; manual cleanup required.')
+            throw new Error(
+                'SQLite schema has both daemon_state and runner_state columns in machines; manual cleanup required.'
+            )
         }
 
         if (hasDaemon && !hasRunner) {
@@ -295,37 +288,36 @@ export class Store {
     }
 
     private hasAnyUserTables(): boolean {
-        const row = this.db.prepare(
-            "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' LIMIT 1"
-        ).get() as { name?: string } | undefined
+        const row = this.db
+            .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' LIMIT 1")
+            .get() as { name?: string } | undefined
         return Boolean(row?.name)
     }
 
     private assertRequiredTablesPresent(): void {
         const placeholders = REQUIRED_TABLES.map(() => '?').join(', ')
-        const rows = this.db.prepare(
-            `SELECT name FROM sqlite_master WHERE type = 'table' AND name IN (${placeholders})`
-        ).all(...REQUIRED_TABLES) as Array<{ name: string }>
+        const rows = this.db
+            .prepare(`SELECT name FROM sqlite_master WHERE type = 'table' AND name IN (${placeholders})`)
+            .all(...REQUIRED_TABLES) as Array<{ name: string }>
         const existing = new Set(rows.map((row) => row.name))
         const missing = REQUIRED_TABLES.filter((table) => !existing.has(table))
 
         if (missing.length > 0) {
             throw new Error(
                 `SQLite schema is missing required tables (${missing.join(', ')}). ` +
-                'Back up and rebuild the database, or run an offline migration to the expected schema version.'
+                    'Back up and rebuild the database, or run an offline migration to the expected schema version.'
             )
         }
     }
 
     private buildSchemaMismatchError(currentVersion: number): Error {
-        const location = (this.dbPath === ':memory:' || this.dbPath.startsWith('file::memory:'))
-            ? 'in-memory database'
-            : this.dbPath
+        const location =
+            this.dbPath === ':memory:' || this.dbPath.startsWith('file::memory:') ? 'in-memory database' : this.dbPath
         return new Error(
             `SQLite schema version mismatch for ${location}. ` +
-            `Expected ${SCHEMA_VERSION}, found ${currentVersion}. ` +
-            'This build does not run compatibility migrations. ' +
-            'Back up and rebuild the database, or run an offline migration to the expected schema version.'
+                `Expected ${SCHEMA_VERSION}, found ${currentVersion}. ` +
+                'This build does not run compatibility migrations. ' +
+                'Back up and rebuild the database, or run an offline migration to the expected schema version.'
         )
     }
 }

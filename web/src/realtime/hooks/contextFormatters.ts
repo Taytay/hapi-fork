@@ -57,11 +57,7 @@ function unwrapOutputContent(content: unknown): { roleOverride: NormalizedRole |
         return { roleOverride: null, content }
     }
 
-    const roleOverride = data.type === 'assistant'
-        ? 'assistant'
-        : data.type === 'user'
-            ? 'user'
-            : null
+    const roleOverride = data.type === 'assistant' ? 'assistant' : data.type === 'user' ? 'user' : null
 
     return { roleOverride, content: messageContent }
 }
@@ -108,12 +104,13 @@ export function formatMessage(message: DecryptedMessage): string | null {
     }
 
     // Determine message type by checking for tool_use (assistant) vs user content
-    const hasToolUse = content.some(item => item.type === 'tool_use')
-    const isAssistant = normalizedRole === 'assistant'
-        ? true
-        : normalizedRole === 'user'
-            ? false
-            : hasToolUse || content.some(item => item.type === 'text' && content.length === 1 === false)
+    const hasToolUse = content.some((item) => item.type === 'tool_use')
+    const isAssistant =
+        normalizedRole === 'assistant'
+            ? true
+            : normalizedRole === 'user'
+              ? false
+              : hasToolUse || content.some((item) => item.type === 'text' && (content.length === 1) === false)
 
     for (const item of content) {
         if (item.type === 'text' && item.text) {
@@ -123,7 +120,9 @@ export function formatMessage(message: DecryptedMessage): string | null {
             if (VOICE_CONFIG.LIMITED_TOOL_CALLS) {
                 lines.push(`Claude Code is using ${name}`)
             } else {
-                lines.push(`Claude Code is using ${name} with arguments: <arguments>${JSON.stringify(item.input)}</arguments>`)
+                lines.push(
+                    `Claude Code is using ${name} with arguments: <arguments>${JSON.stringify(item.input)}</arguments>`
+                )
             }
         }
     }
@@ -154,9 +153,8 @@ export function formatNewMessages(sessionId: string, messages: DecryptedMessage[
 }
 
 export function formatHistory(sessionId: string, messages: DecryptedMessage[]): string {
-    const messagesToFormat = VOICE_CONFIG.MAX_HISTORY_MESSAGES > 0
-        ? messages.slice(-VOICE_CONFIG.MAX_HISTORY_MESSAGES)
-        : messages
+    const messagesToFormat =
+        VOICE_CONFIG.MAX_HISTORY_MESSAGES > 0 ? messages.slice(-VOICE_CONFIG.MAX_HISTORY_MESSAGES) : messages
     const formatted = messagesToFormat.map(formatMessage).filter(Boolean)
     return 'History of messages in session: ' + sessionId + '\n\n' + formatted.join('\n\n')
 }

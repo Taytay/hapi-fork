@@ -25,8 +25,8 @@ export function getPermissions(agentState: AgentState | null | undefined): Map<s
                     allowedTools: entry.allowTools,
                     answers: entry.answers,
                     createdAt: entry.createdAt ?? null,
-                    completedAt: entry.completedAt ?? null
-                }
+                    completedAt: entry.completedAt ?? null,
+                },
             })
         }
     }
@@ -41,8 +41,8 @@ export function getPermissions(agentState: AgentState | null | undefined): Map<s
                 permission: {
                     id,
                     status: 'pending',
-                    createdAt: request.createdAt ?? null
-                }
+                    createdAt: request.createdAt ?? null,
+                },
             })
         }
     }
@@ -94,11 +94,12 @@ export function ensureToolBlock(
         return existing
     }
 
-    const initialState: ChatToolCall['state'] = seed.permission?.status === 'pending'
-        ? 'pending'
-        : seed.permission?.status === 'denied' || seed.permission?.status === 'canceled'
-            ? 'error'
-            : 'running'
+    const initialState: ChatToolCall['state'] =
+        seed.permission?.status === 'pending'
+            ? 'pending'
+            : seed.permission?.status === 'denied' || seed.permission?.status === 'canceled'
+              ? 'error'
+              : 'running'
 
     const tool: ChatToolCall = {
         id,
@@ -109,7 +110,7 @@ export function ensureToolBlock(
         startedAt: initialState === 'running' ? seed.createdAt : null,
         completedAt: null,
         description: seed.description,
-        permission: seed.permission
+        permission: seed.permission,
     }
 
     const block: ToolCallBlock = {
@@ -119,7 +120,7 @@ export function ensureToolBlock(
         createdAt: seed.createdAt,
         tool,
         children: [],
-        meta: seed.meta
+        meta: seed.meta,
     }
 
     toolBlocksById.set(id, block)

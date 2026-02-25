@@ -3,7 +3,10 @@ import type { ApiClient } from '@/api/client'
 import type { Session } from '@/types/api'
 import { queryKeys } from '@/lib/query-keys'
 
-export function useSession(api: ApiClient | null, sessionId: string | null): {
+export function useSession(
+    api: ApiClient | null,
+    sessionId: string | null
+): {
     session: Session | null
     isLoading: boolean
     error: string | null

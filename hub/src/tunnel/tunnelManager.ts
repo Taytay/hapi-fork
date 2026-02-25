@@ -15,9 +15,7 @@ import { platform, arch, homedir } from 'node:os'
 import { isBunCompiled } from '../utils/bunCompiled'
 
 function getHapiHome(): string {
-    return process.env.HAPI_HOME
-        ? process.env.HAPI_HOME.replace(/^~/, homedir())
-        : join(homedir(), '.hapi')
+    return process.env.HAPI_HOME ? process.env.HAPI_HOME.replace(/^~/, homedir()) : join(homedir(), '.hapi')
 }
 
 function getPlatformDir(): string {
@@ -57,9 +55,9 @@ function getTunwgPath(): string {
 export interface TunnelConfig {
     localPort: number
     enabled: boolean
-    apiDomain?: string | null  // TUNWG_API - default: relay.hapi.run (official relay)
-    authKey?: string | null    // TUNWG_AUTH - default: hapi
-    useRelay?: boolean         // TUNWG_RELAY
+    apiDomain?: string | null // TUNWG_API - default: relay.hapi.run (official relay)
+    authKey?: string | null // TUNWG_AUTH - default: hapi
+    useRelay?: boolean // TUNWG_RELAY
 }
 
 interface TunnelState {
@@ -85,7 +83,7 @@ export class TunnelManager {
             tunnelUrl: null,
             isConnected: false,
             lastError: null,
-            retryCount: 0
+            retryCount: 0,
         }
     }
 
@@ -107,7 +105,7 @@ export class TunnelManager {
 
         const forwardUrl = `http://localhost:${this.config.localPort}`
 
-        const env: Record<string, string> = { ...process.env as Record<string, string> }
+        const env: Record<string, string> = { ...(process.env as Record<string, string>) }
 
         if (!env.TUNWG_PATH) {
             env.TUNWG_PATH = join(getHapiHome(), 'tunwg')
@@ -128,7 +126,7 @@ export class TunnelManager {
                 cmd: [tunwgPath, '--json', `--forward=${forwardUrl}`],
                 env,
                 stdout: 'pipe',
-                stderr: 'pipe'
+                stderr: 'pipe',
             })
 
             this.state.process = proc
@@ -208,7 +206,7 @@ export class TunnelManager {
             readStderr()
 
             // Handle process exit
-            proc.exited.then(exitCode => {
+            proc.exited.then((exitCode) => {
                 this.state.isConnected = false
                 this.state.process = null
 
@@ -236,9 +234,11 @@ export class TunnelManager {
                     if (this.state.retryCount < this.maxRetries) {
                         this.state.retryCount++
                         const delay = this.retryDelayMs * Math.pow(2, this.state.retryCount - 1)
-                        console.log(`[Tunnel] Restarting in ${delay}ms (attempt ${this.state.retryCount}/${this.maxRetries})`)
+                        console.log(
+                            `[Tunnel] Restarting in ${delay}ms (attempt ${this.state.retryCount}/${this.maxRetries})`
+                        )
                         this.retryTimeout = setTimeout(() => {
-                            this.spawnTunwg().catch(err => {
+                            this.spawnTunwg().catch((err) => {
                                 console.error('[Tunnel] Restart failed:', err)
                             })
                         }, delay)

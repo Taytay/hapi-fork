@@ -7,17 +7,17 @@ const terminalCreateSchema = TerminalOpenPayloadSchema
 
 const terminalWriteSchema = z.object({
     terminalId: z.string().min(1),
-    data: z.string()
+    data: z.string(),
 })
 
 const terminalResizeSchema = z.object({
     terminalId: z.string().min(1),
     cols: z.number().int().positive(),
-    rows: z.number().int().positive()
+    rows: z.number().int().positive(),
 })
 
 const terminalCloseSchema = z.object({
-    terminalId: z.string().min(1)
+    terminalId: z.string().min(1),
 })
 
 export type TerminalHandlersDeps = {
@@ -64,7 +64,7 @@ export function registerTerminalHandlers(socket: SocketWithData, deps: TerminalH
         }
         cliSocket.emit('terminal:close', {
             sessionId: entry.sessionId,
-            terminalId: entry.terminalId
+            terminalId: entry.terminalId,
         })
     }
 
@@ -128,7 +128,7 @@ export function registerTerminalHandlers(socket: SocketWithData, deps: TerminalH
             sessionId,
             terminalId,
             cols,
-            rows
+            rows,
         })
         terminalRegistry.markActivity(terminalId)
     })
@@ -152,7 +152,7 @@ export function registerTerminalHandlers(socket: SocketWithData, deps: TerminalH
         cliSocket.emit('terminal:write', {
             sessionId: entry.sessionId,
             terminalId,
-            data: payload
+            data: payload,
         })
         terminalRegistry.markActivity(terminalId)
     })
@@ -177,7 +177,7 @@ export function registerTerminalHandlers(socket: SocketWithData, deps: TerminalH
             sessionId: entry.sessionId,
             terminalId,
             cols,
-            rows
+            rows,
         })
         terminalRegistry.markActivity(terminalId)
     })

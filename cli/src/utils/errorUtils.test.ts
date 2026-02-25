@@ -8,8 +8,8 @@ describe('extractErrorInfo', () => {
             response: {
                 status: 400,
                 headers: { 'x-hapi-protocol-version': '2' },
-                data: { error: 'Invalid body' }
-            }
+                data: { error: 'Invalid body' },
+            },
         }
         const info = extractErrorInfo(error)
         expect(info.serverProtocolVersion).toBe(2)
@@ -31,8 +31,8 @@ describe('extractErrorInfo', () => {
             response: {
                 status: 200,
                 headers: { 'x-hapi-protocol-version': '5' },
-                data: {}
-            }
+                data: {},
+            },
         })
         const info = extractErrorInfo(error)
         expect(info.serverProtocolVersion).toBe(3)
@@ -50,8 +50,8 @@ describe('extractErrorInfo', () => {
             response: {
                 status: 200,
                 headers: { 'x-hapi-protocol-version': 'abc' },
-                data: {}
-            }
+                data: {},
+            },
         }
         const info = extractErrorInfo(error)
         expect(info.serverProtocolVersion).toBeUndefined()
@@ -61,7 +61,7 @@ describe('extractErrorInfo', () => {
 describe('apiValidationError', () => {
     it('creates error with serverProtocolVersion from response header', () => {
         const fakeResponse = {
-            headers: { 'x-hapi-protocol-version': '1' }
+            headers: { 'x-hapi-protocol-version': '1' },
         }
         const err = apiValidationError('Invalid /cli/machines response', fakeResponse as any)
         expect(err.message).toBe('Invalid /cli/machines response')
@@ -77,7 +77,7 @@ describe('apiValidationError', () => {
 
     it('round-trips through extractErrorInfo', () => {
         const fakeResponse = {
-            headers: { 'x-hapi-protocol-version': '2' }
+            headers: { 'x-hapi-protocol-version': '2' },
         }
         const err = apiValidationError('Invalid /cli/machines response', fakeResponse as any)
         const info = extractErrorInfo(err)

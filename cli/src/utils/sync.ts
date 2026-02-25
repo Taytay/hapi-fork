@@ -1,74 +1,73 @@
-import { backoff } from "@/utils/time";
+import { backoff } from '@/utils/time'
 
 export class InvalidateSync {
-    private _invalidated = false;
-    private _invalidatedDouble = false;
-    private _stopped = false;
-    private _command: () => Promise<void>;
-    private _pendings: (() => void)[] = [];
+    private _invalidated = false
+    private _invalidatedDouble = false
+    private _stopped = false
+    private _command: () => Promise<void>
+    private _pendings: (() => void)[] = []
 
     constructor(command: () => Promise<void>) {
-        this._command = command;
+        this._command = command
     }
 
     invalidate() {
         if (this._stopped) {
-            return;
+            return
         }
         if (!this._invalidated) {
-            this._invalidated = true;
-            this._invalidatedDouble = false;
-            this._doSync();
+            this._invalidated = true
+            this._invalidatedDouble = false
+            this._doSync()
         } else {
             if (!this._invalidatedDouble) {
-                this._invalidatedDouble = true;
+                this._invalidatedDouble = true
             }
         }
     }
 
     async invalidateAndAwait() {
         if (this._stopped) {
-            return;
+            return
         }
-        await new Promise<void>(resolve => {
-            this._pendings.push(resolve);
-            this.invalidate();
-        });
+        await new Promise<void>((resolve) => {
+            this._pendings.push(resolve)
+            this.invalidate()
+        })
     }
 
     stop() {
         if (this._stopped) {
-            return;
+            return
         }
-        this._notifyPendings();
-        this._stopped = true;
+        this._notifyPendings()
+        this._stopped = true
     }
 
     private _notifyPendings = () => {
         for (let pending of this._pendings) {
-            pending();
+            pending()
         }
-        this._pendings = [];
+        this._pendings = []
     }
-
 
     private _doSync = async () => {
         await backoff(async () => {
             if (this._stopped) {
-                return;
+                return
             }
-            await this._command();
-        });
+            await this._command()
+        })
         if (this._stopped) {
-            this._notifyPendings();
-            return;
+            this._notifyPendings()
+            return
         }
         if (this._invalidatedDouble) {
-            this._invalidatedDouble = false;
-            this._doSync();
+            this._invalidatedDouble = false
+            this._doSync()
         } else {
-            this._invalidated = false;
-            this._notifyPendings();
+            this._invalidated = false
+            this._notifyPendings()
         }
     }
 }

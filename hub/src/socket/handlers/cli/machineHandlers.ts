@@ -21,13 +21,13 @@ type MachineUpdateStateHandler = ClientToServerEvents['machine-update-state']
 const machineUpdateMetadataSchema = z.object({
     machineId: z.string(),
     expectedVersion: z.number().int(),
-    metadata: z.unknown()
+    metadata: z.unknown(),
 })
 
 const machineUpdateStateSchema = z.object({
     machineId: z.string(),
     expectedVersion: z.number().int(),
-    runnerState: z.unknown().nullable()
+    runnerState: z.unknown().nullable(),
 })
 
 export type MachineHandlersDeps = {
@@ -67,7 +67,12 @@ export function registerMachineHandlers(socket: CliSocketWithData, deps: Machine
             return
         }
 
-        const result = store.machines.updateMachineMetadata(id, metadata, expectedVersion, machineAccess.value.namespace)
+        const result = store.machines.updateMachineMetadata(
+            id,
+            metadata,
+            expectedVersion,
+            machineAccess.value.namespace
+        )
         if (result.result === 'success') {
             cb({ result: 'success', version: result.version, metadata: result.value })
         } else if (result.result === 'version-mismatch') {
@@ -85,8 +90,8 @@ export function registerMachineHandlers(socket: CliSocketWithData, deps: Machine
                     t: 'update-machine' as const,
                     machineId: id,
                     metadata: { version: result.version, value: metadata },
-                    runnerState: null
-                }
+                    runnerState: null,
+                },
             }
             socket.to(`machine:${id}`).emit('update', update)
             onWebappEvent?.({ type: 'machine-updated', machineId: id, data: { id } })
@@ -130,8 +135,8 @@ export function registerMachineHandlers(socket: CliSocketWithData, deps: Machine
                     t: 'update-machine' as const,
                     machineId: id,
                     metadata: null,
-                    runnerState: { version: result.version, value: runnerState }
-                }
+                    runnerState: { version: result.version, value: runnerState },
+                },
             }
             socket.to(`machine:${id}`).emit('update', update)
             onWebappEvent?.({ type: 'machine-updated', machineId: id, data: { id } })

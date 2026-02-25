@@ -6,14 +6,14 @@
 
 ## TL;DR
 
-| Aspect | Happy | HAPI |
-|--------|-------|------|
-| **Architecture** | Centralized (cloud server stores encrypted data) | Decentralized (each user runs own hub) |
-| **Users** | Multi-user on shared server | Any number (each runs own hub) |
-| **Data** | Encrypted on server (server cannot read) | Stays on your machine |
-| **Encryption** | Application-layer E2EE (client encrypts before sending) | WireGuard + TLS via relay; or none needed if self-hosted |
-| **Deployment** | Multiple services (PostgreSQL, Redis, app server) | Single binary |
-| **Complexity** | High (E2EE, key management, scaling) | Low (one command) |
+| Aspect           | Happy                                                   | HAPI                                                     |
+| ---------------- | ------------------------------------------------------- | -------------------------------------------------------- |
+| **Architecture** | Centralized (cloud server stores encrypted data)        | Decentralized (each user runs own hub)                   |
+| **Users**        | Multi-user on shared server                             | Any number (each runs own hub)                           |
+| **Data**         | Encrypted on server (server cannot read)                | Stays on your machine                                    |
+| **Encryption**   | Application-layer E2EE (client encrypts before sending) | WireGuard + TLS via relay; or none needed if self-hosted |
+| **Deployment**   | Multiple services (PostgreSQL, Redis, app server)       | Single binary                                            |
+| **Complexity**   | High (E2EE, key management, scaling)                    | Low (one command)                                        |
 
 **Choose HAPI if**: You want data sovereignty, self-hosting, and minimal setup.
 
@@ -132,12 +132,12 @@ The relay server only forwards encrypted packets — it cannot read your data.
 
 ### Data Location
 
-| Aspect | Happy | HAPI |
-|--------|-------|------|
-| **Where data lives** | Cloud server (encrypted blobs) | Your own machine |
-| **Who stores it** | Central server holds encrypted data | Only your hub, locally |
-| **Data at rest** | Encrypted (server cannot read) | Plaintext (protected by OS) |
-| **Server's role** | Stores encrypted data + syncs devices | Relay only forwards (or no server at all if self-hosted) |
+| Aspect               | Happy                                 | HAPI                                                     |
+| -------------------- | ------------------------------------- | -------------------------------------------------------- |
+| **Where data lives** | Cloud server (encrypted blobs)        | Your own machine                                         |
+| **Who stores it**    | Central server holds encrypted data   | Only your hub, locally                                   |
+| **Data at rest**     | Encrypted (server cannot read)        | Plaintext (protected by OS)                              |
+| **Server's role**    | Stores encrypted data + syncs devices | Relay only forwards (or no server at all if self-hosted) |
 
 ### Deployment Model
 
@@ -172,12 +172,12 @@ The relay server only forwards encrypted packets — it cannot read your data.
 
 ### Security Approach
 
-| Aspect | Happy | HAPI (self-hosted) | HAPI (relay) |
-|--------|-------|-------------------|--------------|
-| **Problem** | Data on untrusted server | Remote access to local hub | Remote access via third-party relay |
-| **Solution** | Application-layer E2EE | HTTPS (you control the path) | WireGuard + TLS (tunwg) |
-| **Key management** | Client holds keys; server never sees plaintext | Not needed | Handled by tunwg automatically |
-| **Data at rest** | Encrypted on server | Plaintext on your machine | Plaintext on your machine |
+| Aspect             | Happy                                          | HAPI (self-hosted)           | HAPI (relay)                        |
+| ------------------ | ---------------------------------------------- | ---------------------------- | ----------------------------------- |
+| **Problem**        | Data on untrusted server                       | Remote access to local hub   | Remote access via third-party relay |
+| **Solution**       | Application-layer E2EE                         | HTTPS (you control the path) | WireGuard + TLS (tunwg)             |
+| **Key management** | Client holds keys; server never sees plaintext | Not needed                   | Handled by tunwg automatically      |
+| **Data at rest**   | Encrypted on server                            | Plaintext on your machine    | Plaintext on your machine           |
 
 ## Why Different Architectures?
 
@@ -220,15 +220,15 @@ Goal: Self-hosted tool — each user runs their own hub
 
 ## Summary
 
-| Dimension | Happy | HAPI |
-|-----------|-------|------|
-| **Architecture** | Centralized cloud server | Decentralized (each user runs own hub) |
-| **Server's role** | Stores encrypted data | Relay only forwards (or none if self-hosted) |
-| **Data location** | Server (encrypted, zero-knowledge) | Local (plaintext, your machine) |
-| **Deployment** | Multiple services (PostgreSQL, Redis, Node.js) | Single binary (embedded SQLite) |
-| **Encryption** | Application-layer E2EE (client-side) | WireGuard + TLS (relay) or HTTPS (self-hosted) |
-| **Scaling** | Horizontal (multi-user on shared server) | Per-user (each runs own hub) |
-| **Target user** | Managed cloud service users | Self-hosters who want data sovereignty |
+| Dimension         | Happy                                          | HAPI                                           |
+| ----------------- | ---------------------------------------------- | ---------------------------------------------- |
+| **Architecture**  | Centralized cloud server                       | Decentralized (each user runs own hub)         |
+| **Server's role** | Stores encrypted data                          | Relay only forwards (or none if self-hosted)   |
+| **Data location** | Server (encrypted, zero-knowledge)             | Local (plaintext, your machine)                |
+| **Deployment**    | Multiple services (PostgreSQL, Redis, Node.js) | Single binary (embedded SQLite)                |
+| **Encryption**    | Application-layer E2EE (client-side)           | WireGuard + TLS (relay) or HTTPS (self-hosted) |
+| **Scaling**       | Horizontal (multi-user on shared server)       | Per-user (each runs own hub)                   |
+| **Target user**   | Managed cloud service users                    | Self-hosters who want data sovereignty         |
 
 ## Conclusion
 

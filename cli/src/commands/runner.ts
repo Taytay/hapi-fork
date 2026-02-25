@@ -4,7 +4,7 @@ import {
     checkIfRunnerRunningAndCleanupStaleState,
     listRunnerSessions,
     stopRunner,
-    stopRunnerSession
+    stopRunnerSession,
 } from '@/runner/controlClient'
 import { getLatestRunnerLog } from '@/ui/logger'
 import { spawnHappyCLI } from '@/utils/spawnHappyCLI'
@@ -23,7 +23,9 @@ export const runnerCommand: CommandDefinition = {
                 const sessions = await listRunnerSessions()
 
                 if (sessions.length === 0) {
-                    console.log('No active sessions this runner is aware of (they might have been started by a previous version of the runner)')
+                    console.log(
+                        'No active sessions this runner is aware of (they might have been started by a previous version of the runner)'
+                    )
                 } else {
                     console.log('Active sessions:')
                     console.log(JSON.stringify(sessions, null, 2))
@@ -54,7 +56,7 @@ export const runnerCommand: CommandDefinition = {
             const child = spawnHappyCLI(['runner', 'start-sync'], {
                 detached: true,
                 stdio: 'ignore',
-                env: process.env
+                env: process.env,
             })
             child.unref()
 
@@ -64,7 +66,7 @@ export const runnerCommand: CommandDefinition = {
                     started = true
                     break
                 }
-                await new Promise(resolve => setTimeout(resolve, 100))
+                await new Promise((resolve) => setTimeout(resolve, 100))
             }
 
             if (started) {
@@ -118,5 +120,5 @@ ${chalk.bold('Note:')} The runner runs in the background and manages Claude sess
 
 ${chalk.bold('To clean up runaway processes:')} Use ${chalk.cyan('hapi doctor clean')}
 `)
-    }
+    },
 }

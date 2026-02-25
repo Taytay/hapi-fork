@@ -52,19 +52,20 @@ async function bootstrap() {
         },
         onRegistered(registration) {
             if (registration) {
-                setInterval(() => {
-                    registration.update()
-                }, 60 * 60 * 1000)
+                setInterval(
+                    () => {
+                        registration.update()
+                    },
+                    60 * 60 * 1000
+                )
             }
         },
         onRegisterError(error) {
             console.error('SW registration error:', error)
-        }
+        },
     })
 
-    const history = isTelegram
-        ? createMemoryHistory({ initialEntries: [getInitialPath()] })
-        : undefined
+    const history = isTelegram ? createMemoryHistory({ initialEntries: [getInitialPath()] }) : undefined
     const router = createAppRouter(history)
 
     ReactDOM.createRoot(document.getElementById('root')!).render(

@@ -43,30 +43,29 @@ export class PushService {
         }
 
         const body = JSON.stringify(payload)
-        await Promise.all(subscriptions.map((subscription) => {
-            return this.sendToSubscription(namespace, subscription, body)
-        }))
+        await Promise.all(
+            subscriptions.map((subscription) => {
+                return this.sendToSubscription(namespace, subscription, body)
+            })
+        )
     }
 
-    private async sendToSubscription(
-        namespace: string,
-        subscription: StoredSubscription,
-        body: string
-    ): Promise<void> {
+    private async sendToSubscription(namespace: string, subscription: StoredSubscription, body: string): Promise<void> {
         const pushSubscription: PushSubscription = {
             endpoint: subscription.endpoint,
             keys: {
                 p256dh: subscription.p256dh,
-                auth: subscription.auth
-            }
+                auth: subscription.auth,
+            },
         }
 
         try {
             await webPush.sendNotification(pushSubscription, body)
         } catch (error) {
-            const statusCode = typeof (error as { statusCode?: unknown }).statusCode === 'number'
-                ? (error as { statusCode: number }).statusCode
-                : null
+            const statusCode =
+                typeof (error as { statusCode?: unknown }).statusCode === 'number'
+                    ? (error as { statusCode: number }).statusCode
+                    : null
 
             if (statusCode === 410) {
                 this.store.push.removePushSubscription(namespace, subscription.endpoint)

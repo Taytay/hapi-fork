@@ -37,11 +37,7 @@ function ElapsedView(props: { from: number; active: boolean }) {
     const elapsed = (now - props.from) / 1000
     if (!Number.isFinite(elapsed)) return null
 
-    return (
-        <span className="font-mono text-xs text-[var(--app-hint)]">
-            {elapsed.toFixed(1)}s
-        </span>
-    )
+    return <span className="font-mono text-xs text-[var(--app-hint)]">{elapsed.toFixed(1)}s</span>
 }
 
 function formatTaskChildLabel(child: ToolCallBlock, metadata: SessionMetadataSummary | null): string {
@@ -51,7 +47,7 @@ function formatTaskChildLabel(child: ToolCallBlock, metadata: SessionMetadataSum
         result: child.tool.result,
         childrenCount: child.children.length,
         description: child.tool.description,
-        metadata
+        metadata,
     })
 
     if (presentation.subtitle) {
@@ -79,7 +75,13 @@ function getTaskSummaryChildren(block: ToolCallBlock): { visible: ToolCallBlock[
 
     const children = block.children
         .filter((child): child is ToolCallBlock => child.kind === 'tool-call')
-        .filter((child) => child.tool.state === 'pending' || child.tool.state === 'running' || child.tool.state === 'completed' || child.tool.state === 'error')
+        .filter(
+            (child) =>
+                child.tool.state === 'pending' ||
+                child.tool.state === 'running' ||
+                child.tool.state === 'completed' ||
+                child.tool.state === 'error'
+        )
 
     if (children.length === 0) return null
 
@@ -103,16 +105,12 @@ function renderTaskSummary(block: ToolCallBlock, metadata: SessionMetadataSummar
                             <span className="mr-2 inline-block w-4 text-center align-middle">
                                 <TaskStateIcon state={child.tool.state} />
                             </span>
-                            <span className="align-middle break-all">
-                                {formatTaskChildLabel(child, metadata)}
-                            </span>
+                            <span className="align-middle break-all">{formatTaskChildLabel(child, metadata)}</span>
                         </div>
                     </div>
                 ))}
                 {remaining > 0 ? (
-                    <div className="text-xs text-[var(--app-hint)] italic">
-                        (+{remaining} more)
-                    </div>
+                    <div className="text-xs text-[var(--app-hint)] italic">(+{remaining} more)</div>
                 ) : null}
             </div>
         </div>
@@ -126,13 +124,7 @@ function renderEditInput(input: unknown): ReactNode | null {
     const newString = getInputString(input, 'new_string')
     if (oldString === null || newString === null) return null
 
-    return (
-        <DiffView
-            oldString={oldString}
-            newString={newString}
-            filePath={filePath}
-        />
-    )
+    return <DiffView oldString={oldString} newString={newString} filePath={filePath} />
 }
 
 function renderExitPlanModeInput(input: unknown): ReactNode | null {
@@ -179,9 +171,7 @@ function renderToolInput(block: ToolCallBlock): ReactNode {
                     <div className="flex flex-col gap-2">
                         {rendered}
                         {edits.length > 3 ? (
-                            <div className="text-xs text-[var(--app-hint)]">
-                                (+{edits.length - 3} more edits)
-                            </div>
+                            <div className="text-xs text-[var(--app-hint)]">(+{edits.length - 3} more edits)</div>
                         ) : null}
                     </div>
                 )
@@ -195,9 +185,7 @@ function renderToolInput(block: ToolCallBlock): ReactNode {
         if (filePath && content !== null) {
             return (
                 <div className="flex flex-col gap-2">
-                    <div className="text-xs text-[var(--app-hint)] font-mono break-all">
-                        {filePath}
-                    </div>
+                    <div className="text-xs text-[var(--app-hint)] font-mono break-all">{filePath}</div>
                     <CodeBlock code={content} language="text" />
                 </div>
             )
@@ -214,7 +202,10 @@ function renderToolInput(block: ToolCallBlock): ReactNode {
     }
 
     const commandArray = isObject(input) && Array.isArray(input.command) ? input.command : null
-    if ((toolName === 'CodexBash' || toolName === 'Bash') && (typeof commandArray?.[0] === 'string' || typeof input === 'object')) {
+    if (
+        (toolName === 'CodexBash' || toolName === 'Bash') &&
+        (typeof commandArray?.[0] === 'string' || typeof input === 'object')
+    ) {
         const cmd = Array.isArray(commandArray)
             ? commandArray.filter((part) => typeof part === 'string').join(' ')
             : getInputStringAny(input, ['command', 'cmd'])
@@ -231,7 +222,13 @@ function StatusIcon(props: { state: ToolCallBlock['tool']['state'] }) {
         return (
             <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none">
                 <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M5.2 8.3l1.8 1.8 3.8-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                    d="M5.2 8.3l1.8 1.8 3.8-4"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                />
             </svg>
         )
     }
@@ -239,7 +236,12 @@ function StatusIcon(props: { state: ToolCallBlock['tool']['state'] }) {
         return (
             <svg className="h-3 w-3" viewBox="0 0 16 16" fill="none">
                 <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
-                <path d="M5.6 5.6l4.8 4.8M10.4 5.6l-4.8 4.8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                <path
+                    d="M5.6 5.6l4.8 4.8M10.4 5.6l-4.8 4.8"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                />
             </svg>
         )
     }
@@ -254,7 +256,13 @@ function StatusIcon(props: { state: ToolCallBlock['tool']['state'] }) {
     return (
         <svg className="h-3 w-3 animate-spin" viewBox="0 0 24 24" fill="none">
             <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.5" opacity="0.25" />
-            <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" opacity="0.75" />
+            <path
+                d="M21 12a9 9 0 0 0-9-9"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                opacity="0.75"
+            />
         </svg>
     )
 }
@@ -269,7 +277,13 @@ function statusColorClass(state: ToolCallBlock['tool']['state']): string {
 function DetailsIcon() {
     return (
         <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none">
-            <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+                d="M6 3l5 5-5 5"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
         </svg>
     )
 }
@@ -285,21 +299,25 @@ type ToolCardProps = {
 
 function ToolCardInner(props: ToolCardProps) {
     const { t } = useTranslation()
-    const presentation = useMemo(() => getToolPresentation({
-        toolName: props.block.tool.name,
-        input: props.block.tool.input,
-        result: props.block.tool.result,
-        childrenCount: props.block.children.length,
-        description: props.block.tool.description,
-        metadata: props.metadata
-    }), [
-        props.block.tool.name,
-        props.block.tool.input,
-        props.block.tool.result,
-        props.block.children.length,
-        props.block.tool.description,
-        props.metadata
-    ])
+    const presentation = useMemo(
+        () =>
+            getToolPresentation({
+                toolName: props.block.tool.name,
+                input: props.block.tool.input,
+                result: props.block.tool.result,
+                childrenCount: props.block.children.length,
+                description: props.block.tool.description,
+                metadata: props.metadata,
+            }),
+        [
+            props.block.tool.name,
+            props.block.tool.input,
+            props.block.tool.result,
+            props.block.children.length,
+            props.block.tool.description,
+            props.metadata,
+        ]
+    )
 
     const toolName = props.block.tool.name
     const toolTitle = presentation.title
@@ -314,10 +332,11 @@ function ToolCardInner(props: ToolCardProps) {
     const isAskUserQuestion = isAskUserQuestionToolName(toolName)
     const isRequestUserInput = isRequestUserInputToolName(toolName)
     const isQuestionTool = isAskUserQuestion || isRequestUserInput
-    const showsPermissionFooter = Boolean(permission && (
-        permission.status === 'pending'
-        || ((permission.status === 'denied' || permission.status === 'canceled') && Boolean(permission.reason))
-    ))
+    const showsPermissionFooter = Boolean(
+        permission &&
+        (permission.status === 'pending' ||
+            ((permission.status === 'denied' || permission.status === 'canceled') && Boolean(permission.reason)))
+    )
     const hasBody = showInline || taskSummary !== null || showsPermissionFooter
     const stateColor = statusColorClass(props.block.tool.state)
     const { suppressFocusRing, onTriggerPointerDown, onTriggerKeyDown, onTriggerBlur } = usePointerFocusRing()
@@ -329,9 +348,7 @@ function ToolCardInner(props: ToolCardProps) {
                     <div className="shrink-0 flex h-3.5 w-3.5 items-center justify-center text-[var(--app-hint)] leading-none">
                         {presentation.icon}
                     </div>
-                    <CardTitle className="min-w-0 text-sm font-medium leading-tight break-words">
-                        {toolTitle}
-                    </CardTitle>
+                    <CardTitle className="min-w-0 text-sm font-medium leading-tight break-words">{toolTitle}</CardTitle>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
@@ -376,9 +393,8 @@ function ToolCardInner(props: ToolCardProps) {
                             <DialogTitle>{toolTitle}</DialogTitle>
                         </DialogHeader>
                         {(() => {
-                            const isQuestionToolWithAnswers = isQuestionTool
-                                && permission?.answers
-                                && Object.keys(permission.answers).length > 0
+                            const isQuestionToolWithAnswers =
+                                isQuestionTool && permission?.answers && Object.keys(permission.answers).length > 0
 
                             return (
                                 <div className="mt-3 flex max-h-[75vh] flex-col gap-4 overflow-auto">
@@ -394,7 +410,9 @@ function ToolCardInner(props: ToolCardProps) {
                                     </div>
                                     {!isQuestionToolWithAnswers && (
                                         <div>
-                                            <div className="mb-1 text-xs font-medium text-[var(--app-hint)]">{t('tool.result')}</div>
+                                            <div className="mb-1 text-xs font-medium text-[var(--app-hint)]">
+                                                {t('tool.result')}
+                                            </div>
                                             <ResultToolView block={props.block} metadata={props.metadata} />
                                         </div>
                                     )}
@@ -407,11 +425,7 @@ function ToolCardInner(props: ToolCardProps) {
 
             {hasBody ? (
                 <CardContent className="px-3 pb-3 pt-0">
-                    {taskSummary ? (
-                        <div className="mt-2">
-                            {taskSummary}
-                        </div>
-                    ) : null}
+                    {taskSummary ? <div className="mt-2">{taskSummary}</div> : null}
 
                     {showInline ? (
                         CompactToolView ? (
@@ -421,11 +435,15 @@ function ToolCardInner(props: ToolCardProps) {
                         ) : (
                             <div className="mt-3 flex flex-col gap-3">
                                 <div>
-                                    <div className="mb-1 text-xs font-medium text-[var(--app-hint)]">{t('tool.input')}</div>
+                                    <div className="mb-1 text-xs font-medium text-[var(--app-hint)]">
+                                        {t('tool.input')}
+                                    </div>
                                     {renderToolInput(props.block)}
                                 </div>
                                 <div>
-                                    <div className="mb-1 text-xs font-medium text-[var(--app-hint)]">{t('tool.result')}</div>
+                                    <div className="mb-1 text-xs font-medium text-[var(--app-hint)]">
+                                        {t('tool.result')}
+                                    </div>
                                     <ResultToolView block={props.block} metadata={props.metadata} />
                                 </div>
                             </div>

@@ -6,5 +6,5 @@ export const hookForwarderCommand: CommandDefinition = {
     run: async ({ commandArgs }) => {
         const { runSessionHookForwarder } = await import('@/claude/utils/sessionHookForwarder')
         await runSessionHookForwarder(commandArgs)
-    }
+    },
 }

@@ -11,13 +11,7 @@ import { useTranslation } from '@/lib/use-translation'
 import { TerminalView } from '@/components/Terminal/TerminalView'
 import { LoadingState } from '@/components/LoadingState'
 import { Button } from '@/components/ui/button'
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 function BackIcon() {
     return (
         <svg
@@ -213,7 +207,7 @@ export default function TerminalPage() {
         token,
         sessionId,
         terminalId,
-        baseUrl
+        baseUrl,
     })
 
     useEffect(() => {
@@ -324,15 +318,18 @@ export default function TerminalPage() {
     }, [terminalState.status])
 
     const quickInputDisabled = !session?.active || terminalState.status !== 'connected'
-    const writePlainInput = useCallback((text: string) => {
-        if (!text || quickInputDisabled) {
-            return false
-        }
-        write(text)
-        resetModifiers()
-        terminalRef.current?.focus()
-        return true
-    }, [quickInputDisabled, write, resetModifiers])
+    const writePlainInput = useCallback(
+        (text: string) => {
+            if (!text || quickInputDisabled) {
+                return false
+            }
+            write(text)
+            resetModifiers()
+            terminalRef.current?.focus()
+            return true
+        },
+        [quickInputDisabled, write, resetModifiers]
+    )
 
     const handlePasteAction = useCallback(async () => {
         if (quickInputDisabled) {
@@ -509,9 +506,7 @@ export default function TerminalPage() {
                 <DialogContent className="max-w-md">
                     <DialogHeader>
                         <DialogTitle>{t('terminal.paste.fallbackTitle')}</DialogTitle>
-                        <DialogDescription>
-                            {t('terminal.paste.fallbackDescription')}
-                        </DialogDescription>
+                        <DialogDescription>{t('terminal.paste.fallbackDescription')}</DialogDescription>
                     </DialogHeader>
                     <textarea
                         value={manualPasteText}
@@ -532,11 +527,7 @@ export default function TerminalPage() {
                         >
                             {t('button.cancel')}
                         </Button>
-                        <Button
-                            type="button"
-                            onClick={handleManualPasteSubmit}
-                            disabled={!manualPasteText.trim()}
-                        >
+                        <Button type="button" onClick={handleManualPasteSubmit} disabled={!manualPasteText.trim()}>
                             {t('button.paste')}
                         </Button>
                     </div>

@@ -6,7 +6,7 @@ import {
     formatSessionFocus,
     formatSessionFull,
     formatSessionOffline,
-    formatSessionOnline
+    formatSessionOnline,
 } from './contextFormatters'
 import { VOICE_CONFIG } from '../voiceConfig'
 import type { DecryptedMessage, Session } from '@/types/api'
@@ -159,5 +159,5 @@ export const voiceHooks = {
         }
         shownSessions.clear()
         lastFocusSession = null
-    }
+    },
 }

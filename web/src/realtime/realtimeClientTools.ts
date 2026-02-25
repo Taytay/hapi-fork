@@ -104,5 +104,5 @@ export const realtimeClientTools = {
             console.error('[Voice] Failed to process permission:', error)
             return `error (failed to ${decision} permission)`
         }
-    }
+    },
 }

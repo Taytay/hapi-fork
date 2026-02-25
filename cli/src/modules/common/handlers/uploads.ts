@@ -9,7 +9,7 @@ import { getHapiBlobsDir } from '@/constants/uploadPaths'
 interface UploadFileRequest {
     sessionId?: string
     filename: string
-    content: string  // base64 encoded
+    content: string // base64 encoded
     mimeType: string
 }
 
@@ -37,11 +37,7 @@ const MAX_UPLOAD_BYTES = 50 * 1024 * 1024
 
 function sanitizeFilename(filename: string): string {
     // Remove path separators and limit length
-    const sanitized = filename
-        .replace(/[/\\]/g, '_')
-        .replace(/\.\./g, '_')
-        .replace(/\s+/g, '_')
-        .slice(0, 255)
+    const sanitized = filename.replace(/[/\\]/g, '_').replace(/\.\./g, '_').replace(/\s+/g, '_').slice(0, 255)
 
     // If filename is empty after sanitization, use a default
     return sanitized || 'upload'

@@ -66,7 +66,7 @@ export function VoiceProvider({ children }: { children: ReactNode }) {
                 setMicMuted,
                 toggleMic,
                 startVoice,
-                stopVoice
+                stopVoice,
             }}
         >
             {children}

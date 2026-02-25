@@ -47,10 +47,10 @@ export function TerminalView(props: {
                 background,
                 foreground,
                 cursor: foreground,
-                selectionBackground
+                selectionBackground,
             },
             convertEol: true,
-            customGlyphs: true
+            customGlyphs: true,
         })
 
         const fitAddon = new FitAddon()
@@ -95,7 +95,7 @@ export function TerminalView(props: {
             onResizeRef.current?.(terminal.cols, terminal.rows)
         }
 
-        void ensureBuiltinFontLoaded().then(loaded => {
+        void ensureBuiltinFontLoaded().then((loaded) => {
             if (!loaded) return
             refreshFont(true)
         })
@@ -118,10 +118,5 @@ export function TerminalView(props: {
         return () => abortController.abort()
     }, [])
 
-    return (
-        <div
-            ref={containerRef}
-            className={`h-full w-full ${props.className ?? ''}`}
-        />
-    )
+    return <div ref={containerRef} className={`h-full w-full ${props.className ?? ''}`} />
 }

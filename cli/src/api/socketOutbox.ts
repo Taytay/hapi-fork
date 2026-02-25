@@ -100,7 +100,7 @@ export class SocketOutbox {
             event,
             args,
             sizeBytes,
-            enqueuedAt: Date.now()
+            enqueuedAt: Date.now(),
         })
         this.queuedBytes += sizeBytes
         return true
@@ -148,7 +148,9 @@ export class SocketOutbox {
             return
         }
 
-        logger.warn(`[OUTBOX] Dropped ${this.droppedCount} items (${this.droppedBytes} bytes). reason=${this.lastDropReason}`)
+        logger.warn(
+            `[OUTBOX] Dropped ${this.droppedCount} items (${this.droppedBytes} bytes). reason=${this.lastDropReason}`
+        )
         this.droppedCount = 0
         this.droppedBytes = 0
         this.lastDropLogAt = now

@@ -14,7 +14,7 @@ import {
     TerminalClosePayloadSchema,
     TerminalOpenPayloadSchema,
     TerminalResizePayloadSchema,
-    TerminalWritePayloadSchema
+    TerminalWritePayloadSchema,
 } from '@hapi/protocol'
 import type {
     AgentState,
@@ -24,7 +24,7 @@ import type {
     Session,
     SessionModelMode,
     SessionPermissionMode,
-    UserMessage
+    UserMessage,
 } from './types'
 import { AgentStateSchema, CliMessagesResponseSchema, MetadataSchema, UserMessageSchema } from './types'
 import { RpcHandlerManager } from './rpc/RpcHandlerManager'
@@ -63,7 +63,7 @@ export class ApiSessionClient extends EventEmitter {
 
         this.rpcHandlerManager = new RpcHandlerManager({
             scopePrefix: this.sessionId,
-            logger: (msg, data) => logger.debug(msg, data)
+            logger: (msg, data) => logger.debug(msg, data),
         })
 
         if (this.metadata?.path) {
@@ -74,7 +74,7 @@ export class ApiSessionClient extends EventEmitter {
             auth: {
                 token: this.token,
                 clientType: 'session-scoped' as const,
-                sessionId: this.sessionId
+                sessionId: this.sessionId,
             },
             path: '/socket.io/',
             reconnection: true,
@@ -82,7 +82,7 @@ export class ApiSessionClient extends EventEmitter {
             reconnectionDelay: 1000,
             reconnectionDelayMax: 5000,
             transports: ['websocket'],
-            autoConnect: false
+            autoConnect: false,
         })
 
         this.terminalManager = new TerminalManager({
@@ -91,7 +91,7 @@ export class ApiSessionClient extends EventEmitter {
             onReady: (payload) => this.socket.emit('terminal:ready', payload),
             onOutput: (payload) => this.socket.emit('terminal:output', payload),
             onExit: (payload) => this.socket.emit('terminal:exit', payload),
-            onError: (payload) => this.socket.emit('terminal:error', payload)
+            onError: (payload) => this.socket.emit('terminal:error', payload),
         })
 
         this.socket.on('connect', () => {
@@ -105,13 +105,16 @@ export class ApiSessionClient extends EventEmitter {
             this.socket.emit('session-alive', {
                 sid: this.sessionId,
                 time: Date.now(),
-                thinking: false
+                thinking: false,
             })
         })
 
-        this.socket.on('rpc-request', async (data: { method: string; params: string }, callback: (response: string) => void) => {
-            callback(await this.rpcHandlerManager.handleRequest(data))
-        })
+        this.socket.on(
+            'rpc-request',
+            async (data: { method: string; params: string }, callback: (response: string) => void) => {
+                callback(await this.rpcHandlerManager.handleRequest(data))
+            }
+        )
 
         this.socket.on('disconnect', (reason) => {
             logger.debug('[API] Socket disconnected:', reason)
@@ -131,35 +134,46 @@ export class ApiSessionClient extends EventEmitter {
             logger.debug('[API] Socket error:', payload)
         })
 
-        const handleTerminalEvent = <T extends { sessionId: string }>(
-            schema: ZodType<T>,
-            handler: (payload: T) => void
-        ) => (data: unknown) => {
-            const parsed = schema.safeParse(data)
-            if (!parsed.success) {
-                return
+        const handleTerminalEvent =
+            <T extends { sessionId: string }>(schema: ZodType<T>, handler: (payload: T) => void) =>
+            (data: unknown) => {
+                const parsed = schema.safeParse(data)
+                if (!parsed.success) {
+                    return
+                }
+                if (parsed.data.sessionId !== this.sessionId) {
+                    return
+                }
+                handler(parsed.data)
             }
-            if (parsed.data.sessionId !== this.sessionId) {
-                return
-            }
-            handler(parsed.data)
-        }
 
-        this.socket.on('terminal:open', handleTerminalEvent(TerminalOpenPayloadSchema, (payload) => {
-            this.terminalManager.create(payload.terminalId, payload.cols, payload.rows)
-        }))
+        this.socket.on(
+            'terminal:open',
+            handleTerminalEvent(TerminalOpenPayloadSchema, (payload) => {
+                this.terminalManager.create(payload.terminalId, payload.cols, payload.rows)
+            })
+        )
 
-        this.socket.on('terminal:write', handleTerminalEvent(TerminalWritePayloadSchema, (payload) => {
-            this.terminalManager.write(payload.terminalId, payload.data)
-        }))
+        this.socket.on(
+            'terminal:write',
+            handleTerminalEvent(TerminalWritePayloadSchema, (payload) => {
+                this.terminalManager.write(payload.terminalId, payload.data)
+            })
+        )
 
-        this.socket.on('terminal:resize', handleTerminalEvent(TerminalResizePayloadSchema, (payload) => {
-            this.terminalManager.resize(payload.terminalId, payload.cols, payload.rows)
-        }))
+        this.socket.on(
+            'terminal:resize',
+            handleTerminalEvent(TerminalResizePayloadSchema, (payload) => {
+                this.terminalManager.resize(payload.terminalId, payload.cols, payload.rows)
+            })
+        )
 
-        this.socket.on('terminal:close', handleTerminalEvent(TerminalClosePayloadSchema, (payload) => {
-            this.terminalManager.close(payload.terminalId)
-        }))
+        this.socket.on(
+            'terminal:close',
+            handleTerminalEvent(TerminalClosePayloadSchema, (payload) => {
+                this.terminalManager.close(payload.terminalId)
+            })
+        )
 
         this.socket.on('update', (data: Update) => {
             try {
@@ -176,7 +190,9 @@ export class ApiSessionClient extends EventEmitter {
                         if (parsed.success) {
                             this.metadata = parsed.data
                         } else {
-                            logger.debug('[API] Ignoring invalid metadata update', { version: data.body.metadata.version })
+                            logger.debug('[API] Ignoring invalid metadata update', {
+                                version: data.body.metadata.version,
+                            })
                         }
                         this.metadataVersion = data.body.metadata.version
                     }
@@ -189,7 +205,9 @@ export class ApiSessionClient extends EventEmitter {
                             if (parsed.success) {
                                 this.agentState = parsed.data
                             } else {
-                                logger.debug('[API] Ignoring invalid agentState update', { version: data.body.agentState.version })
+                                logger.debug('[API] Ignoring invalid agentState update', {
+                                    version: data.body.agentState.version,
+                                })
                             }
                         }
                         this.agentStateVersion = data.body.agentState.version
@@ -274,9 +292,9 @@ export class ApiSessionClient extends EventEmitter {
                         params: { afterSeq: cursor, limit },
                         headers: {
                             Authorization: `Bearer ${this.token}`,
-                            'Content-Type': 'application/json'
+                            'Content-Type': 'application/json',
                         },
-                        timeout: 15_000
+                        timeout: 15_000,
                     }
                 )
 
@@ -306,7 +324,7 @@ export class ApiSessionClient extends EventEmitter {
                     logger.debug('[API] Backfill stopped due to non-advancing cursor', {
                         cursor,
                         maxSeq,
-                        observedSeq
+                        observedSeq,
                     })
                     break
                 }
@@ -328,33 +346,38 @@ export class ApiSessionClient extends EventEmitter {
     sendClaudeSessionMessage(body: RawJSONLines): void {
         let content: MessageContent
 
-        if (body.type === 'user' && typeof body.message.content === 'string' && body.isSidechain !== true && body.isMeta !== true) {
+        if (
+            body.type === 'user' &&
+            typeof body.message.content === 'string' &&
+            body.isSidechain !== true &&
+            body.isMeta !== true
+        ) {
             content = {
                 role: 'user',
                 content: {
                     type: 'text',
-                    text: body.message.content
+                    text: body.message.content,
                 },
                 meta: {
-                    sentFrom: 'cli'
-                }
+                    sentFrom: 'cli',
+                },
             }
         } else {
             content = {
                 role: 'agent',
                 content: {
                     type: 'output',
-                    data: body
+                    data: body,
                 },
                 meta: {
-                    sentFrom: 'cli'
-                }
+                    sentFrom: 'cli',
+                },
             }
         }
 
         this.socket.emit('message', {
             sid: this.sessionId,
-            message: content
+            message: content,
         })
 
         if (body.type === 'summary' && 'summary' in body && 'leafUuid' in body) {
@@ -362,8 +385,8 @@ export class ApiSessionClient extends EventEmitter {
                 ...metadata,
                 summary: {
                     text: body.summary,
-                    updatedAt: Date.now()
-                }
+                    updatedAt: Date.now(),
+                },
             }))
         }
     }
@@ -377,17 +400,17 @@ export class ApiSessionClient extends EventEmitter {
             role: 'user',
             content: {
                 type: 'text',
-                text
+                text,
             },
             meta: {
                 sentFrom: 'cli',
-                ...(meta ?? {})
-            }
+                ...(meta ?? {}),
+            },
         }
 
         this.socket.emit('message', {
             sid: this.sessionId,
-            message: content
+            message: content,
         })
     }
 
@@ -396,42 +419,49 @@ export class ApiSessionClient extends EventEmitter {
             role: 'agent',
             content: {
                 type: 'codex',
-                data: body
+                data: body,
             },
             meta: {
-                sentFrom: 'cli'
-            }
+                sentFrom: 'cli',
+            },
         }
         this.socket.emit('message', {
             sid: this.sessionId,
-            message: content
+            message: content,
         })
     }
 
-    sendSessionEvent(event: {
-        type: 'switch'
-        mode: 'local' | 'remote'
-    } | {
-        type: 'message'
-        message: string
-    } | {
-        type: 'permission-mode-changed'
-        mode: SessionPermissionMode
-    } | {
-        type: 'ready'
-    }, id?: string): void {
+    sendSessionEvent(
+        event:
+            | {
+                  type: 'switch'
+                  mode: 'local' | 'remote'
+              }
+            | {
+                  type: 'message'
+                  message: string
+              }
+            | {
+                  type: 'permission-mode-changed'
+                  mode: SessionPermissionMode
+              }
+            | {
+                  type: 'ready'
+              },
+        id?: string
+    ): void {
         const content = {
             role: 'agent',
             content: {
                 id: id ?? randomUUID(),
                 type: 'event',
-                data: event
-            }
+                data: event,
+            },
         }
 
         this.socket.emit('message', {
             sid: this.sessionId,
-            message: content
+            message: content,
         })
     }
 
@@ -445,7 +475,7 @@ export class ApiSessionClient extends EventEmitter {
             time: Date.now(),
             thinking,
             mode,
-            ...(runtime ?? {})
+            ...(runtime ?? {}),
         })
     }
 
@@ -460,11 +490,11 @@ export class ApiSessionClient extends EventEmitter {
                 const current = this.metadata ?? ({} as Metadata)
                 const updated = handler(current)
 
-                const answer = await this.socket.emitWithAck('update-metadata', {
+                const answer = (await this.socket.emitWithAck('update-metadata', {
                     sid: this.sessionId,
                     expectedVersion: this.metadataVersion,
-                    metadata: updated
-                }) as unknown
+                    metadata: updated,
+                })) as unknown
 
                 applyVersionedAck(answer, {
                     valueKey: 'metadata',
@@ -484,7 +514,7 @@ export class ApiSessionClient extends EventEmitter {
                     },
                     invalidResponseMessage: 'Invalid update-metadata response',
                     errorMessage: 'Metadata update failed',
-                    versionMismatchMessage: 'Metadata version mismatch'
+                    versionMismatchMessage: 'Metadata version mismatch',
                 })
             })
         })
@@ -496,11 +526,11 @@ export class ApiSessionClient extends EventEmitter {
                 const current = this.agentState ?? ({} as AgentState)
                 const updated = handler(current)
 
-                const answer = await this.socket.emitWithAck('update-state', {
+                const answer = (await this.socket.emitWithAck('update-state', {
                     sid: this.sessionId,
                     expectedVersion: this.agentStateVersion,
-                    agentState: updated
-                }) as unknown
+                    agentState: updated,
+                })) as unknown
 
                 applyVersionedAck(answer, {
                     valueKey: 'agentState',
@@ -520,7 +550,7 @@ export class ApiSessionClient extends EventEmitter {
                     },
                     invalidResponseMessage: 'Invalid update-state response',
                     errorMessage: 'Agent state update failed',
-                    versionMismatchMessage: 'Agent state version mismatch'
+                    versionMismatchMessage: 'Agent state version mismatch',
                 })
             })
         })
@@ -548,12 +578,15 @@ export class ApiSessionClient extends EventEmitter {
                 resolve(true)
             }
 
-            const timeout = setTimeout(() => {
-                if (settled) return
-                settled = true
-                cleanup()
-                resolve(false)
-            }, Math.max(0, timeoutMs))
+            const timeout = setTimeout(
+                () => {
+                    if (settled) return
+                    settled = true
+                    cleanup()
+                    resolve(false)
+                },
+                Math.max(0, timeoutMs)
+            )
 
             this.socket.on('connect', onConnect)
         })
@@ -579,7 +612,7 @@ export class ApiSessionClient extends EventEmitter {
 
             timeout = setTimeout(() => finish(false), timeoutMs)
 
-            lock.inLock(async () => { })
+            lock.inLock(async () => {})
                 .then(() => finish(true))
                 .catch(() => finish(false))
         })

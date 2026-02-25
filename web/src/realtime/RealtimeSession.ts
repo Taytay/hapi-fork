@@ -5,11 +5,7 @@ let voiceSession: VoiceSession | null = null
 let voiceSessionStarted = false
 let currentSessionId: string | null = null
 
-export async function startRealtimeSession(
-    sessionId: string,
-    initialContext?: string,
-    language?: ElevenLabsLanguage
-) {
+export async function startRealtimeSession(sessionId: string, initialContext?: string, language?: ElevenLabsLanguage) {
     if (!voiceSession) {
         console.warn('[Voice] No voice session registered')
         return
@@ -20,7 +16,7 @@ export async function startRealtimeSession(
         await voiceSession.startSession({
             sessionId,
             initialContext,
-            language
+            language,
         })
         voiceSessionStarted = true
     } catch (error) {

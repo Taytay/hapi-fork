@@ -29,7 +29,7 @@ function parseVisibility(value: string | undefined): VisibilityState {
 
 const visibilitySchema = z.object({
     subscriptionId: z.string().min(1),
-    visibility: z.enum(['visible', 'hidden'])
+    visibility: z.enum(['visible', 'hidden']),
 })
 
 export function createEventsRoutes(
@@ -88,7 +88,7 @@ export function createEventsRoutes(
                 send: (event) => stream.writeSSE({ data: JSON.stringify(event) }),
                 sendHeartbeat: async () => {
                     await stream.write(': heartbeat\n\n')
-                }
+                },
             })
 
             await stream.writeSSE({
@@ -96,9 +96,9 @@ export function createEventsRoutes(
                     type: 'connection-changed',
                     data: {
                         status: 'connected',
-                        subscriptionId
-                    }
-                })
+                        subscriptionId,
+                    },
+                }),
             })
 
             await new Promise<void>((resolve) => {

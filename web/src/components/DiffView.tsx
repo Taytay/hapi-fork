@@ -1,6 +1,13 @@
 import { diffLines } from 'diff'
 import { useMemo } from 'react'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog'
 import { usePointerFocusRing } from '@/hooks/usePointerFocusRing'
 import { cn } from '@/lib/utils'
 import { useTranslation } from '@/lib/use-translation'
@@ -27,11 +34,7 @@ export function DiffView(props: {
     const subtitle = props.filePath ? stats.label : `${t('diff.title')} • ${stats.label}`
 
     const DiffInline = (
-        <DiffInlineView
-            oldString={props.oldString}
-            newString={props.newString}
-            filePath={props.filePath}
-        />
+        <DiffInlineView oldString={props.oldString} newString={props.newString} filePath={props.filePath} />
     )
 
     if (variant === 'inline') {
@@ -62,9 +65,7 @@ export function DiffView(props: {
                                 <div className="min-w-0 font-mono text-xs text-[var(--app-hint)] truncate">
                                     {props.filePath ? stats.label : subtitle}
                                 </div>
-                                <div className="shrink-0 text-xs text-[var(--app-link)]">
-                                    {t('diff.view')}
-                                </div>
+                                <div className="shrink-0 text-xs text-[var(--app-link)]">{t('diff.view')}</div>
                             </div>
                         </div>
                     </div>
@@ -73,23 +74,15 @@ export function DiffView(props: {
             <DialogContent className="max-w-4xl">
                 <DialogHeader>
                     <DialogTitle className="break-all">{title}</DialogTitle>
-                    <DialogDescription className="font-mono break-all">
-                        {stats.label}
-                    </DialogDescription>
+                    <DialogDescription className="font-mono break-all">{stats.label}</DialogDescription>
                 </DialogHeader>
-                <div className="mt-3 max-h-[75vh] overflow-auto">
-                    {DiffInline}
-                </div>
+                <div className="mt-3 max-h-[75vh] overflow-auto">{DiffInline}</div>
             </DialogContent>
         </Dialog>
     )
 }
 
-function DiffInlineView(props: {
-    oldString: string
-    newString: string
-    filePath?: string
-}) {
+function DiffInlineView(props: { oldString: string; newString: string; filePath?: string }) {
     const diff = useMemo(() => diffLines(props.oldString, props.newString), [props.oldString, props.newString])
 
     return (

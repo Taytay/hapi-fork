@@ -42,14 +42,16 @@ export function extractErrorInfo(error: unknown): ErrorInfo {
 
     const record = error as Record<string, unknown>
     const axiosCode = typeof record.code === 'string' ? record.code : undefined
-    const response = typeof record.response === 'object' && record.response !== null
-        ? (record.response as Record<string, unknown>)
-        : undefined
+    const response =
+        typeof record.response === 'object' && record.response !== null
+            ? (record.response as Record<string, unknown>)
+            : undefined
     const httpStatus = typeof response?.status === 'number' ? response.status : undefined
     const responseData = response?.data
-    const responseError = typeof responseData === 'object' && responseData !== null
-        ? (responseData as Record<string, unknown>).error
-        : undefined
+    const responseError =
+        typeof responseData === 'object' && responseData !== null
+            ? (responseData as Record<string, unknown>).error
+            : undefined
     const responseErrorText = typeof responseError === 'string' ? responseError : ''
 
     // Protocol version: prefer direct property (set by apiValidationError),
@@ -58,9 +60,10 @@ export function extractErrorInfo(error: unknown): ErrorInfo {
     if (typeof record.serverProtocolVersion === 'number' && Number.isFinite(record.serverProtocolVersion)) {
         serverProtocolVersion = record.serverProtocolVersion
     } else {
-        const headers = typeof response?.headers === 'object' && response.headers !== null
-            ? (response.headers as Record<string, unknown>)
-            : undefined
+        const headers =
+            typeof response?.headers === 'object' && response.headers !== null
+                ? (response.headers as Record<string, unknown>)
+                : undefined
         const protocolHeader = headers?.['x-hapi-protocol-version']
         if (typeof protocolHeader === 'string' && protocolHeader !== '') {
             const pv = Number(protocolHeader)
@@ -74,7 +77,7 @@ export function extractErrorInfo(error: unknown): ErrorInfo {
         axiosCode,
         httpStatus,
         responseErrorText,
-        serverProtocolVersion
+        serverProtocolVersion,
     }
 }
 
@@ -99,11 +102,13 @@ export function isRetryableConnectionError(error: unknown): boolean {
     const { axiosCode, httpStatus } = extractErrorInfo(error)
 
     // Retryable network errors
-    if (axiosCode === 'ECONNREFUSED' ||
+    if (
+        axiosCode === 'ECONNREFUSED' ||
         axiosCode === 'ETIMEDOUT' ||
         axiosCode === 'ENOTFOUND' ||
         axiosCode === 'ENETUNREACH' ||
-        axiosCode === 'ECONNRESET') {
+        axiosCode === 'ECONNRESET'
+    ) {
         return true
     }
 

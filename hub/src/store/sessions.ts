@@ -39,7 +39,7 @@ function toStoredSession(row: DbSessionRow): StoredSession {
         todosUpdatedAt: row.todos_updated_at,
         active: row.active === 1,
         activeAt: row.active_at,
-        seq: row.seq
+        seq: row.seq,
     }
 }
 
@@ -50,9 +50,9 @@ export function getOrCreateSession(
     agentState: unknown,
     namespace: string
 ): StoredSession {
-    const existing = db.prepare(
-        'SELECT * FROM sessions WHERE tag = ? AND namespace = ? ORDER BY created_at DESC LIMIT 1'
-    ).get(tag, namespace) as DbSessionRow | undefined
+    const existing = db
+        .prepare('SELECT * FROM sessions WHERE tag = ? AND namespace = ? ORDER BY created_at DESC LIMIT 1')
+        .get(tag, namespace) as DbSessionRow | undefined
 
     if (existing) {
         return toStoredSession(existing)
@@ -64,7 +64,8 @@ export function getOrCreateSession(
     const metadataJson = JSON.stringify(metadata)
     const agentStateJson = agentState === null || agentState === undefined ? null : JSON.stringify(agentState)
 
-    db.prepare(`
+    db.prepare(
+        `
         INSERT INTO sessions (
             id, tag, namespace, machine_id, created_at, updated_at,
             metadata, metadata_version,
@@ -78,14 +79,15 @@ export function getOrCreateSession(
             NULL, NULL,
             0, NULL, 0
         )
-    `).run({
+    `
+    ).run({
         id,
         tag,
         namespace,
         created_at: now,
         updated_at: now,
         metadata: metadataJson,
-        agent_state: agentStateJson
+        agent_state: agentStateJson,
     })
 
     const row = getSession(db, id)
@@ -122,12 +124,12 @@ export function updateSessionMetadata(
         decode: safeJsonParse,
         setClauses: [
             'updated_at = CASE WHEN @touch_updated_at = 1 THEN @updated_at ELSE updated_at END',
-            'seq = seq + 1'
+            'seq = seq + 1',
         ],
         params: {
             updated_at: now,
-            touch_updated_at: touchUpdatedAt ? 1 : 0
-        }
+            touch_updated_at: touchUpdatedAt ? 1 : 0,
+        },
     })
 }
 
@@ -153,7 +155,7 @@ export function updateSessionAgentState(
         encode: (value) => (value === null ? null : JSON.stringify(value)),
         decode: safeJsonParse,
         setClauses: ['updated_at = @updated_at', 'seq = seq + 1'],
-        params: { updated_at: now }
+        params: { updated_at: now },
     })
 }
 
@@ -166,7 +168,9 @@ export function setSessionTodos(
 ): boolean {
     try {
         const json = todos === null || todos === undefined ? null : JSON.stringify(todos)
-        const result = db.prepare(`
+        const result = db
+            .prepare(
+                `
             UPDATE sessions
             SET todos = @todos,
                 todos_updated_at = @todos_updated_at,
@@ -175,13 +179,15 @@ export function setSessionTodos(
             WHERE id = @id
               AND namespace = @namespace
               AND (todos_updated_at IS NULL OR todos_updated_at < @todos_updated_at)
-        `).run({
-            id,
-            todos: json,
-            todos_updated_at: todosUpdatedAt,
-            updated_at: todosUpdatedAt,
-            namespace
-        })
+        `
+            )
+            .run({
+                id,
+                todos: json,
+                todos_updated_at: todosUpdatedAt,
+                updated_at: todosUpdatedAt,
+                namespace,
+            })
 
         return result.changes === 1
     } catch {
@@ -195,9 +201,9 @@ export function getSession(db: Database, id: string): StoredSession | null {
 }
 
 export function getSessionByNamespace(db: Database, id: string, namespace: string): StoredSession | null {
-    const row = db.prepare(
-        'SELECT * FROM sessions WHERE id = ? AND namespace = ?'
-    ).get(id, namespace) as DbSessionRow | undefined
+    const row = db.prepare('SELECT * FROM sessions WHERE id = ? AND namespace = ?').get(id, namespace) as
+        | DbSessionRow
+        | undefined
     return row ? toStoredSession(row) : null
 }
 
@@ -207,15 +213,13 @@ export function getSessions(db: Database): StoredSession[] {
 }
 
 export function getSessionsByNamespace(db: Database, namespace: string): StoredSession[] {
-    const rows = db.prepare(
-        'SELECT * FROM sessions WHERE namespace = ? ORDER BY updated_at DESC'
-    ).all(namespace) as DbSessionRow[]
+    const rows = db
+        .prepare('SELECT * FROM sessions WHERE namespace = ? ORDER BY updated_at DESC')
+        .all(namespace) as DbSessionRow[]
     return rows.map(toStoredSession)
 }
 
 export function deleteSession(db: Database, id: string, namespace: string): boolean {
-    const result = db.prepare(
-        'DELETE FROM sessions WHERE id = ? AND namespace = ?'
-    ).run(id, namespace)
+    const result = db.prepare('DELETE FROM sessions WHERE id = ? AND namespace = ?').run(id, namespace)
     return result.changes > 0
 }

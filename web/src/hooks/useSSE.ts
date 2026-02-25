@@ -104,10 +104,15 @@ export function useSSE(options: {
         }
 
         setSubscriptionId(null)
-        const url = buildEventsUrl(options.baseUrl, options.token, {
-            ...subscription,
-            sessionId: subscription.sessionId ?? undefined
-        }, getVisibilityState())
+        const url = buildEventsUrl(
+            options.baseUrl,
+            options.token,
+            {
+                ...subscription,
+                sessionId: subscription.sessionId ?? undefined,
+            },
+            getVisibilityState()
+        )
         const eventSource = new EventSource(url)
         eventSourceRef.current = eventSource
 
@@ -131,7 +136,11 @@ export function useSSE(options: {
                 ingestIncomingMessages(event.sessionId, [event.message])
             }
 
-            if (event.type === 'session-added' || event.type === 'session-updated' || event.type === 'session-removed') {
+            if (
+                event.type === 'session-added' ||
+                event.type === 'session-updated' ||
+                event.type === 'session-removed'
+            ) {
                 void queryClient.invalidateQueries({ queryKey: queryKeys.sessions })
                 if ('sessionId' in event) {
                     if (event.type === 'session-removed') {

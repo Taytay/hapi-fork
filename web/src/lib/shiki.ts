@@ -6,10 +6,7 @@ import { toJsxRuntime } from 'hast-util-to-jsx-runtime'
 import { jsx, jsxs, Fragment } from 'react/jsx-runtime'
 
 // Only 2 themes
-const THEMES = [
-    import('@shikijs/themes/github-light'),
-    import('@shikijs/themes/github-dark'),
-]
+const THEMES = [import('@shikijs/themes/github-light'), import('@shikijs/themes/github-dark')]
 
 // 30 common languages for LLM code output
 const LANGS = [
@@ -113,10 +110,7 @@ function resolveLanguage(lang: string | undefined): string {
 /**
  * Custom hook for syntax highlighting with our minimal Shiki bundle
  */
-export function useShikiHighlighter(
-    code: string,
-    language: string | undefined
-): ReactNode | null {
+export function useShikiHighlighter(code: string, language: string | undefined): ReactNode | null {
     const [highlighted, setHighlighted] = useState<ReactNode | null>(null)
     const lang = useMemo(() => resolveLanguage(language), [language])
 

@@ -33,7 +33,7 @@ export function createRunnerLifecycle(options: RunnerLifecycleOptions): RunnerLi
             lifecycleState: 'archived',
             lifecycleStateSince: Date.now(),
             archivedBy: 'cli',
-            archiveReason
+            archiveReason,
         }))
 
         options.session.sendSessionDeath()
@@ -122,14 +122,14 @@ export function createRunnerLifecycle(options: RunnerLifecycleOptions): RunnerLi
         markCrash,
         cleanup,
         cleanupAndExit,
-        registerProcessHandlers
+        registerProcessHandlers,
     }
 }
 
 export function setControlledByUser(session: ApiSessionClient, mode: 'local' | 'remote'): void {
     session.updateAgentState((currentState) => ({
         ...currentState,
-        controlledByUser: mode === 'local'
+        controlledByUser: mode === 'local',
     }))
 }
 

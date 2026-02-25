@@ -7,7 +7,7 @@ const telegramUserSchema = z.object({
     first_name: z.string().optional(),
     last_name: z.string().optional(),
     username: z.string().optional(),
-    language_code: z.string().optional()
+    language_code: z.string().optional(),
 })
 
 export type TelegramUser = z.infer<typeof telegramUserSchema>
@@ -41,11 +41,7 @@ function deriveSecretKeys(botToken: string): Uint8Array[] {
     const hmacKeyConstThenToken = createHmac('sha256', 'WebAppData').update(botToken).digest()
     const hmacKeyTokenThenConst = createHmac('sha256', botToken).update('WebAppData').digest()
     const shaBotToken = createHash('sha256').update(botToken).digest()
-    return [
-        new Uint8Array(hmacKeyConstThenToken),
-        new Uint8Array(hmacKeyTokenThenConst),
-        new Uint8Array(shaBotToken)
-    ]
+    return [new Uint8Array(hmacKeyConstThenToken), new Uint8Array(hmacKeyTokenThenConst), new Uint8Array(shaBotToken)]
 }
 
 function computeExpectedHashHex(secretKey: Uint8Array, dataCheckString: string): string {
@@ -81,7 +77,9 @@ export function validateTelegramInitData(
 
     const dataCheckString = computeDataCheckString(entries)
     const secretKeys = deriveSecretKeys(botToken)
-    const isValid = secretKeys.some((secretKey) => safeCompareHex(hash, computeExpectedHashHex(secretKey, dataCheckString)))
+    const isValid = secretKeys.some((secretKey) =>
+        safeCompareHex(hash, computeExpectedHashHex(secretKey, dataCheckString))
+    )
 
     if (!isValid) {
         return { ok: false, error: 'Invalid initData signature' }
@@ -106,4 +104,3 @@ export function validateTelegramInitData(
 
     return { ok: true, user: user.data, authDate, raw: entries }
 }
-

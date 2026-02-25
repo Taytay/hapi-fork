@@ -26,10 +26,7 @@ export class RpcHandlerManager {
         this.logger = config.logger || ((msg, data) => defaultLogger.debug(msg, data))
     }
 
-    registerHandler<TRequest = any, TResponse = any>(
-        method: string,
-        handler: RpcHandler<TRequest, TResponse>
-    ): void {
+    registerHandler<TRequest = any, TResponse = any>(method: string, handler: RpcHandler<TRequest, TResponse>): void {
         const prefixedMethod = this.getPrefixedMethod(method)
 
         this.handlers.set(prefixedMethod, handler)
@@ -51,12 +48,11 @@ export class RpcHandlerManager {
             const result = await handler(params as any)
             return JSON.stringify(result)
         } catch (error) {
-            const details = error instanceof Error
-                ? { message: error.message, stack: error.stack }
-                : { error: String(error) }
+            const details =
+                error instanceof Error ? { message: error.message, stack: error.stack } : { error: String(error) }
             this.logger('[RPC] [ERROR] Error handling request', details)
             return JSON.stringify({
-                error: error instanceof Error ? error.message : 'Unknown error'
+                error: error instanceof Error ? error.message : 'Unknown error',
             })
         }
     }

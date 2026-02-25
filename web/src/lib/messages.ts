@@ -77,9 +77,8 @@ export function mergeMessages(existing: DecryptedMessage[], incoming: DecryptedM
 
     for (const optimistic of optimisticMessages) {
         if (optimistic.status === 'sent') {
-            const hasServerUserMessage = nonOptimisticMessages.some((m) =>
-                isUserMessage(m) &&
-                Math.abs(m.createdAt - optimistic.createdAt) < 10_000
+            const hasServerUserMessage = nonOptimisticMessages.some(
+                (m) => isUserMessage(m) && Math.abs(m.createdAt - optimistic.createdAt) < 10_000
             )
             if (hasServerUserMessage) {
                 continue
@@ -94,7 +93,7 @@ export function mergeMessages(existing: DecryptedMessage[], incoming: DecryptedM
 
 export function upsertMessagesInCache(
     data: InfiniteData<MessagesResponse> | undefined,
-    incoming: DecryptedMessage[],
+    incoming: DecryptedMessage[]
 ): InfiniteData<MessagesResponse> {
     const mergedIncoming = mergeMessages([], incoming)
 

@@ -1,15 +1,11 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
 import type { WebAppEnv } from '../middleware/auth'
-import {
-    ELEVENLABS_API_BASE,
-    VOICE_AGENT_NAME,
-    buildVoiceAgentConfig
-} from '@hapi/protocol/voice'
+import { ELEVENLABS_API_BASE, VOICE_AGENT_NAME, buildVoiceAgentConfig } from '@hapi/protocol/voice'
 
 const tokenRequestSchema = z.object({
     customAgentId: z.string().optional(),
-    customApiKey: z.string().optional()
+    customApiKey: z.string().optional(),
 })
 
 // Cache for auto-created agent IDs (keyed by API key hash)
@@ -29,17 +25,17 @@ async function findHapiAgent(apiKey: string): Promise<string | null> {
             method: 'GET',
             headers: {
                 'xi-api-key': apiKey,
-                'Accept': 'application/json'
-            }
+                Accept: 'application/json',
+            },
         })
 
         if (!response.ok) {
             return null
         }
 
-        const data = await response.json() as { agents?: ElevenLabsAgent[] }
+        const data = (await response.json()) as { agents?: ElevenLabsAgent[] }
         const agents: ElevenLabsAgent[] = data.agents || []
-        const hapiAgent = agents.find(agent => agent.name === VOICE_AGENT_NAME)
+        const hapiAgent = agents.find((agent) => agent.name === VOICE_AGENT_NAME)
 
         return hapiAgent?.agent_id || null
     } catch {
@@ -57,21 +53,22 @@ async function createHapiAgent(apiKey: string): Promise<string | null> {
             headers: {
                 'xi-api-key': apiKey,
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                Accept: 'application/json',
             },
-            body: JSON.stringify(buildVoiceAgentConfig())
+            body: JSON.stringify(buildVoiceAgentConfig()),
         })
 
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({})) as { detail?: { message?: string } | string }
-            const errorMessage = typeof errorData.detail === 'string'
-                ? errorData.detail
-                : (errorData.detail as { message?: string })?.message || `API error: ${response.status}`
+            const errorData = (await response.json().catch(() => ({}))) as { detail?: { message?: string } | string }
+            const errorMessage =
+                typeof errorData.detail === 'string'
+                    ? errorData.detail
+                    : (errorData.detail as { message?: string })?.message || `API error: ${response.status}`
             console.error('[Voice] Failed to create agent:', errorMessage)
             return null
         }
 
-        const data = await response.json() as { agent_id?: string }
+        const data = (await response.json()) as { agent_id?: string }
         return data.agent_id || null
     } catch (error) {
         console.error('[Voice] Error creating agent:', error)
@@ -131,20 +128,26 @@ export function createVoiceRoutes(): Hono<WebAppEnv> {
         let agentId = customAgentId || process.env.ELEVENLABS_AGENT_ID
 
         if (!apiKey) {
-            return c.json({
-                allowed: false,
-                error: 'ElevenLabs API key not configured'
-            }, 400)
+            return c.json(
+                {
+                    allowed: false,
+                    error: 'ElevenLabs API key not configured',
+                },
+                400
+            )
         }
 
         // Auto-create agent if not configured
         if (!agentId) {
-            agentId = await getOrCreateAgentId(apiKey) ?? undefined
+            agentId = (await getOrCreateAgentId(apiKey)) ?? undefined
             if (!agentId) {
-                return c.json({
-                    allowed: false,
-                    error: 'Failed to create ElevenLabs agent automatically'
-                }, 500)
+                return c.json(
+                    {
+                        allowed: false,
+                        error: 'Failed to create ElevenLabs agent automatically',
+                    },
+                    500
+                )
             }
         }
 
@@ -156,40 +159,53 @@ export function createVoiceRoutes(): Hono<WebAppEnv> {
                     method: 'GET',
                     headers: {
                         'xi-api-key': apiKey,
-                        'Accept': 'application/json'
-                    }
+                        Accept: 'application/json',
+                    },
                 }
             )
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({})) as { detail?: { message?: string }; error?: string }
-                const errorMessage = errorData.detail?.message || errorData.error || `ElevenLabs API error: ${response.status}`
+                const errorData = (await response.json().catch(() => ({}))) as {
+                    detail?: { message?: string }
+                    error?: string
+                }
+                const errorMessage =
+                    errorData.detail?.message || errorData.error || `ElevenLabs API error: ${response.status}`
                 console.error('[Voice] Failed to get token from ElevenLabs:', errorMessage)
-                return c.json({
-                    allowed: false,
-                    error: errorMessage
-                }, 500)
+                return c.json(
+                    {
+                        allowed: false,
+                        error: errorMessage,
+                    },
+                    500
+                )
             }
 
-            const data = await response.json() as { token?: string }
+            const data = (await response.json()) as { token?: string }
             if (!data.token) {
-                return c.json({
-                    allowed: false,
-                    error: 'No token in ElevenLabs response'
-                }, 500)
+                return c.json(
+                    {
+                        allowed: false,
+                        error: 'No token in ElevenLabs response',
+                    },
+                    500
+                )
             }
 
             return c.json({
                 allowed: true,
                 token: data.token,
-                agentId
+                agentId,
             })
         } catch (error) {
             console.error('[Voice] Error fetching token:', error)
-            return c.json({
-                allowed: false,
-                error: error instanceof Error ? error.message : 'Network error'
-            }, 500)
+            return c.json(
+                {
+                    allowed: false,
+                    error: error instanceof Error ? error.message : 'Network error',
+                },
+                500
+            )
         }
     })
 

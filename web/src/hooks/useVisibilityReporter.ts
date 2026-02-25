@@ -72,37 +72,41 @@ export function useVisibilityReporter(options: {
             inFlightRef.current = true
             let hadError = false
             const activeSubscription = subscriptionId
-            void api.setVisibility({
-                subscriptionId,
-                visibility: desired
-            }).then(() => {
-                if (lastSubscriptionRef.current !== activeSubscription) {
-                    return
-                }
-                lastStateRef.current = desired
-                pendingStateRef.current = null
-                clearRetry()
-            }).catch((error) => {
-                if (lastSubscriptionRef.current !== activeSubscription) {
-                    return
-                }
-                hadError = true
-                console.error('Failed to update visibility:', error)
-                if (!retryTimerRef.current) {
-                    retryTimerRef.current = setTimeout(() => {
-                        retryTimerRef.current = null
+            void api
+                .setVisibility({
+                    subscriptionId,
+                    visibility: desired,
+                })
+                .then(() => {
+                    if (lastSubscriptionRef.current !== activeSubscription) {
+                        return
+                    }
+                    lastStateRef.current = desired
+                    pendingStateRef.current = null
+                    clearRetry()
+                })
+                .catch((error) => {
+                    if (lastSubscriptionRef.current !== activeSubscription) {
+                        return
+                    }
+                    hadError = true
+                    console.error('Failed to update visibility:', error)
+                    if (!retryTimerRef.current) {
+                        retryTimerRef.current = setTimeout(() => {
+                            retryTimerRef.current = null
+                            flush()
+                        }, 2000)
+                    }
+                })
+                .finally(() => {
+                    inFlightRef.current = false
+                    if (hadError || retryTimerRef.current) {
+                        return
+                    }
+                    if (pendingStateRef.current && pendingStateRef.current !== lastStateRef.current) {
                         flush()
-                    }, 2000)
-                }
-            }).finally(() => {
-                inFlightRef.current = false
-                if (hadError || retryTimerRef.current) {
-                    return
-                }
-                if (pendingStateRef.current && pendingStateRef.current !== lastStateRef.current) {
-                    flush()
-                }
-            })
+                    }
+                })
         }
 
         const report = () => {

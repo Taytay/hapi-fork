@@ -19,9 +19,7 @@ function CodeHeader(props: CodeHeaderProps) {
 
     return (
         <div className="aui-md-codeheader flex items-center justify-between rounded-t-md bg-[var(--app-code-bg)] px-2 py-1">
-            <div className="min-w-0 flex-1 pr-2 text-xs font-mono text-[var(--app-hint)]">
-                {language}
-            </div>
+            <div className="min-w-0 flex-1 pr-2 text-xs font-mono text-[var(--app-hint)]">{language}</div>
             <button
                 type="button"
                 onClick={() => copy(props.code)}
@@ -54,12 +52,7 @@ function Code(props: ComponentPropsWithoutRef<'code'>) {
     const isCodeBlock = useIsMarkdownCodeBlock()
 
     if (isCodeBlock) {
-        return (
-            <code
-                {...props}
-                className={cn('aui-md-codeblockcode font-mono', props.className)}
-            />
-        )
+        return <code {...props} className={cn('aui-md-codeblockcode font-mono', props.className)} />
     }
 
     return (
@@ -76,13 +69,7 @@ function Code(props: ComponentPropsWithoutRef<'code'>) {
 function A(props: ComponentPropsWithoutRef<'a'>) {
     const rel = props.target === '_blank' ? (props.rel ?? 'noreferrer') : props.rel
 
-    return (
-        <a
-            {...props}
-            rel={rel}
-            className={cn('aui-md-a text-[var(--app-link)] underline', props.className)}
-        />
-    )
+    return <a {...props} rel={rel} className={cn('aui-md-a text-[var(--app-link)] underline', props.className)} />
 }
 
 function Paragraph(props: ComponentPropsWithoutRef<'p'>) {
@@ -93,10 +80,7 @@ function Blockquote(props: ComponentPropsWithoutRef<'blockquote'>) {
     return (
         <blockquote
             {...props}
-            className={cn(
-                'aui-md-blockquote border-l-4 border-[var(--app-hint)] pl-3 opacity-85',
-                props.className
-            )}
+            className={cn('aui-md-blockquote border-l-4 border-[var(--app-hint)] pl-3 opacity-85', props.className)}
         />
     )
 }

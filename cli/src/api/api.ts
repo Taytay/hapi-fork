@@ -1,6 +1,22 @@
 import axios from 'axios'
-import type { AgentState, CreateMachineResponse, CreateSessionResponse, RunnerState, Machine, MachineMetadata, Metadata, Session } from '@/api/types'
-import { AgentStateSchema, CreateMachineResponseSchema, CreateSessionResponseSchema, RunnerStateSchema, MachineMetadataSchema, MetadataSchema } from '@/api/types'
+import type {
+    AgentState,
+    CreateMachineResponse,
+    CreateSessionResponse,
+    RunnerState,
+    Machine,
+    MachineMetadata,
+    Metadata,
+    Session,
+} from '@/api/types'
+import {
+    AgentStateSchema,
+    CreateMachineResponseSchema,
+    CreateSessionResponseSchema,
+    RunnerStateSchema,
+    MachineMetadataSchema,
+    MetadataSchema,
+} from '@/api/types'
 import { configuration } from '@/configuration'
 import { getAuthToken } from '@/api/auth'
 import { apiValidationError } from '@/utils/errorUtils'
@@ -12,26 +28,22 @@ export class ApiClient {
         return new ApiClient(getAuthToken())
     }
 
-    private constructor(private readonly token: string) { }
+    private constructor(private readonly token: string) {}
 
-    async getOrCreateSession(opts: {
-        tag: string
-        metadata: Metadata
-        state: AgentState | null
-    }): Promise<Session> {
+    async getOrCreateSession(opts: { tag: string; metadata: Metadata; state: AgentState | null }): Promise<Session> {
         const response = await axios.post<CreateSessionResponse>(
             `${configuration.apiUrl}/cli/sessions`,
             {
                 tag: opts.tag,
                 metadata: opts.metadata,
-                agentState: opts.state
+                agentState: opts.state,
             },
             {
                 headers: {
                     Authorization: `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                timeout: 60_000
+                timeout: 60_000,
             }
         )
 
@@ -70,7 +82,7 @@ export class ApiClient {
             thinkingAt: raw.thinkingAt,
             todos: raw.todos,
             permissionMode: raw.permissionMode,
-            modelMode: raw.modelMode
+            modelMode: raw.modelMode,
         }
     }
 
@@ -84,14 +96,14 @@ export class ApiClient {
             {
                 id: opts.machineId,
                 metadata: opts.metadata,
-                runnerState: opts.runnerState ?? null
+                runnerState: opts.runnerState ?? null,
             },
             {
                 headers: {
                     Authorization: `Bearer ${this.token}`,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                timeout: 60_000
+                timeout: 60_000,
             }
         )
 
@@ -124,7 +136,7 @@ export class ApiClient {
             metadata,
             metadataVersion: raw.metadataVersion,
             runnerState,
-            runnerStateVersion: raw.runnerStateVersion
+            runnerStateVersion: raw.runnerStateVersion,
         }
     }
 

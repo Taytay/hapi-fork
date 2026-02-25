@@ -52,4 +52,3 @@ export class RpcRegistry {
         return this.methodToSocketId.get(method) ?? null
     }
 }
-

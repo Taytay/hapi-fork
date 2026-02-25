@@ -8,5 +8,5 @@ export const notifyCommand: CommandDefinition = {
         console.error(chalk.red('The `hapi notify` command is not available in direct-connect mode.'))
         console.error(chalk.gray('Use Telegram notifications from hapi-hub instead.'))
         process.exit(1)
-    }
+    },
 }

@@ -3,7 +3,10 @@ import type { ApiClient } from '@/api/client'
 import type { Machine } from '@/types/api'
 import { queryKeys } from '@/lib/query-keys'
 
-export function useMachines(api: ApiClient | null, enabled: boolean): {
+export function useMachines(
+    api: ApiClient | null,
+    enabled: boolean
+): {
     machines: Machine[]
     isLoading: boolean
     error: string | null

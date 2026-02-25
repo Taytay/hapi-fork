@@ -101,11 +101,11 @@ ${chalk.bold.cyan('Claude Code Options (from `claude --help`):')}
 `)
 
             try {
-                const claudeHelp = execFileSync(
-                    'claude',
-                    ['--help'],
-                    { encoding: 'utf8', env: withBunRuntimeEnv(), shell: process.platform === 'win32' }
-                )
+                const claudeHelp = execFileSync('claude', ['--help'], {
+                    encoding: 'utf8',
+                    env: withBunRuntimeEnv(),
+                    shell: process.platform === 'win32',
+                })
                 console.log(claudeHelp)
             } catch {
                 console.log(chalk.yellow('Could not retrieve claude help. Make sure claude is installed.'))
@@ -126,18 +126,19 @@ ${chalk.bold.cyan('Claude Code Options (from `claude --help`):')}
             const runnerProcess = spawnHappyCLI(['runner', 'start-sync'], {
                 detached: true,
                 stdio: 'ignore',
-                env: process.env
+                env: process.env,
             })
             runnerProcess.unref()
 
-            await new Promise(resolve => setTimeout(resolve, 200))
+            await new Promise((resolve) => setTimeout(resolve, 200))
         }
 
         try {
             const { runClaude } = await import('@/claude/runClaude')
             await runClaude(options)
         } catch (error) {
-            const { message, messageLower, axiosCode, httpStatus, responseErrorText, serverProtocolVersion } = extractErrorInfo(error)
+            const { message, messageLower, axiosCode, httpStatus, responseErrorText, serverProtocolVersion } =
+                extractErrorInfo(error)
 
             if (
                 axiosCode === 'ECONNREFUSED' ||
@@ -173,9 +174,17 @@ ${chalk.bold.cyan('Claude Code Options (from `claude --help`):')}
 
             if (serverProtocolVersion !== undefined && serverProtocolVersion !== PROTOCOL_VERSION) {
                 if (serverProtocolVersion < PROTOCOL_VERSION) {
-                    console.error(chalk.yellow(`  Hint: hub protocol version (${serverProtocolVersion}) is behind CLI (${PROTOCOL_VERSION}). Please update the hub.`))
+                    console.error(
+                        chalk.yellow(
+                            `  Hint: hub protocol version (${serverProtocolVersion}) is behind CLI (${PROTOCOL_VERSION}). Please update the hub.`
+                        )
+                    )
                 } else {
-                    console.error(chalk.yellow(`  Hint: CLI protocol version (${PROTOCOL_VERSION}) is behind hub (${serverProtocolVersion}). Please update the CLI.`))
+                    console.error(
+                        chalk.yellow(
+                            `  Hint: CLI protocol version (${PROTOCOL_VERSION}) is behind hub (${serverProtocolVersion}). Please update the CLI.`
+                        )
+                    )
                 }
             }
 
@@ -184,5 +193,5 @@ ${chalk.bold.cyan('Claude Code Options (from `claude --help`):')}
             }
             process.exit(1)
         }
-    }
+    },
 }

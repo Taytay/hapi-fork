@@ -64,10 +64,7 @@ function DirectorySkeleton(props: { depth: number; rows?: number }) {
 function DirectoryErrorRow(props: { depth: number; message: string }) {
     const indent = 12 + props.depth * 14
     return (
-        <div
-            className="px-3 py-2 text-xs text-[var(--app-hint)] bg-amber-500/10"
-            style={{ paddingLeft: indent }}
-        >
+        <div className="px-3 py-2 text-xs text-[var(--app-hint)] bg-amber-500/10" style={{ paddingLeft: indent }}>
             {props.message}
         </div>
     )
@@ -85,7 +82,7 @@ function DirectoryNode(props: {
 }) {
     const isExpanded = props.expanded.has(props.path)
     const { entries, error, isLoading } = useSessionDirectory(props.api, props.sessionId, props.path, {
-        enabled: isExpanded
+        enabled: isExpanded,
     })
 
     const directories = useMemo(() => entries.filter((entry) => entry.type === 'directory'), [entries])
@@ -203,4 +200,3 @@ export function DirectoryTree(props: {
         </div>
     )
 }
-

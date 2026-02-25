@@ -37,7 +37,7 @@ function buildPattern(words: string[]): RegExp {
 // 快速检查是否包含任何特效单词
 function hasAnySpecialWord(text: string, words: string[]): boolean {
     const lowerText = text.toLowerCase()
-    return words.some(word => lowerText.includes(word.toLowerCase()))
+    return words.some((word) => lowerText.includes(word.toLowerCase()))
 }
 
 const RAINBOW_PATTERN = buildPattern(RAINBOW_WORDS)
@@ -127,11 +127,12 @@ export function LazyRainbowText(props: { text: string }) {
     // Quick check: if no special words, just render markdown
     const hasSpecialWord = hasAnySpecialWord(text, RAINBOW_WORDS)
 
-    const rainbowComponents = useMemo(() => ({
-        p: ({ children }: { children?: React.ReactNode }) => (
-            <p>{processChildrenForRainbow(children)}</p>
-        ),
-    }), [])
+    const rainbowComponents = useMemo(
+        () => ({
+            p: ({ children }: { children?: React.ReactNode }) => <p>{processChildrenForRainbow(children)}</p>,
+        }),
+        []
+    )
 
     return (
         <div ref={ref}>

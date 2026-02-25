@@ -2,7 +2,7 @@ import {
     TerminalErrorPayloadSchema,
     TerminalExitPayloadSchema,
     TerminalOutputPayloadSchema,
-    TerminalReadyPayloadSchema
+    TerminalReadyPayloadSchema,
 } from '@hapi/protocol'
 import type { StoredSession } from '../../../store'
 import type { TerminalRegistry } from '../../terminalRegistry'
@@ -30,7 +30,10 @@ export type TerminalHandlersDeps = {
 export function registerTerminalHandlers(socket: CliSocketWithData, deps: TerminalHandlersDeps): void {
     const { terminalRegistry, terminalNamespace, resolveSessionAccess, emitAccessError } = deps
 
-    const forwardTerminalEvent = (event: string, payload: { sessionId: string; terminalId: string } & Record<string, unknown>) => {
+    const forwardTerminalEvent = (
+        event: string,
+        payload: { sessionId: string; terminalId: string } & Record<string, unknown>
+    ) => {
         const entry = terminalRegistry.get(payload.terminalId)
         if (!entry) {
             return
@@ -97,13 +100,16 @@ export function registerTerminalHandlers(socket: CliSocketWithData, deps: Termin
     })
 }
 
-export function cleanupTerminalHandlers(socket: CliSocketWithData, deps: { terminalRegistry: TerminalRegistry; terminalNamespace: SocketNamespace }): void {
+export function cleanupTerminalHandlers(
+    socket: CliSocketWithData,
+    deps: { terminalRegistry: TerminalRegistry; terminalNamespace: SocketNamespace }
+): void {
     const removed = deps.terminalRegistry.removeByCliSocket(socket.id)
     for (const entry of removed) {
         const terminalSocket = deps.terminalNamespace.sockets.get(entry.socketId)
         terminalSocket?.emit('terminal:error', {
             terminalId: entry.terminalId,
-            message: 'CLI disconnected.'
+            message: 'CLI disconnected.',
         })
     }
 }

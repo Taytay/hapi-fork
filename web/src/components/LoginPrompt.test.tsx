@@ -4,11 +4,7 @@ import { I18nProvider } from '@/lib/i18n-context'
 import { LoginPrompt } from './LoginPrompt'
 
 function renderWithProviders(ui: React.ReactElement) {
-    return render(
-        <I18nProvider>
-            {ui}
-        </I18nProvider>
-    )
+    return render(<I18nProvider>{ui}</I18nProvider>)
 }
 
 describe('LoginPrompt', () => {

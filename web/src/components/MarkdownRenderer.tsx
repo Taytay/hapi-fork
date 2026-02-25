@@ -10,9 +10,7 @@ interface MarkdownRendererProps {
 }
 
 function MarkdownContent(props: MarkdownRendererProps) {
-    const mergedComponents = props.components
-        ? { ...defaultComponents, ...props.components }
-        : defaultComponents
+    const mergedComponents = props.components ? { ...defaultComponents, ...props.components } : defaultComponents
 
     return (
         <TextMessagePartProvider text={props.content}>

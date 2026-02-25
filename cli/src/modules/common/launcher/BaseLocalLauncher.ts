@@ -47,7 +47,7 @@ export class BaseLocalLauncher {
             abortSignal: this.abortController.signal,
             requestExit: this.requestExit,
             requestSwitch: this.requestSwitch,
-            getExitReason: () => this.exitReason
+            getExitReason: () => this.exitReason,
         }
     }
 
@@ -64,7 +64,7 @@ export class BaseLocalLauncher {
             sendFailureMessage,
             recordLocalLaunchFailure,
             abortLogMessage = 'abort requested',
-            switchLogMessage = 'switch requested'
+            switchLogMessage = 'switch requested',
         } = this.options
 
         try {
@@ -123,10 +123,12 @@ export class BaseLocalLauncher {
                     const message = error instanceof Error ? error.message : String(error)
                     const failureMessage = `${failureLabel}: ${message}`
                     sendFailureMessage(failureMessage)
-                    const failureExitReason = this.exitReason ?? getLocalLaunchExitReason({
-                        startedBy,
-                        startingMode
-                    })
+                    const failureExitReason =
+                        this.exitReason ??
+                        getLocalLaunchExitReason({
+                            startedBy,
+                            startingMode,
+                        })
                     recordLocalLaunchFailure(message, failureExitReason)
                     if (!this.exitReason) {
                         this.exitReason = failureExitReason

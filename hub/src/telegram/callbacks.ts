@@ -46,10 +46,7 @@ async function getSessionOrAnswer(
 /**
  * Handle callback query
  */
-export async function handleCallback(
-    data: string,
-    ctx: CallbackContext
-): Promise<void> {
+export async function handleCallback(data: string, ctx: CallbackContext): Promise<void> {
     const { action, sessionPrefix, extra } = parseCallbackData(data)
     const { syncEngine } = ctx
 

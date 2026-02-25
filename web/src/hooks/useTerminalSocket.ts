@@ -85,7 +85,7 @@ export function useTerminalSocket(options: UseTerminalSocketOptions): {
             sessionId: sessionIdRef.current,
             terminalId: terminalIdRef.current,
             cols: size.cols,
-            rows: size.rows
+            rows: size.rows,
         })
     }, [])
 
@@ -93,93 +93,96 @@ export function useTerminalSocket(options: UseTerminalSocketOptions): {
         setState({ status: 'error', error: message })
     }, [])
 
-    const connect = useCallback((cols: number, rows: number) => {
-        lastSizeRef.current = { cols, rows }
-        const token = tokenRef.current
-        const sessionId = sessionIdRef.current
-        const terminalId = terminalIdRef.current
+    const connect = useCallback(
+        (cols: number, rows: number) => {
+            lastSizeRef.current = { cols, rows }
+            const token = tokenRef.current
+            const sessionId = sessionIdRef.current
+            const terminalId = terminalIdRef.current
 
-        if (!token || !sessionId || !terminalId) {
-            setErrorState('Missing terminal credentials.')
-            return
-        }
-
-        if (socketRef.current) {
-            const socket = socketRef.current
-            socket.auth = { token }
-            if (socket.connected) {
-                emitCreate(socket, { cols, rows })
-            } else {
-                socket.connect()
+            if (!token || !sessionId || !terminalId) {
+                setErrorState('Missing terminal credentials.')
+                return
             }
+
+            if (socketRef.current) {
+                const socket = socketRef.current
+                socket.auth = { token }
+                if (socket.connected) {
+                    emitCreate(socket, { cols, rows })
+                } else {
+                    socket.connect()
+                }
+                setState({ status: 'connecting' })
+                return
+            }
+
+            const socket = io(`${baseUrlRef.current}/terminal`, {
+                auth: { token },
+                path: '/socket.io/',
+                reconnection: true,
+                reconnectionAttempts: Infinity,
+                reconnectionDelay: 1000,
+                reconnectionDelayMax: 5000,
+                transports: ['polling', 'websocket'],
+                autoConnect: false,
+            })
+
+            socketRef.current = socket
             setState({ status: 'connecting' })
-            return
-        }
 
-        const socket = io(`${baseUrlRef.current}/terminal`, {
-            auth: { token },
-            path: '/socket.io/',
-            reconnection: true,
-            reconnectionAttempts: Infinity,
-            reconnectionDelay: 1000,
-            reconnectionDelayMax: 5000,
-            transports: ['polling', 'websocket'],
-            autoConnect: false
-        })
+            socket.on('connect', () => {
+                const size = lastSizeRef.current ?? { cols, rows }
+                setState({ status: 'connecting' })
+                emitCreate(socket, size)
+            })
 
-        socketRef.current = socket
-        setState({ status: 'connecting' })
+            socket.on('terminal:ready', (payload: TerminalReadyPayload) => {
+                if (!isCurrentTerminal(payload.terminalId)) {
+                    return
+                }
+                setState({ status: 'connected' })
+            })
 
-        socket.on('connect', () => {
-            const size = lastSizeRef.current ?? { cols, rows }
-            setState({ status: 'connecting' })
-            emitCreate(socket, size)
-        })
+            socket.on('terminal:output', (payload: TerminalOutputPayload) => {
+                if (!isCurrentTerminal(payload.terminalId)) {
+                    return
+                }
+                outputHandlerRef.current(payload.data)
+            })
 
-        socket.on('terminal:ready', (payload: TerminalReadyPayload) => {
-            if (!isCurrentTerminal(payload.terminalId)) {
-                return
-            }
-            setState({ status: 'connected' })
-        })
+            socket.on('terminal:exit', (payload: TerminalExitPayload) => {
+                if (!isCurrentTerminal(payload.terminalId)) {
+                    return
+                }
+                exitHandlerRef.current(payload.code, payload.signal)
+                setErrorState('Terminal exited.')
+            })
 
-        socket.on('terminal:output', (payload: TerminalOutputPayload) => {
-            if (!isCurrentTerminal(payload.terminalId)) {
-                return
-            }
-            outputHandlerRef.current(payload.data)
-        })
+            socket.on('terminal:error', (payload: TerminalErrorPayload) => {
+                if (!isCurrentTerminal(payload.terminalId)) {
+                    return
+                }
+                setErrorState(payload.message)
+            })
 
-        socket.on('terminal:exit', (payload: TerminalExitPayload) => {
-            if (!isCurrentTerminal(payload.terminalId)) {
-                return
-            }
-            exitHandlerRef.current(payload.code, payload.signal)
-            setErrorState('Terminal exited.')
-        })
+            socket.on('connect_error', (error) => {
+                const message = error instanceof Error ? error.message : 'Connection error'
+                setErrorState(message)
+            })
 
-        socket.on('terminal:error', (payload: TerminalErrorPayload) => {
-            if (!isCurrentTerminal(payload.terminalId)) {
-                return
-            }
-            setErrorState(payload.message)
-        })
+            socket.on('disconnect', (reason) => {
+                if (reason === 'io client disconnect') {
+                    setState({ status: 'idle' })
+                    return
+                }
+                setErrorState(`Disconnected: ${reason}`)
+            })
 
-        socket.on('connect_error', (error) => {
-            const message = error instanceof Error ? error.message : 'Connection error'
-            setErrorState(message)
-        })
-
-        socket.on('disconnect', (reason) => {
-            if (reason === 'io client disconnect') {
-                setState({ status: 'idle' })
-                return
-            }
-            setErrorState(`Disconnected: ${reason}`)
-        })
-
-        socket.connect()
-    }, [emitCreate, setErrorState, isCurrentTerminal])
+            socket.connect()
+        },
+        [emitCreate, setErrorState, isCurrentTerminal]
+    )
 
     const write = useCallback((data: string) => {
         const socket = socketRef.current
@@ -224,6 +227,6 @@ export function useTerminalSocket(options: UseTerminalSocketOptions): {
         resize,
         disconnect,
         onOutput,
-        onExit
+        onExit,
     }
 }

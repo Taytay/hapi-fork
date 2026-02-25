@@ -55,7 +55,7 @@ export function parseCallbackData(data: string): { action: string; sessionPrefix
     return {
         action: parts[0] || '',
         sessionPrefix: parts[1] || '',
-        extra: parts[2]
+        extra: parts[2],
     }
 }
 
@@ -63,5 +63,5 @@ export function parseCallbackData(data: string): { action: string; sessionPrefix
  * Find session by ID prefix
  */
 export function findSessionByPrefix(sessions: Session[], prefix: string): Session | undefined {
-    return sessions.find(s => s.id.startsWith(prefix))
+    return sessions.find((s) => s.id.startsWith(prefix))
 }

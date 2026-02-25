@@ -23,21 +23,33 @@ function isToolAllowedForSession(toolName: string, toolInput: unknown, allowedTo
 }
 
 function isCodexSession(metadata: SessionMetadataSummary | null, toolName: string): boolean {
-    return isCodexFamilyFlavor(metadata?.flavor)
-        || toolName.startsWith('Codex')
-        || toolName.startsWith('Gemini')
-        || toolName.startsWith('OpenCode')
+    return (
+        isCodexFamilyFlavor(metadata?.flavor) ||
+        toolName.startsWith('Codex') ||
+        toolName.startsWith('Gemini') ||
+        toolName.startsWith('OpenCode')
+    )
 }
 
-function formatPermissionSummary(permission: ToolPermission, toolName: string, toolInput: unknown, codex: boolean, t: (key: string) => string): string {
+function formatPermissionSummary(
+    permission: ToolPermission,
+    toolName: string,
+    toolInput: unknown,
+    codex: boolean,
+    t: (key: string) => string
+): string {
     if (permission.status === 'pending') return t('tool.waitingForApproval')
-    if (permission.status === 'canceled') return permission.reason ? `${t('tool.canceled')}: ${permission.reason}` : t('tool.canceled')
+    if (permission.status === 'canceled')
+        return permission.reason ? `${t('tool.canceled')}: ${permission.reason}` : t('tool.canceled')
 
     if (codex) {
-        if (permission.status === 'approved' && permission.decision === 'approved_for_session') return t('tool.approvedForSession')
+        if (permission.status === 'approved' && permission.decision === 'approved_for_session')
+            return t('tool.approvedForSession')
         if (permission.status === 'approved') return t('tool.approved')
-        if (permission.status === 'denied' && permission.decision === 'abort') return permission.reason ? `${t('tool.aborted')}: ${permission.reason}` : t('tool.aborted')
-        if (permission.status === 'denied') return permission.reason ? `${t('tool.deny')}: ${permission.reason}` : t('tool.deny')
+        if (permission.status === 'denied' && permission.decision === 'abort')
+            return permission.reason ? `${t('tool.aborted')}: ${permission.reason}` : t('tool.aborted')
+        if (permission.status === 'denied')
+            return permission.reason ? `${t('tool.deny')}: ${permission.reason}` : t('tool.deny')
         return t('tool.allow')
     }
 
@@ -61,12 +73,10 @@ function PermissionRowButton(props: {
     disabled: boolean
     onClick: () => void
 }) {
-    const base = 'flex w-full items-center justify-between rounded-md px-2 py-2 text-sm text-left transition-colors disabled:pointer-events-none disabled:opacity-50 hover:bg-[var(--app-subtle-bg)]'
-    const tone = props.tone === 'allow'
-        ? 'text-emerald-600'
-        : props.tone === 'deny'
-            ? 'text-red-600'
-            : 'text-[var(--app-link)]'
+    const base =
+        'flex w-full items-center justify-between rounded-md px-2 py-2 text-sm text-left transition-colors disabled:pointer-events-none disabled:opacity-50 hover:bg-[var(--app-subtle-bg)]'
+    const tone =
+        props.tone === 'allow' ? 'text-emerald-600' : props.tone === 'deny' ? 'text-red-600' : 'text-[var(--app-link)]'
 
     return (
         <button
@@ -123,16 +133,15 @@ export function PermissionFooter(props: {
     }
 
     const toolName = props.tool.name
-    const isEditTool = toolName === 'Edit'
-        || toolName === 'MultiEdit'
-        || toolName === 'Write'
-        || toolName === 'NotebookEdit'
-    const hideAllowForSession = toolName === 'Edit'
-        || toolName === 'MultiEdit'
-        || toolName === 'Write'
-        || toolName === 'NotebookEdit'
-        || toolName === 'exit_plan_mode'
-        || toolName === 'ExitPlanMode'
+    const isEditTool =
+        toolName === 'Edit' || toolName === 'MultiEdit' || toolName === 'Write' || toolName === 'NotebookEdit'
+    const hideAllowForSession =
+        toolName === 'Edit' ||
+        toolName === 'MultiEdit' ||
+        toolName === 'Write' ||
+        toolName === 'NotebookEdit' ||
+        toolName === 'exit_plan_mode' ||
+        toolName === 'ExitPlanMode'
 
     const canAllowForSession = !codex && isPending && !hideAllowForSession
     const canAllowAllEdits = !codex && isPending && isEditTool
@@ -156,7 +165,10 @@ export function PermissionFooter(props: {
         setLoadingForSession(true)
         const command = toolName === 'Bash' ? getInputStringAny(props.tool.input, ['command', 'cmd']) : null
         const toolIdentifier = toolName === 'Bash' && command ? `Bash(${command})` : toolName
-        await run(() => props.api.approvePermission(props.sessionId, permission.id, { allowTools: [toolIdentifier] }), 'success')
+        await run(
+            () => props.api.approvePermission(props.sessionId, permission.id, { allowTools: [toolIdentifier] }),
+            'success'
+        )
         setLoadingForSession(false)
     }
 
@@ -193,22 +205,14 @@ export function PermissionFooter(props: {
         if (permission.status !== 'denied' && permission.status !== 'canceled') return null
         if (!permission.reason) return null
 
-        return (
-            <div className="mt-2 text-xs text-red-600">
-                {permission.reason}
-            </div>
-        )
+        return <div className="mt-2 text-xs text-red-600">{permission.reason}</div>
     }
 
     return (
         <div className="mt-2">
             <div className="text-xs text-[var(--app-hint)]">{summary}</div>
 
-            {error ? (
-                <div className="mt-2 text-xs text-red-600">
-                    {error}
-                </div>
-            ) : null}
+            {error ? <div className="mt-2 text-xs text-red-600">{error}</div> : null}
 
             <div className="mt-2 flex flex-col gap-1">
                 {codex ? (

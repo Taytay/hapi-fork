@@ -13,9 +13,10 @@ function levenshteinDistance(a: string, b: string): number {
     for (let j = 0; j <= a.length; j++) matrix[0][j] = j
     for (let i = 1; i <= b.length; i++) {
         for (let j = 1; j <= a.length; j++) {
-            matrix[i][j] = b[i - 1] === a[j - 1]
-                ? matrix[i - 1][j - 1]
-                : Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1)
+            matrix[i][j] =
+                b[i - 1] === a[j - 1]
+                    ? matrix[i - 1][j - 1]
+                    : Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1)
         }
     }
     return matrix[b.length][a.length]
@@ -31,15 +32,27 @@ const BUILTIN_COMMANDS: Record<string, SlashCommand[]> = {
         { name: 'compact', description: 'Clear conversation history but keep a summary in context', source: 'builtin' },
         { name: 'context', description: 'Visualize current context usage as a colored grid', source: 'builtin' },
         { name: 'cost', description: 'Show the total cost and duration of the current session', source: 'builtin' },
-        { name: 'doctor', description: 'Diagnose and verify your Claude Code installation and settings', source: 'builtin' },
+        {
+            name: 'doctor',
+            description: 'Diagnose and verify your Claude Code installation and settings',
+            source: 'builtin',
+        },
         { name: 'plan', description: 'View or open the current session plan', source: 'builtin' },
         { name: 'stats', description: 'Show your Claude Code usage statistics and activity', source: 'builtin' },
-        { name: 'status', description: 'Show Claude Code status including version, model, account, and API connectivity', source: 'builtin' },
+        {
+            name: 'status',
+            description: 'Show Claude Code status including version, model, account, and API connectivity',
+            source: 'builtin',
+        },
     ],
     codex: [
         { name: 'review', description: 'Review current changes and find issues', source: 'builtin' },
         { name: 'new', description: 'Start a new chat during a conversation', source: 'builtin' },
-        { name: 'compat', description: 'Summarize conversation to prevent hitting the context limit', source: 'builtin' },
+        {
+            name: 'compat',
+            description: 'Summarize conversation to prevent hitting the context limit',
+            source: 'builtin',
+        },
         { name: 'undo', description: 'Ask Codex to undo a turn', source: 'builtin' },
         { name: 'diff', description: 'Show git diff including untracked files', source: 'builtin' },
         { name: 'status', description: 'Show current session configuration and token usage', source: 'builtin' },
@@ -86,9 +99,7 @@ export function useSlashCommands(
 
         // If API succeeded, add user-defined and plugin commands
         if (query.data?.success && query.data.commands) {
-            const extraCommands = query.data.commands.filter(
-                cmd => cmd.source === 'user' || cmd.source === 'plugin'
-            )
+            const extraCommands = query.data.commands.filter((cmd) => cmd.source === 'user' || cmd.source === 'plugin')
             return [...builtin, ...extraCommands]
         }
 
@@ -96,47 +107,48 @@ export function useSlashCommands(
         return builtin
     }, [agentType, query.data])
 
-    const getSuggestions = useCallback(async (queryText: string): Promise<Suggestion[]> => {
-        const searchTerm = queryText.startsWith('/')
-            ? queryText.slice(1).toLowerCase()
-            : queryText.toLowerCase()
+    const getSuggestions = useCallback(
+        async (queryText: string): Promise<Suggestion[]> => {
+            const searchTerm = queryText.startsWith('/') ? queryText.slice(1).toLowerCase() : queryText.toLowerCase()
 
-        if (!searchTerm) {
-            return commands.map(cmd => ({
-                key: `/${cmd.name}`,
-                text: `/${cmd.name}`,
-                label: `/${cmd.name}`,
-                description: cmd.description ?? (cmd.source === 'user' ? 'Custom command' : undefined),
-                content: cmd.content,
-                source: cmd.source
-            }))
-        }
+            if (!searchTerm) {
+                return commands.map((cmd) => ({
+                    key: `/${cmd.name}`,
+                    text: `/${cmd.name}`,
+                    label: `/${cmd.name}`,
+                    description: cmd.description ?? (cmd.source === 'user' ? 'Custom command' : undefined),
+                    content: cmd.content,
+                    source: cmd.source,
+                }))
+            }
 
-        const maxDistance = Math.max(2, Math.floor(searchTerm.length / 2))
-        return commands
-            .map(cmd => {
-                const name = cmd.name.toLowerCase()
-                let score: number
-                if (name === searchTerm) score = 0
-                else if (name.startsWith(searchTerm)) score = 1
-                else if (name.includes(searchTerm)) score = 2
-                else {
-                    const dist = levenshteinDistance(searchTerm, name)
-                    score = dist <= maxDistance ? 3 + dist : Infinity
-                }
-                return { cmd, score }
-            })
-            .filter(item => item.score < Infinity)
-            .sort((a, b) => a.score - b.score)
-            .map(({ cmd }) => ({
-                key: `/${cmd.name}`,
-                text: `/${cmd.name}`,
-                label: `/${cmd.name}`,
-                description: cmd.description ?? (cmd.source === 'user' ? 'Custom command' : undefined),
-                content: cmd.content,
-                source: cmd.source
-            }))
-    }, [commands])
+            const maxDistance = Math.max(2, Math.floor(searchTerm.length / 2))
+            return commands
+                .map((cmd) => {
+                    const name = cmd.name.toLowerCase()
+                    let score: number
+                    if (name === searchTerm) score = 0
+                    else if (name.startsWith(searchTerm)) score = 1
+                    else if (name.includes(searchTerm)) score = 2
+                    else {
+                        const dist = levenshteinDistance(searchTerm, name)
+                        score = dist <= maxDistance ? 3 + dist : Infinity
+                    }
+                    return { cmd, score }
+                })
+                .filter((item) => item.score < Infinity)
+                .sort((a, b) => a.score - b.score)
+                .map(({ cmd }) => ({
+                    key: `/${cmd.name}`,
+                    text: `/${cmd.name}`,
+                    label: `/${cmd.name}`,
+                    description: cmd.description ?? (cmd.source === 'user' ? 'Custom command' : undefined),
+                    content: cmd.content,
+                    source: cmd.source,
+                }))
+        },
+        [commands]
+    )
 
     return {
         commands,

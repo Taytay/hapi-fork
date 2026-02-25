@@ -74,9 +74,7 @@ function normalizeOrigin(value: string): string {
 }
 
 function normalizeOrigins(origins: string[]): string[] {
-    const normalized = origins
-        .map(normalizeOrigin)
-        .filter(Boolean)
+    const normalized = origins.map(normalizeOrigin).filter(Boolean)
     if (normalized.includes('*')) {
         return ['*']
     }
@@ -147,7 +145,9 @@ async function main() {
         const tokenSource = formatSource(config.sources.telegramBotToken)
         console.log(`[Hub] Telegram: enabled (${tokenSource})`)
         const notificationSource = formatSource(config.sources.telegramNotification)
-        console.log(`[Hub] Telegram notifications: ${config.telegramNotification ? 'enabled' : 'disabled'} (${notificationSource})`)
+        console.log(
+            `[Hub] Telegram notifications: ${config.telegramNotification ? 'enabled' : 'disabled'} (${notificationSource})`
+        )
     }
 
     // Display tunnel status
@@ -179,13 +179,13 @@ async function main() {
         onWebappEvent: (event: SyncEvent) => syncEngine?.handleRealtimeEvent(event),
         onSessionAlive: (payload) => syncEngine?.handleSessionAlive(payload),
         onSessionEnd: (payload) => syncEngine?.handleSessionEnd(payload),
-        onMachineAlive: (payload) => syncEngine?.handleMachineAlive(payload)
+        onMachineAlive: (payload) => syncEngine?.handleMachineAlive(payload),
     })
 
     syncEngine = new SyncEngine(store, socketServer.io, socketServer.rpcRegistry, sseManager)
 
     const notificationChannels: NotificationChannel[] = [
-        new PushNotificationChannel(pushService, sseManager, visibilityTracker, config.publicUrl)
+        new PushNotificationChannel(pushService, sseManager, visibilityTracker, config.publicUrl),
     ]
 
     // Initialize Telegram bot (optional)
@@ -194,7 +194,7 @@ async function main() {
             syncEngine,
             botToken: config.telegramBotToken,
             publicUrl: config.publicUrl,
-            store
+            store,
         })
         // Only add to notification channels if notifications are enabled
         if (config.telegramNotification) {
@@ -215,7 +215,7 @@ async function main() {
         socketEngine: socketServer.engine,
         corsOrigins,
         relayMode: relayFlag.enabled,
-        officialWebUrl
+        officialWebUrl,
     })
 
     // Start the bot if configured
@@ -235,7 +235,7 @@ async function main() {
             enabled: true,
             apiDomain: relayApiDomain,
             authKey: process.env.HAPI_RELAY_AUTH || null,
-            useRelay: process.env.HAPI_RELAY_FORCE_TCP === 'true' || process.env.HAPI_RELAY_FORCE_TCP === '1'
+            useRelay: process.env.HAPI_RELAY_FORCE_TCP === 'true' || process.env.HAPI_RELAY_FORCE_TCP === '1',
         })
 
         try {
@@ -260,7 +260,7 @@ async function main() {
             // Generate direct access link with hub and token
             const params = new URLSearchParams({
                 hub: tunnelUrl,
-                token: config.cliApiToken
+                token: config.cliApiToken,
             })
             const directAccessUrl = `${officialWebUrl}/?${params.toString()}`
 
@@ -276,7 +276,7 @@ async function main() {
                     type: 'terminal',
                     small: true,
                     margin: 1,
-                    errorCorrectionLevel: 'L'
+                    errorCorrectionLevel: 'L',
                 })
                 console.log('')
                 console.log(qrString)

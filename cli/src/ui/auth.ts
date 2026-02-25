@@ -14,7 +14,7 @@ export async function authAndSetupMachineIfNeeded(): Promise<{
         if (!current.machineId) {
             return {
                 ...current,
-                machineId: randomUUID()
+                machineId: randomUUID(),
             }
         }
         return current
@@ -26,4 +26,3 @@ export async function authAndSetupMachineIfNeeded(): Promise<{
 
     return { token: configuration.cliApiToken, machineId: settings.machineId }
 }
-

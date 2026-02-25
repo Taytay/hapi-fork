@@ -39,7 +39,7 @@ function formatDate(timestamp: number): string {
     return date.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
-        year: 'numeric'
+        year: 'numeric',
     })
 }
 
@@ -70,7 +70,14 @@ function extractUserText(content: unknown): string | null {
 }
 
 // Parse command line arguments
-function parseArgs(): { minMessages: number | null; pathPattern: string | null; messagePattern: string | null; orphaned: boolean; force: boolean; help: boolean } {
+function parseArgs(): {
+    minMessages: number | null
+    pathPattern: string | null
+    messagePattern: string | null
+    orphaned: boolean
+    force: boolean
+    help: boolean
+} {
     const args = process.argv.slice(2)
     let minMessages: number | null = null
     let pathPattern: string | null = null
@@ -117,9 +124,7 @@ function getDbPath(): string {
     if (process.env.DB_PATH) {
         return process.env.DB_PATH.replace(/^~/, homedir())
     }
-    const dataDir = process.env.HAPI_HOME
-        ? process.env.HAPI_HOME.replace(/^~/, homedir())
-        : join(homedir(), '.hapi')
+    const dataDir = process.env.HAPI_HOME ? process.env.HAPI_HOME.replace(/^~/, homedir()) : join(homedir(), '.hapi')
     return join(dataDir, 'hapi.db')
 }
 
@@ -136,10 +141,9 @@ interface SessionInfo {
 // Query sessions with message counts
 function querySessions(db: Database): SessionInfo[] {
     // Get basic session info
-    const sessionRows = db.query<
-        { id: string; metadata: string | null; updated_at: number; message_count: number },
-        []
-    >(`
+    const sessionRows = db
+        .query<{ id: string; metadata: string | null; updated_at: number; message_count: number }, []>(
+            `
         SELECT
             s.id,
             s.metadata,
@@ -148,17 +152,20 @@ function querySessions(db: Database): SessionInfo[] {
         FROM sessions s
         LEFT JOIN messages m ON m.session_id = s.id
         GROUP BY s.id
-    `).all()
+    `
+        )
+        .all()
 
     // Get all messages for processing
-    const messageRows = db.query<
-        { session_id: string; content: string; seq: number },
-        []
-    >(`
+    const messageRows = db
+        .query<{ session_id: string; content: string; seq: number }, []>(
+            `
         SELECT session_id, content, seq
         FROM messages
         ORDER BY session_id, seq
-    `).all()
+    `
+        )
+        .all()
 
     // Group messages by session
     const messagesBySession = new Map<string, { content: string; seq: number }[]>()
@@ -168,7 +175,7 @@ function querySessions(db: Database): SessionInfo[] {
         messagesBySession.set(msg.session_id, list)
     }
 
-    return sessionRows.map(row => {
+    return sessionRows.map((row) => {
         let path: string | null = null
         let title: string | null = null
         if (row.metadata) {
@@ -224,13 +231,13 @@ function filterSessions(
 
     // Filter by message count if specified
     if (minMessages !== null) {
-        filtered = filtered.filter(s => s.messageCount < minMessages)
+        filtered = filtered.filter((s) => s.messageCount < minMessages)
     }
 
     // Filter by path pattern if specified
     if (pathPattern !== null) {
         const glob = new Bun.Glob(pathPattern)
-        filtered = filtered.filter(s => {
+        filtered = filtered.filter((s) => {
             if (!s.path) return false
             return glob.match(s.path)
         })
@@ -238,7 +245,7 @@ function filterSessions(
 
     // Filter by first message pattern (case-insensitive fuzzy match)
     if (messagePattern !== null) {
-        filtered = filtered.filter(s => {
+        filtered = filtered.filter((s) => {
             if (!s.firstUserMessage) return false
             return s.firstUserMessage.toLowerCase().includes(messagePattern)
         })
@@ -246,7 +253,7 @@ function filterSessions(
 
     // Filter by orphaned (path does not exist) if specified
     if (orphaned) {
-        filtered = filtered.filter(s => {
+        filtered = filtered.filter((s) => {
             if (!s.path) return true // No path = orphaned
             return !existsSync(s.path)
         })
@@ -287,13 +294,15 @@ function displaySessions(sessions: SessionInfo[]): void {
         const firstMsg = truncate(s.firstUserMessage ?? '(no message)', messageWidth)
         const path = truncate(s.path ?? '', pathWidth)
 
-        console.log([
-            updated.padEnd(dateWidth),
-            s.messageCount.toString().padStart(countWidth),
-            title.padEnd(titleWidth),
-            firstMsg.padEnd(messageWidth),
-            path.padEnd(pathWidth),
-        ].join(' | '))
+        console.log(
+            [
+                updated.padEnd(dateWidth),
+                s.messageCount.toString().padStart(countWidth),
+                title.padEnd(titleWidth),
+                firstMsg.padEnd(messageWidth),
+                path.padEnd(pathWidth),
+            ].join(' | ')
+        )
     }
 }
 
@@ -408,14 +417,17 @@ Examples:
         }
 
         // Delete sessions
-        const deleted = deleteSessions(db, toDelete.map(s => s.id))
+        const deleted = deleteSessions(
+            db,
+            toDelete.map((s) => s.id)
+        )
         console.log(`Deleted ${deleted} session(s) and their messages.`)
     } finally {
         db.close()
     }
 }
 
-main().catch(err => {
+main().catch((err) => {
     console.error('Error:', err.message)
     process.exit(1)
 })

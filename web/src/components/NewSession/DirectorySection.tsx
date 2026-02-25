@@ -21,9 +21,7 @@ export function DirectorySection(props: {
 
     return (
         <div className="flex flex-col gap-1.5 px-3 py-3">
-            <label className="text-xs font-medium text-[var(--app-hint)]">
-                {t('newSession.directory')}
-            </label>
+            <label className="text-xs font-medium text-[var(--app-hint)]">{t('newSession.directory')}</label>
             <div className="relative">
                 <input
                     type="text"

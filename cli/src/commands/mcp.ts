@@ -6,5 +6,5 @@ export const mcpCommand: CommandDefinition = {
     requiresRuntimeAssets: false,
     run: async ({ commandArgs }) => {
         await runHappyMcpStdioBridge(commandArgs)
-    }
+    },
 }

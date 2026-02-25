@@ -1,8 +1,5 @@
 import type { ToolViewProps } from '@/components/ToolCard/views/_all'
-import {
-    parseRequestUserInputInput,
-    parseRequestUserInputAnswers
-} from '@/components/ToolCard/requestUserInput'
+import { parseRequestUserInputInput, parseRequestUserInputAnswers } from '@/components/ToolCard/requestUserInput'
 import { cn } from '@/lib/utils'
 
 function getSelectionMark(isSelected: boolean): string {
@@ -25,7 +22,8 @@ export function RequestUserInputView(props: ToolViewProps) {
     const parsed = parseRequestUserInputInput(props.block.tool.input)
     const questions = parsed.questions
     // Try permission.answers first (live), fall back to tool.result (history)
-    const rawAnswers = props.block.tool.permission?.answers ?? parseResultAsAnswers(props.block.tool.result) ?? undefined
+    const rawAnswers =
+        props.block.tool.permission?.answers ?? parseResultAsAnswers(props.block.tool.result) ?? undefined
     const parsedAnswers = rawAnswers ? parseRequestUserInputAnswers(rawAnswers) : null
     const hasAnswers = parsedAnswers && Object.keys(parsedAnswers).length > 0
 
@@ -42,9 +40,7 @@ export function RequestUserInputView(props: ToolViewProps) {
                 return (
                     <div key={q.id} className="rounded-md border border-[var(--app-border)] bg-[var(--app-bg)] p-3">
                         {q.question ? (
-                            <div className="text-sm text-[var(--app-fg)] break-words">
-                                {q.question}
-                            </div>
+                            <div className="text-sm text-[var(--app-fg)] break-words">{q.question}</div>
                         ) : null}
 
                         {isPureTextQuestion ? (
@@ -73,30 +69,32 @@ export function RequestUserInputView(props: ToolViewProps) {
                                         <div
                                             key={optIdx}
                                             className={cn(
-                                                "rounded-md border px-2 py-2",
+                                                'rounded-md border px-2 py-2',
                                                 isSelected
-                                                    ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30"
-                                                    : "border-[var(--app-border)]"
+                                                    ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30'
+                                                    : 'border-[var(--app-border)]'
                                             )}
                                         >
                                             <div className="flex items-start gap-2">
                                                 {hasAnswers && (
-                                                    <span className={cn(
-                                                        "shrink-0 text-sm",
-                                                        isSelected
-                                                            ? "text-emerald-600"
-                                                            : "text-[var(--app-hint)]"
-                                                    )}>
+                                                    <span
+                                                        className={cn(
+                                                            'shrink-0 text-sm',
+                                                            isSelected ? 'text-emerald-600' : 'text-[var(--app-hint)]'
+                                                        )}
+                                                    >
                                                         {getSelectionMark(isSelected)}
                                                     </span>
                                                 )}
                                                 <div className="min-w-0 flex-1">
-                                                    <div className={cn(
-                                                        "text-sm break-words",
-                                                        isSelected
-                                                            ? "text-emerald-700 dark:text-emerald-300 font-medium"
-                                                            : "text-[var(--app-fg)]"
-                                                    )}>
+                                                    <div
+                                                        className={cn(
+                                                            'text-sm break-words',
+                                                            isSelected
+                                                                ? 'text-emerald-700 dark:text-emerald-300 font-medium'
+                                                                : 'text-[var(--app-fg)]'
+                                                        )}
+                                                    >
                                                         {opt.label}
                                                     </div>
                                                     {opt.description ? (

@@ -20,5 +20,5 @@ export const connectCommand: CommandDefinition = {
             }
             process.exit(1)
         }
-    }
+    },
 }

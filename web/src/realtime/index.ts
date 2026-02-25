@@ -9,7 +9,7 @@ export {
     isVoiceSessionStarted,
     getVoiceSession,
     getCurrentRealtimeSessionId,
-    updateCurrentSessionId
+    updateCurrentSessionId,
 } from './RealtimeSession'
 
 // Client tools
@@ -32,7 +32,7 @@ export {
     formatSessionOffline,
     formatSessionFocus,
     formatPermissionRequest,
-    formatReadyEvent
+    formatReadyEvent,
 } from './hooks/contextFormatters'
 
 // Config

@@ -43,11 +43,11 @@ describe('PushableAsyncIterable', () => {
         // Push values asynchronously
         await Promise.resolve()
         iterable.push('first')
-        
-        await new Promise(resolve => setTimeout(resolve, 10))
+
+        await new Promise((resolve) => setTimeout(resolve, 10))
         iterable.push('second')
-        
-        await new Promise(resolve => setTimeout(resolve, 10))
+
+        await new Promise((resolve) => setTimeout(resolve, 10))
         iterable.push('third')
         iterable.end()
 
@@ -82,7 +82,7 @@ describe('PushableAsyncIterable', () => {
 
     it('should handle external error control', async () => {
         const iterable = new PushableAsyncIterable<number>()
-        
+
         const consumer = (async () => {
             const values: number[] = []
             try {
@@ -109,7 +109,7 @@ describe('PushableAsyncIterable', () => {
 
     it('should queue values when no consumer is waiting', async () => {
         const iterable = new PushableAsyncIterable<number>()
-        
+
         // Push values before consumer starts
         iterable.push(1)
         iterable.push(2)
@@ -128,29 +128,29 @@ describe('PushableAsyncIterable', () => {
     it('should throw when pushing to completed iterable', () => {
         const iterable = new PushableAsyncIterable<number>()
         iterable.end()
-        
+
         expect(() => iterable.push(1)).toThrow('Cannot push to completed iterable')
     })
 
     it('should only allow single iteration', async () => {
         const iterable = new PushableAsyncIterable<number>()
-        
+
         // First iteration is fine
         const iterator1 = iterable[Symbol.asyncIterator]()
-        
+
         // Second iteration should throw
         expect(() => iterable[Symbol.asyncIterator]()).toThrow('PushableAsyncIterable can only be iterated once')
     })
 
     it('should provide queue and waiter status', async () => {
         const iterable = new PushableAsyncIterable<number>()
-        
+
         // Push values - they should be queued
         iterable.push(1)
         iterable.push(2)
         expect(iterable.queueSize).toBe(2)
         expect(iterable.waiterCount).toBe(0)
-        
+
         // Start consuming
         const consumer = (async () => {
             for await (const value of iterable) {
@@ -169,7 +169,7 @@ describe('PushableAsyncIterable', () => {
                 }
             }
         })()
-        
+
         await consumer
     })
 })

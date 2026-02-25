@@ -1,104 +1,108 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Text, useStdout } from 'ink';
-import { MessageBuffer, type BufferedMessage } from './messageBuffer';
-import { useSwitchControls } from './useSwitchControls';
+import React, { useEffect, useState } from 'react'
+import { Box, Text, useStdout } from 'ink'
+import { MessageBuffer, type BufferedMessage } from './messageBuffer'
+import { useSwitchControls } from './useSwitchControls'
 
 interface GeminiDisplayProps {
-    messageBuffer: MessageBuffer;
-    logPath?: string;
-    onExit?: () => void;
-    onSwitchToLocal?: () => void;
+    messageBuffer: MessageBuffer
+    logPath?: string
+    onExit?: () => void
+    onSwitchToLocal?: () => void
 }
 
 function extractTag(messages: BufferedMessage[], tag: 'MODEL' | 'MODE'): string | null {
-    const prefix = `[${tag}:`;
+    const prefix = `[${tag}:`
     for (let index = messages.length - 1; index >= 0; index -= 1) {
-        const message = messages[index];
+        const message = messages[index]
         if (message.type !== 'system') {
-            continue;
+            continue
         }
         if (!message.content.startsWith(prefix)) {
-            continue;
+            continue
         }
-        const match = message.content.match(/\[\w+:(.+?)\]/);
+        const match = message.content.match(/\[\w+:(.+?)\]/)
         if (match && match[1]) {
-            return match[1];
+            return match[1]
         }
     }
-    return null;
+    return null
 }
 
-export const GeminiDisplay: React.FC<GeminiDisplayProps> = ({
-    messageBuffer,
-    logPath,
-    onExit,
-    onSwitchToLocal
-}) => {
-    const [messages, setMessages] = useState<BufferedMessage[]>([]);
-    const [model, setModel] = useState<string | null>(null);
-    const [permissionMode, setPermissionMode] = useState<string | null>(null);
+export const GeminiDisplay: React.FC<GeminiDisplayProps> = ({ messageBuffer, logPath, onExit, onSwitchToLocal }) => {
+    const [messages, setMessages] = useState<BufferedMessage[]>([])
+    const [model, setModel] = useState<string | null>(null)
+    const [permissionMode, setPermissionMode] = useState<string | null>(null)
     const { confirmationMode, actionInProgress } = useSwitchControls({
         onExit,
-        onSwitch: onSwitchToLocal
-    });
-    const { stdout } = useStdout();
-    const terminalWidth = stdout.columns || 80;
-    const terminalHeight = stdout.rows || 24;
+        onSwitch: onSwitchToLocal,
+    })
+    const { stdout } = useStdout()
+    const terminalWidth = stdout.columns || 80
+    const terminalHeight = stdout.rows || 24
 
     useEffect(() => {
-        setMessages(messageBuffer.getMessages());
+        setMessages(messageBuffer.getMessages())
 
         const unsubscribe = messageBuffer.onUpdate((newMessages) => {
-            setMessages(newMessages);
-            const nextModel = extractTag(newMessages, 'MODEL');
+            setMessages(newMessages)
+            const nextModel = extractTag(newMessages, 'MODEL')
             if (nextModel) {
-                setModel(nextModel);
+                setModel(nextModel)
             }
-            const nextMode = extractTag(newMessages, 'MODE');
+            const nextMode = extractTag(newMessages, 'MODE')
             if (nextMode) {
-                setPermissionMode(nextMode);
+                setPermissionMode(nextMode)
             }
-        });
+        })
 
         return () => {
-            unsubscribe();
-        };
-    }, [messageBuffer]);
+            unsubscribe()
+        }
+    }, [messageBuffer])
 
     const getMessageColor = (type: BufferedMessage['type']): string => {
         switch (type) {
-            case 'user': return 'magenta';
-            case 'assistant': return 'cyan';
-            case 'system': return 'blue';
-            case 'tool': return 'yellow';
-            case 'result': return 'green';
-            case 'status': return 'gray';
-            default: return 'white';
+            case 'user':
+                return 'magenta'
+            case 'assistant':
+                return 'cyan'
+            case 'system':
+                return 'blue'
+            case 'tool':
+                return 'yellow'
+            case 'result':
+                return 'green'
+            case 'status':
+                return 'gray'
+            default:
+                return 'white'
         }
-    };
+    }
 
     const formatMessage = (msg: BufferedMessage): string => {
-        const lines = msg.content.split('\n');
-        const maxLineLength = Math.max(1, terminalWidth - 10);
-        return lines.map(line => {
-            if (line.length <= maxLineLength) return line;
-            const chunks: string[] = [];
-            for (let i = 0; i < line.length; i += maxLineLength) {
-                chunks.push(line.slice(i, i + maxLineLength));
-            }
-            return chunks.join('\n');
-        }).join('\n');
-    };
+        const lines = msg.content.split('\n')
+        const maxLineLength = Math.max(1, terminalWidth - 10)
+        return lines
+            .map((line) => {
+                if (line.length <= maxLineLength) return line
+                const chunks: string[] = []
+                for (let i = 0; i < line.length; i += maxLineLength) {
+                    chunks.push(line.slice(i, i + maxLineLength))
+                }
+                return chunks.join('\n')
+            })
+            .join('\n')
+    }
 
     const visibleMessages = messages.filter((msg) => {
         if (msg.type === 'system' && msg.content.startsWith('[MODEL:')) {
-            return false;
+            return false
         }
         if (msg.type === 'system' && msg.content.startsWith('[MODE:')) {
-            return false;
+            return false
         }
-        return true;
-    });
+        return true
+    })
 
     return (
         <Box flexDirection="column" width={terminalWidth} height={terminalHeight}>
@@ -112,23 +116,27 @@ export const GeminiDisplay: React.FC<GeminiDisplayProps> = ({
                 overflow="hidden"
             >
                 <Box flexDirection="column" marginBottom={1}>
-                    <Text color="gray" bold>Gemini Agent Messages</Text>
-                    <Text color="gray" dimColor>{'-'.repeat(Math.min(terminalWidth - 4, 60))}</Text>
+                    <Text color="gray" bold>
+                        Gemini Agent Messages
+                    </Text>
+                    <Text color="gray" dimColor>
+                        {'-'.repeat(Math.min(terminalWidth - 4, 60))}
+                    </Text>
                 </Box>
 
                 <Box flexDirection="column" height={terminalHeight - 10} overflow="hidden">
                     {visibleMessages.length === 0 ? (
-                        <Text color="gray" dimColor>Waiting for messages...</Text>
+                        <Text color="gray" dimColor>
+                            Waiting for messages...
+                        </Text>
                     ) : (
-                        visibleMessages
-                            .slice(-Math.max(1, terminalHeight - 10))
-                            .map((msg) => (
-                                <Box key={msg.id} flexDirection="column" marginBottom={1}>
-                                    <Text color={getMessageColor(msg.type)} dimColor>
-                                        {formatMessage(msg)}
-                                    </Text>
-                                </Box>
-                            ))
+                        visibleMessages.slice(-Math.max(1, terminalHeight - 10)).map((msg) => (
+                            <Box key={msg.id} flexDirection="column" marginBottom={1}>
+                                <Text color={getMessageColor(msg.type)} dimColor>
+                                    {formatMessage(msg)}
+                                </Text>
+                            </Box>
+                        ))
                     )}
                 </Box>
             </Box>
@@ -137,10 +145,13 @@ export const GeminiDisplay: React.FC<GeminiDisplayProps> = ({
                 width={terminalWidth}
                 borderStyle="round"
                 borderColor={
-                    actionInProgress ? 'gray' :
-                    confirmationMode === 'exit' ? 'red' :
-                    confirmationMode === 'switch' ? 'yellow' :
-                    'green'
+                    actionInProgress
+                        ? 'gray'
+                        : confirmationMode === 'exit'
+                          ? 'red'
+                          : confirmationMode === 'switch'
+                            ? 'yellow'
+                            : 'green'
                 }
                 paddingX={2}
                 justifyContent="center"
@@ -166,7 +177,8 @@ export const GeminiDisplay: React.FC<GeminiDisplayProps> = ({
                         </Text>
                     ) : (
                         <Text color="green" bold>
-                            Gemini running {onSwitchToLocal ? '(Space to switch to local, Ctrl-C to exit)' : '(Ctrl-C to exit)'}
+                            Gemini running{' '}
+                            {onSwitchToLocal ? '(Space to switch to local, Ctrl-C to exit)' : '(Ctrl-C to exit)'}
                         </Text>
                     )}
                     {(model || permissionMode) && (
@@ -183,5 +195,5 @@ export const GeminiDisplay: React.FC<GeminiDisplayProps> = ({
                 </Box>
             </Box>
         </Box>
-    );
-};
+    )
+}

@@ -16,4 +16,3 @@ export function registerSkillsHandlers(rpcHandlerManager: RpcHandlerManager): vo
         }
     })
 }
-

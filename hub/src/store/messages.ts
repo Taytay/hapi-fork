@@ -20,48 +20,45 @@ function toStoredMessage(row: DbMessageRow): StoredMessage {
         content: safeJsonParse(row.content),
         createdAt: row.created_at,
         seq: row.seq,
-        localId: row.local_id
+        localId: row.local_id,
     }
 }
 
-export function addMessage(
-    db: Database,
-    sessionId: string,
-    content: unknown,
-    localId?: string
-): StoredMessage {
+export function addMessage(db: Database, sessionId: string, content: unknown, localId?: string): StoredMessage {
     const now = Date.now()
 
     if (localId) {
-        const existing = db.prepare(
-            'SELECT * FROM messages WHERE session_id = ? AND local_id = ? LIMIT 1'
-        ).get(sessionId, localId) as DbMessageRow | undefined
+        const existing = db
+            .prepare('SELECT * FROM messages WHERE session_id = ? AND local_id = ? LIMIT 1')
+            .get(sessionId, localId) as DbMessageRow | undefined
         if (existing) {
             return toStoredMessage(existing)
         }
     }
 
-    const msgSeqRow = db.prepare(
-        'SELECT COALESCE(MAX(seq), 0) + 1 AS nextSeq FROM messages WHERE session_id = ?'
-    ).get(sessionId) as { nextSeq: number }
+    const msgSeqRow = db
+        .prepare('SELECT COALESCE(MAX(seq), 0) + 1 AS nextSeq FROM messages WHERE session_id = ?')
+        .get(sessionId) as { nextSeq: number }
     const msgSeq = msgSeqRow.nextSeq
 
     const id = randomUUID()
     const json = JSON.stringify(content)
 
-    db.prepare(`
+    db.prepare(
+        `
         INSERT INTO messages (
             id, session_id, content, created_at, seq, local_id
         ) VALUES (
             @id, @session_id, @content, @created_at, @seq, @local_id
         )
-    `).run({
+    `
+    ).run({
         id,
         session_id: sessionId,
         content: json,
         created_at: now,
         seq: msgSeq,
-        local_id: localId ?? null
+        local_id: localId ?? null,
     })
 
     const row = db.prepare('SELECT * FROM messages WHERE id = ?').get(id) as DbMessageRow | undefined
@@ -71,21 +68,17 @@ export function addMessage(
     return toStoredMessage(row)
 }
 
-export function getMessages(
-    db: Database,
-    sessionId: string,
-    limit: number = 200,
-    beforeSeq?: number
-): StoredMessage[] {
+export function getMessages(db: Database, sessionId: string, limit: number = 200, beforeSeq?: number): StoredMessage[] {
     const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.min(200, limit)) : 200
 
-    const rows = (beforeSeq !== undefined && beforeSeq !== null && Number.isFinite(beforeSeq))
-        ? db.prepare(
-            'SELECT * FROM messages WHERE session_id = ? AND seq < ? ORDER BY seq DESC LIMIT ?'
-        ).all(sessionId, beforeSeq, safeLimit) as DbMessageRow[]
-        : db.prepare(
-            'SELECT * FROM messages WHERE session_id = ? ORDER BY seq DESC LIMIT ?'
-        ).all(sessionId, safeLimit) as DbMessageRow[]
+    const rows =
+        beforeSeq !== undefined && beforeSeq !== null && Number.isFinite(beforeSeq)
+            ? (db
+                  .prepare('SELECT * FROM messages WHERE session_id = ? AND seq < ? ORDER BY seq DESC LIMIT ?')
+                  .all(sessionId, beforeSeq, safeLimit) as DbMessageRow[])
+            : (db
+                  .prepare('SELECT * FROM messages WHERE session_id = ? ORDER BY seq DESC LIMIT ?')
+                  .all(sessionId, safeLimit) as DbMessageRow[])
 
     return rows.reverse().map(toStoredMessage)
 }
@@ -99,17 +92,17 @@ export function getMessagesAfter(
     const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.min(200, limit)) : 200
     const safeAfterSeq = Number.isFinite(afterSeq) ? afterSeq : 0
 
-    const rows = db.prepare(
-        'SELECT * FROM messages WHERE session_id = ? AND seq > ? ORDER BY seq ASC LIMIT ?'
-    ).all(sessionId, safeAfterSeq, safeLimit) as DbMessageRow[]
+    const rows = db
+        .prepare('SELECT * FROM messages WHERE session_id = ? AND seq > ? ORDER BY seq ASC LIMIT ?')
+        .all(sessionId, safeAfterSeq, safeLimit) as DbMessageRow[]
 
     return rows.map(toStoredMessage)
 }
 
 export function getMaxSeq(db: Database, sessionId: string): number {
-    const row = db.prepare(
-        'SELECT COALESCE(MAX(seq), 0) AS maxSeq FROM messages WHERE session_id = ?'
-    ).get(sessionId) as { maxSeq: number } | undefined
+    const row = db
+        .prepare('SELECT COALESCE(MAX(seq), 0) AS maxSeq FROM messages WHERE session_id = ?')
+        .get(sessionId) as { maxSeq: number } | undefined
     return row?.maxSeq ?? 0
 }
 
@@ -129,18 +122,20 @@ export function mergeSessionMessages(
         db.exec('BEGIN')
 
         if (newMaxSeq > 0 && oldMaxSeq > 0) {
-            db.prepare(
-                'UPDATE messages SET seq = seq + ? WHERE session_id = ?'
-            ).run(oldMaxSeq, toSessionId)
+            db.prepare('UPDATE messages SET seq = seq + ? WHERE session_id = ?').run(oldMaxSeq, toSessionId)
         }
 
-        const collisions = db.prepare(`
+        const collisions = db
+            .prepare(
+                `
             SELECT local_id FROM messages
             WHERE session_id = ? AND local_id IS NOT NULL
             INTERSECT
             SELECT local_id FROM messages
             WHERE session_id = ? AND local_id IS NOT NULL
-        `).all(toSessionId, fromSessionId) as Array<{ local_id: string }>
+        `
+            )
+            .all(toSessionId, fromSessionId) as Array<{ local_id: string }>
 
         if (collisions.length > 0) {
             const localIds = collisions.map((row) => row.local_id)
@@ -150,9 +145,9 @@ export function mergeSessionMessages(
             ).run(fromSessionId, ...localIds)
         }
 
-        const result = db.prepare(
-            'UPDATE messages SET session_id = ? WHERE session_id = ?'
-        ).run(toSessionId, fromSessionId)
+        const result = db
+            .prepare('UPDATE messages SET session_id = ? WHERE session_id = ?')
+            .run(toSessionId, fromSessionId)
 
         db.exec('COMMIT')
         return { moved: result.changes, oldMaxSeq, newMaxSeq }

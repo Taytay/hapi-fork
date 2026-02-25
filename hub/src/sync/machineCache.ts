@@ -10,7 +10,7 @@ const machineMetadataSchema = z.object({
     displayName: z.string().optional(),
     homeDir: z.string().optional(),
     happyHomeDir: z.string().optional(),
-    happyLibDir: z.string().optional()
+    happyLibDir: z.string().optional(),
 })
 
 export interface Machine {
@@ -42,8 +42,7 @@ export class MachineCache {
     constructor(
         private readonly store: Store,
         private readonly publisher: EventPublisher
-    ) {
-    }
+    ) {}
 
     getMachines(): Machine[] {
         return Array.from(this.machines.values())
@@ -75,7 +74,12 @@ export class MachineCache {
 
     getOrCreateMachine(id: string, metadata: unknown, runnerState: unknown, namespace: string): Machine {
         const stored = this.store.machines.getOrCreateMachine(id, metadata, runnerState, namespace)
-        return this.refreshMachine(stored.id) ?? (() => { throw new Error('Failed to load machine') })()
+        return (
+            this.refreshMachine(stored.id) ??
+            (() => {
+                throw new Error('Failed to load machine')
+            })()
+        )
     }
 
     refreshMachine(machineId: string): Machine | null {
@@ -115,11 +119,11 @@ export class MachineCache {
             createdAt: stored.createdAt,
             updatedAt: stored.updatedAt,
             active: useStoredActivity ? stored.active : (existing?.active ?? stored.active),
-            activeAt: useStoredActivity ? storedActiveAt : (existingActiveAt || storedActiveAt),
+            activeAt: useStoredActivity ? storedActiveAt : existingActiveAt || storedActiveAt,
             metadata,
             metadataVersion: stored.metadataVersion,
             runnerState: stored.runnerState,
-            runnerStateVersion: stored.runnerStateVersion
+            runnerStateVersion: stored.runnerStateVersion,
         }
 
         this.machines.set(machineId, machine)
@@ -147,10 +151,14 @@ export class MachineCache {
 
         const now = Date.now()
         const lastBroadcastAt = this.lastBroadcastAtByMachineId.get(machine.id) ?? 0
-        const shouldBroadcast = (!wasActive && machine.active) || (now - lastBroadcastAt > 10_000)
+        const shouldBroadcast = (!wasActive && machine.active) || now - lastBroadcastAt > 10_000
         if (shouldBroadcast) {
             this.lastBroadcastAtByMachineId.set(machine.id, now)
-            this.publisher.emit({ type: 'machine-updated', machineId: machine.id, data: { activeAt: machine.activeAt } })
+            this.publisher.emit({
+                type: 'machine-updated',
+                machineId: machine.id,
+                data: { activeAt: machine.activeAt },
+            })
         }
     }
 

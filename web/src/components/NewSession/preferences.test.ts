@@ -1,10 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import {
-    loadPreferredAgent,
-    loadPreferredYoloMode,
-    savePreferredAgent,
-    savePreferredYoloMode,
-} from './preferences'
+import { loadPreferredAgent, loadPreferredYoloMode, savePreferredAgent, savePreferredYoloMode } from './preferences'
 
 describe('NewSession preferences', () => {
     beforeEach(() => {

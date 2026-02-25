@@ -32,19 +32,19 @@ type UpdateStateHandler = ClientToServerEvents['update-state']
 const messageSchema = z.object({
     sid: z.string(),
     message: z.union([z.string(), z.unknown()]),
-    localId: z.string().optional()
+    localId: z.string().optional(),
 })
 
 const updateMetadataSchema = z.object({
     sid: z.string(),
     expectedVersion: z.number().int(),
-    metadata: z.unknown()
+    metadata: z.unknown(),
 })
 
 const updateStateSchema = z.object({
     sid: z.string(),
     expectedVersion: z.number().int(),
-    agentState: z.unknown().nullable()
+    agentState: z.unknown().nullable(),
 })
 
 export type SessionHandlersDeps = {
@@ -68,15 +68,16 @@ export function registerSessionHandlers(socket: CliSocketWithData, deps: Session
         const { sid, localId } = parsed.data
         const raw = parsed.data.message
 
-        const content = typeof raw === 'string'
-            ? (() => {
-                try {
-                    return JSON.parse(raw) as unknown
-                } catch {
-                    return raw
-                }
-            })()
-            : raw
+        const content =
+            typeof raw === 'string'
+                ? (() => {
+                      try {
+                          return JSON.parse(raw) as unknown
+                      } catch {
+                          return raw
+                      }
+                  })()
+                : raw
 
         const sessionAccess = resolveSessionAccess(sid)
         if (!sessionAccess.ok) {
@@ -107,9 +108,9 @@ export function registerSessionHandlers(socket: CliSocketWithData, deps: Session
                     seq: msg.seq,
                     createdAt: msg.createdAt,
                     localId: msg.localId,
-                    content: msg.content
-                }
-            }
+                    content: msg.content,
+                },
+            },
         }
         socket.to(`session:${sid}`).emit('update', update)
 
@@ -121,8 +122,8 @@ export function registerSessionHandlers(socket: CliSocketWithData, deps: Session
                 seq: msg.seq,
                 localId: msg.localId,
                 content: msg.content,
-                createdAt: msg.createdAt
-            }
+                createdAt: msg.createdAt,
+            },
         })
     })
 
@@ -163,8 +164,8 @@ export function registerSessionHandlers(socket: CliSocketWithData, deps: Session
                     t: 'update-session' as const,
                     sid,
                     metadata: { version: result.version, value: metadata },
-                    agentState: null
-                }
+                    agentState: null,
+                },
             }
             socket.to(`session:${sid}`).emit('update', update)
             onWebappEvent?.({ type: 'session-updated', sessionId: sid, data: { sid } })
@@ -210,8 +211,8 @@ export function registerSessionHandlers(socket: CliSocketWithData, deps: Session
                     t: 'update-session' as const,
                     sid,
                     metadata: null,
-                    agentState: { version: result.version, value: agentState }
-                }
+                    agentState: { version: result.version, value: agentState },
+                },
             }
             socket.to(`session:${sid}`).emit('update', update)
             onWebappEvent?.({ type: 'session-updated', sessionId: sid, data: { sid } })

@@ -6,14 +6,14 @@ import { CliOutputBlock } from '@/components/CliOutputBlock'
 import type { HappyChatMessageMetadata } from '@/lib/assistant-runtime'
 
 const TOOL_COMPONENTS = {
-    Fallback: HappyToolMessage
+    Fallback: HappyToolMessage,
 } as const
 
 const MESSAGE_PART_COMPONENTS = {
     Text: MarkdownText,
     Reasoning: Reasoning,
     ReasoningGroup: ReasoningGroup,
-    tools: TOOL_COMPONENTS
+    tools: TOOL_COMPONENTS,
 } as const
 
 export function HappyAssistantMessage() {

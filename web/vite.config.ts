@@ -17,13 +17,13 @@ export default defineConfig({
         proxy: {
             '/api': {
                 target: 'http://127.0.0.1:3006',
-                changeOrigin: true
+                changeOrigin: true,
             },
             '/socket.io': {
                 target: 'http://127.0.0.1:3006',
-                ws: true
-            }
-        }
+                ws: true,
+            },
+        },
     },
     plugins: [
         react(),
@@ -47,43 +47,43 @@ export default defineConfig({
                     {
                         src: 'pwa-64x64.png',
                         sizes: '64x64',
-                        type: 'image/png'
+                        type: 'image/png',
                     },
                     {
                         src: 'pwa-192x192.png',
                         sizes: '192x192',
-                        type: 'image/png'
+                        type: 'image/png',
                     },
                     {
                         src: 'pwa-512x512.png',
                         sizes: '512x512',
-                        type: 'image/png'
+                        type: 'image/png',
                     },
                     {
                         src: 'maskable-icon-512x512.png',
                         sizes: '512x512',
                         type: 'image/png',
-                        purpose: 'maskable'
-                    }
-                ]
+                        purpose: 'maskable',
+                    },
+                ],
             },
             injectManifest: {
-                globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}']
+                globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
             },
             devOptions: {
                 enabled: true,
-                type: 'module'
-            }
-        })
+                type: 'module',
+            },
+        }),
     ],
     base,
     resolve: {
         alias: {
-            '@': resolve(__dirname, 'src')
-        }
+            '@': resolve(__dirname, 'src'),
+        },
     },
     build: {
         outDir: 'dist',
-        emptyOutDir: true
-    }
+        emptyOutDir: true,
+    },
 })

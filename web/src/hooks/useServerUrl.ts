@@ -2,9 +2,7 @@ import { useCallback, useMemo, useState } from 'react'
 
 const HUB_URL_KEY = 'hapi_hub_url'
 
-export type ServerUrlResult =
-    | { ok: true; value: string }
-    | { ok: false; error: string }
+export type ServerUrlResult = { ok: true; value: string } | { ok: false; error: string }
 
 export function normalizeServerUrl(input: string): ServerUrlResult {
     const trimmed = input.trim()
@@ -108,6 +106,6 @@ export function useServerUrl(): {
         serverUrl,
         baseUrl,
         setServerUrl,
-        clearServerUrl
+        clearServerUrl,
     }
 }

@@ -52,13 +52,16 @@ const IGNORED_REGEX = /^! (.+)$/
 const NUMSTAT_REGEX = /^(\d+|-)\t(\d+|-)\t(.*)$/
 
 export function parseStatusSummaryV2(statusOutput: string): GitStatusSummaryV2 {
-    const lines = statusOutput.trim().split('\n').filter((line) => line.length > 0)
+    const lines = statusOutput
+        .trim()
+        .split('\n')
+        .filter((line) => line.length > 0)
 
     const result: GitStatusSummaryV2 = {
         files: [],
         notAdded: [],
         ignored: [],
-        branch: {}
+        branch: {},
     }
 
     for (const line of lines) {
@@ -129,14 +132,17 @@ export function parseStatusSummaryV2(statusOutput: string): GitStatusSummaryV2 {
 }
 
 export function parseNumStat(numStatOutput: string): DiffSummary {
-    const lines = numStatOutput.trim().split('\n').filter((line) => line.length > 0)
+    const lines = numStatOutput
+        .trim()
+        .split('\n')
+        .filter((line) => line.length > 0)
 
     const result: DiffSummary = {
         files: [],
         insertions: 0,
         deletions: 0,
         changes: 0,
-        changed: 0
+        changed: 0,
     }
 
     for (const line of lines) {
@@ -156,7 +162,7 @@ export function parseNumStat(numStatOutput: string): DiffSummary {
             changes,
             insertions,
             deletions,
-            binary: isBinary
+            binary: isBinary,
         })
         result.insertions += insertions
         result.deletions += deletions
@@ -167,7 +173,9 @@ export function parseNumStat(numStatOutput: string): DiffSummary {
     return result
 }
 
-export function createDiffStatsMap(summary: DiffSummary): Record<string, { added: number; removed: number; binary: boolean }> {
+export function createDiffStatsMap(
+    summary: DiffSummary
+): Record<string, { added: number; removed: number; binary: boolean }> {
     const stats: Record<string, { added: number; removed: number; binary: boolean }> = {}
 
     for (const file of summary.files) {
@@ -175,7 +183,7 @@ export function createDiffStatsMap(summary: DiffSummary): Record<string, { added
         const stat = {
             added: file.insertions,
             removed: file.deletions,
-            binary: file.binary
+            binary: file.binary,
         }
         stats[file.file] = stat
         if (paths.newPath && paths.newPath !== file.file) {
@@ -227,7 +235,7 @@ export function buildGitStatusFiles(
                 isStaged: true,
                 linesAdded: stats.added,
                 linesRemoved: stats.removed,
-                oldPath: file.from
+                oldPath: file.from,
             })
         }
 
@@ -242,7 +250,7 @@ export function buildGitStatusFiles(
                 isStaged: false,
                 linesAdded: stats.added,
                 linesRemoved: stats.removed,
-                oldPath: file.from
+                oldPath: file.from,
             })
         }
     }
@@ -264,7 +272,7 @@ export function buildGitStatusFiles(
             status: 'untracked',
             isStaged: false,
             linesAdded: 0,
-            linesRemoved: 0
+            linesRemoved: 0,
         })
     }
 
@@ -273,7 +281,7 @@ export function buildGitStatusFiles(
         unstagedFiles,
         branch: branchName,
         totalStaged: stagedFiles.length,
-        totalUnstaged: unstagedFiles.length
+        totalUnstaged: unstagedFiles.length,
     }
 }
 
@@ -282,7 +290,7 @@ function parseOrdinaryChange(matches: string[]): GitFileEntryV2 | null {
     return {
         index: matches[1],
         workingDir: matches[2],
-        path: matches[9]
+        path: matches[9],
     }
 }
 
@@ -292,7 +300,7 @@ function parseRenameCopy(matches: string[]): GitFileEntryV2 | null {
         index: matches[1],
         workingDir: matches[2],
         from: matches[11],
-        path: matches[12]
+        path: matches[12],
     }
 }
 
@@ -301,7 +309,7 @@ function parseUnmerged(matches: string[]): GitFileEntryV2 | null {
     return {
         index: matches[1],
         workingDir: matches[2],
-        path: matches[11]
+        path: matches[11],
     }
 }
 
@@ -328,7 +336,9 @@ function getFileStatus(statusChar: string): GitFileStatus['status'] {
 function normalizeNumstatPath(rawPath: string): { newPath: string; oldPath?: string } {
     const trimmed = rawPath.trim()
     if (trimmed.includes('{') && trimmed.includes('=>') && trimmed.includes('}')) {
-        const newPath = trimmed.replace(/\{([^{}]+?)\s*=>\s*([^{}]+?)\}/g, (_, oldPart: string, newPart: string) => newPart.trim())
+        const newPath = trimmed.replace(/\{([^{}]+?)\s*=>\s*([^{}]+?)\}/g, (_, oldPart: string, newPart: string) =>
+            newPart.trim()
+        )
         const oldPath = trimmed.replace(/\{([^{}]+?)\s*=>\s*([^{}]+?)\}/g, (_, oldPart: string) => oldPart.trim())
         return { newPath, oldPath }
     }

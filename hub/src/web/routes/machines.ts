@@ -10,11 +10,11 @@ const spawnBodySchema = z.object({
     model: z.string().optional(),
     yolo: z.boolean().optional(),
     sessionType: z.enum(['simple', 'worktree']).optional(),
-    worktreeName: z.string().optional()
+    worktreeName: z.string().optional(),
 })
 
 const pathsExistsSchema = z.object({
-    paths: z.array(z.string().min(1)).max(1000)
+    paths: z.array(z.string().min(1)).max(1000),
 })
 
 export function createMachinesRoutes(getSyncEngine: () => SyncEngine | null): Hono<WebAppEnv> {

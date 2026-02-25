@@ -14,9 +14,7 @@ export function SessionTypeSelector(props: {
 
     return (
         <div className="flex flex-col gap-1.5 px-3 py-3">
-            <label className="text-xs font-medium text-[var(--app-hint)]">
-                {t('newSession.type')}
-            </label>
+            <label className="text-xs font-medium text-[var(--app-hint)]">{t('newSession.type')}</label>
             <div className="flex flex-col gap-1.5">
                 {(['simple', 'worktree'] as const).map((type) => (
                     <div key={type} className="flex flex-col gap-2">

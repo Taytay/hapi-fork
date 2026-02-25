@@ -21,11 +21,7 @@ function createIcon(paths: ReactNode, props: IconProps, strokeWidth = 1.5) {
 }
 
 export function CloseIcon(props: IconProps) {
-    return createIcon(
-        <path d="M6 18 18 6M6 6l12 12" />,
-        props,
-        2
-    )
+    return createIcon(<path d="M6 18 18 6M6 6l12 12" />, props, 2)
 }
 
 export function ShareIcon(props: IconProps) {
@@ -36,10 +32,7 @@ export function ShareIcon(props: IconProps) {
 }
 
 export function PlusCircleIcon(props: IconProps) {
-    return createIcon(
-        <path d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />,
-        props
-    )
+    return createIcon(<path d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />, props)
 }
 
 export function CopyIcon(props: IconProps) {
@@ -54,9 +47,5 @@ export function CopyIcon(props: IconProps) {
 }
 
 export function CheckIcon(props: IconProps) {
-    return createIcon(
-        <polyline points="20 6 9 17 4 12" />,
-        props,
-        2
-    )
+    return createIcon(<polyline points="20 6 9 17 4 12" />, props, 2)
 }

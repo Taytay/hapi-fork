@@ -49,7 +49,10 @@ export function getEventPresentation(event: AgentEvent): EventPresentation {
     }
     if (event.type === 'limit-reached') {
         const endsAt = typeof event.endsAt === 'number' ? event.endsAt : null
-        return { icon: '⏳', text: endsAt ? `Usage limit reached until ${formatUnixTimestamp(endsAt)}` : 'Usage limit reached' }
+        return {
+            icon: '⏳',
+            text: endsAt ? `Usage limit reached until ${formatUnixTimestamp(endsAt)}` : 'Usage limit reached',
+        }
     }
     if (event.type === 'message') {
         return { icon: null, text: typeof event.message === 'string' ? event.message : 'Message' }

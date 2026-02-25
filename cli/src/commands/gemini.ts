@@ -52,5 +52,5 @@ export const geminiCommand: CommandDefinition = {
             }
             process.exit(1)
         }
-    }
+    },
 }

@@ -22,7 +22,7 @@ import {
     type RpcListDirectoryResponse,
     type RpcPathExistsResponse,
     type RpcReadFileResponse,
-    type RpcUploadFileResponse
+    type RpcUploadFileResponse,
 } from './rpcGateway'
 import { SessionCache } from './sessionCache'
 
@@ -35,12 +35,16 @@ export type {
     RpcListDirectoryResponse,
     RpcPathExistsResponse,
     RpcReadFileResponse,
-    RpcUploadFileResponse
+    RpcUploadFileResponse,
 } from './rpcGateway'
 
 export type ResumeSessionResult =
     | { type: 'success'; sessionId: string }
-    | { type: 'error'; message: string; code: 'session_not_found' | 'access_denied' | 'no_machine_online' | 'resume_unavailable' | 'resume_failed' }
+    | {
+          type: 'error'
+          message: string
+          code: 'session_not_found' | 'access_denied' | 'no_machine_online' | 'resume_unavailable' | 'resume_failed'
+      }
 
 export class SyncEngine {
     private readonly eventPublisher: EventPublisher
@@ -50,12 +54,7 @@ export class SyncEngine {
     private readonly rpcGateway: RpcGateway
     private inactivityTimer: NodeJS.Timeout | null = null
 
-    constructor(
-        store: Store,
-        io: Server,
-        rpcRegistry: RpcRegistry,
-        sseManager: SSEManager
-    ) {
+    constructor(store: Store, io: Server, rpcRegistry: RpcRegistry, sseManager: SSEManager) {
         this.eventPublisher = new EventPublisher(sseManager, (event) => this.resolveNamespace(event))
         this.sessionCache = new SessionCache(store, this.eventPublisher)
         this.machineCache = new MachineCache(store, this.eventPublisher)
@@ -102,8 +101,8 @@ export class SyncEngine {
     }
 
     getSessionByNamespace(sessionId: string, namespace: string): Session | undefined {
-        const session = this.sessionCache.getSessionByNamespace(sessionId, namespace)
-            ?? this.sessionCache.refreshSession(sessionId)
+        const session =
+            this.sessionCache.getSessionByNamespace(sessionId, namespace) ?? this.sessionCache.refreshSession(sessionId)
         if (!session || session.namespace !== namespace) {
             return undefined
         }
@@ -145,7 +144,10 @@ export class SyncEngine {
         return this.machineCache.getOnlineMachinesByNamespace(namespace)
     }
 
-    getMessagesPage(sessionId: string, options: { limit: number; beforeSeq: number | null }): {
+    getMessagesPage(
+        sessionId: string,
+        options: { limit: number; beforeSeq: number | null }
+    ): {
         messages: DecryptedMessage[]
         page: {
             limit: number
@@ -288,7 +290,9 @@ export class SyncEngine {
         if (!result || typeof result !== 'object') {
             throw new Error('Invalid response from session config RPC')
         }
-        const obj = result as { applied?: { permissionMode?: Session['permissionMode']; modelMode?: Session['modelMode'] } }
+        const obj = result as {
+            applied?: { permissionMode?: Session['permissionMode']; modelMode?: Session['modelMode'] }
+        }
         const applied = obj.applied
         if (!applied || typeof applied !== 'object') {
             throw new Error('Missing applied session config')
@@ -307,7 +311,16 @@ export class SyncEngine {
         worktreeName?: string,
         resumeSessionId?: string
     ): Promise<{ type: 'success'; sessionId: string } | { type: 'error'; message: string }> {
-        return await this.rpcGateway.spawnSession(machineId, directory, agent, model, yolo, sessionType, worktreeName, resumeSessionId)
+        return await this.rpcGateway.spawnSession(
+            machineId,
+            directory,
+            agent,
+            model,
+            yolo,
+            sessionType,
+            worktreeName,
+            resumeSessionId
+        )
     }
 
     async resumeSession(sessionId: string, namespace: string): Promise<ResumeSessionResult> {
@@ -316,7 +329,7 @@ export class SyncEngine {
             return {
                 type: 'error',
                 message: access.reason === 'access-denied' ? 'Session access denied' : 'Session not found',
-                code: access.reason === 'access-denied' ? 'access_denied' : 'session_not_found'
+                code: access.reason === 'access-denied' ? 'access_denied' : 'session_not_found',
             }
         }
 
@@ -330,14 +343,16 @@ export class SyncEngine {
             return { type: 'error', message: 'Session metadata missing path', code: 'resume_unavailable' }
         }
 
-        const flavor = metadata.flavor === 'codex' || metadata.flavor === 'gemini' || metadata.flavor === 'opencode'
-            ? metadata.flavor
-            : 'claude'
-        const resumeToken = flavor === 'codex'
-            ? metadata.codexSessionId
-            : flavor === 'gemini'
-                ? metadata.geminiSessionId
-                : flavor === 'opencode'
+        const flavor =
+            metadata.flavor === 'codex' || metadata.flavor === 'gemini' || metadata.flavor === 'opencode'
+                ? metadata.flavor
+                : 'claude'
+        const resumeToken =
+            flavor === 'codex'
+                ? metadata.codexSessionId
+                : flavor === 'gemini'
+                  ? metadata.geminiSessionId
+                  : flavor === 'opencode'
                     ? metadata.opencodeSessionId
                     : metadata.claudeSessionId
 
@@ -418,11 +433,17 @@ export class SyncEngine {
         return await this.rpcGateway.getGitStatus(sessionId, cwd)
     }
 
-    async getGitDiffNumstat(sessionId: string, options: { cwd?: string; staged?: boolean }): Promise<RpcCommandResponse> {
+    async getGitDiffNumstat(
+        sessionId: string,
+        options: { cwd?: string; staged?: boolean }
+    ): Promise<RpcCommandResponse> {
         return await this.rpcGateway.getGitDiffNumstat(sessionId, options)
     }
 
-    async getGitDiffFile(sessionId: string, options: { cwd?: string; filePath: string; staged?: boolean }): Promise<RpcCommandResponse> {
+    async getGitDiffFile(
+        sessionId: string,
+        options: { cwd?: string; filePath: string; staged?: boolean }
+    ): Promise<RpcCommandResponse> {
         return await this.rpcGateway.getGitDiffFile(sessionId, options)
     }
 
@@ -434,7 +455,12 @@ export class SyncEngine {
         return await this.rpcGateway.listDirectory(sessionId, path)
     }
 
-    async uploadFile(sessionId: string, filename: string, content: string, mimeType: string): Promise<RpcUploadFileResponse> {
+    async uploadFile(
+        sessionId: string,
+        filename: string,
+        content: string,
+        mimeType: string
+    ): Promise<RpcUploadFileResponse> {
         return await this.rpcGateway.uploadFile(sessionId, filename, content, mimeType)
     }
 
@@ -446,7 +472,10 @@ export class SyncEngine {
         return await this.rpcGateway.runRipgrep(sessionId, args, cwd)
     }
 
-    async listSlashCommands(sessionId: string, agent: string): Promise<{
+    async listSlashCommands(
+        sessionId: string,
+        agent: string
+    ): Promise<{
         success: boolean
         commands?: Array<{ name: string; description?: string; source: 'builtin' | 'user' }>
         error?: string

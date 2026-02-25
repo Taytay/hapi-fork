@@ -52,5 +52,5 @@ export const opencodeCommand: CommandDefinition = {
             }
             process.exit(1)
         }
-    }
+    },
 }

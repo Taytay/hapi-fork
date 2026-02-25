@@ -234,7 +234,9 @@ export default function SettingsPage() {
                                 <span className="text-[var(--app-fg)]">{t('settings.display.fontSize')}</span>
                                 <span className="flex items-center gap-1 text-[var(--app-hint)]">
                                     <span>{currentFontScaleLabel}</span>
-                                    <ChevronDownIcon className={`transition-transform ${isFontOpen ? 'rotate-180' : ''}`} />
+                                    <ChevronDownIcon
+                                        className={`transition-transform ${isFontOpen ? 'rotate-180' : ''}`}
+                                    />
                                 </span>
                             </button>
 
@@ -295,7 +297,9 @@ export default function SettingsPage() {
                                                 : getLanguageDisplayName(currentVoiceLanguage)
                                             : t('settings.voice.autoDetect')}
                                     </span>
-                                    <ChevronDownIcon className={`transition-transform ${isVoiceOpen ? 'rotate-180' : ''}`} />
+                                    <ChevronDownIcon
+                                        className={`transition-transform ${isVoiceOpen ? 'rotate-180' : ''}`}
+                                    />
                                 </span>
                             </button>
 
@@ -307,9 +311,10 @@ export default function SettingsPage() {
                                 >
                                     {voiceLanguages.map((lang) => {
                                         const isSelected = voiceLanguage === lang.code
-                                        const displayName = lang.code === null
-                                            ? t('settings.voice.autoDetect')
-                                            : getLanguageDisplayName(lang)
+                                        const displayName =
+                                            lang.code === null
+                                                ? t('settings.voice.autoDetect')
+                                                : getLanguageDisplayName(lang)
                                         return (
                                             <button
                                                 key={lang.code ?? 'auto'}

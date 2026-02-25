@@ -30,7 +30,7 @@ function toStoredMachine(row: DbMachineRow): StoredMachine {
         runnerStateVersion: row.runner_state_version,
         active: row.active === 1,
         activeAt: row.active_at,
-        seq: row.seq
+        seq: row.seq,
     }
 }
 
@@ -54,7 +54,8 @@ export function getOrCreateMachine(
     const metadataJson = JSON.stringify(metadata)
     const runnerStateJson = runnerState === null || runnerState === undefined ? null : JSON.stringify(runnerState)
 
-    db.prepare(`
+    db.prepare(
+        `
         INSERT INTO machines (
             id, namespace, created_at, updated_at,
             metadata, metadata_version,
@@ -66,13 +67,14 @@ export function getOrCreateMachine(
             @runner_state, 1,
             0, NULL, 0
         )
-    `).run({
+    `
+    ).run({
         id,
         namespace,
         created_at: now,
         updated_at: now,
         metadata: metadataJson,
-        runner_state: runnerStateJson
+        runner_state: runnerStateJson,
     })
 
     const row = getMachine(db, id)
@@ -106,7 +108,7 @@ export function updateMachineMetadata(
         },
         decode: safeJsonParse,
         setClauses: ['updated_at = @updated_at', 'seq = seq + 1'],
-        params: { updated_at: now }
+        params: { updated_at: now },
     })
 }
 
@@ -131,13 +133,8 @@ export function updateMachineRunnerState(
         value: normalized,
         encode: (value) => (value === null ? null : JSON.stringify(value)),
         decode: safeJsonParse,
-        setClauses: [
-            'updated_at = @updated_at',
-            'active = 1',
-            'active_at = @active_at',
-            'seq = seq + 1'
-        ],
-        params: { updated_at: now, active_at: now }
+        setClauses: ['updated_at = @updated_at', 'active = 1', 'active_at = @active_at', 'seq = seq + 1'],
+        params: { updated_at: now, active_at: now },
     })
 }
 
@@ -147,9 +144,9 @@ export function getMachine(db: Database, id: string): StoredMachine | null {
 }
 
 export function getMachineByNamespace(db: Database, id: string, namespace: string): StoredMachine | null {
-    const row = db.prepare(
-        'SELECT * FROM machines WHERE id = ? AND namespace = ?'
-    ).get(id, namespace) as DbMachineRow | undefined
+    const row = db.prepare('SELECT * FROM machines WHERE id = ? AND namespace = ?').get(id, namespace) as
+        | DbMachineRow
+        | undefined
     return row ? toStoredMachine(row) : null
 }
 
@@ -159,8 +156,8 @@ export function getMachines(db: Database): StoredMachine[] {
 }
 
 export function getMachinesByNamespace(db: Database, namespace: string): StoredMachine[] {
-    const rows = db.prepare(
-        'SELECT * FROM machines WHERE namespace = ? ORDER BY updated_at DESC'
-    ).all(namespace) as DbMachineRow[]
+    const rows = db
+        .prepare('SELECT * FROM machines WHERE namespace = ? ORDER BY updated_at DESC')
+        .all(namespace) as DbMachineRow[]
     return rows.map(toStoredMachine)
 }

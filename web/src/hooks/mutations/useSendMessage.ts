@@ -3,11 +3,7 @@ import { useRef, useState } from 'react'
 import type { ApiClient } from '@/api/client'
 import type { AttachmentMetadata, DecryptedMessage } from '@/types/api'
 import { makeClientSideId } from '@/lib/messages'
-import {
-    appendOptimisticMessage,
-    getMessageWindowState,
-    updateMessageStatus,
-} from '@/lib/message-window-store'
+import { appendOptimisticMessage, getMessageWindowState, updateMessageStatus } from '@/lib/message-window-store'
 import { usePlatform } from '@/hooks/usePlatform'
 
 type SendMessageInput = {
@@ -26,10 +22,7 @@ type UseSendMessageOptions = {
     onBlocked?: (reason: BlockedReason) => void
 }
 
-function findMessageByLocalId(
-    sessionId: string,
-    localId: string,
-): DecryptedMessage | null {
+function findMessageByLocalId(sessionId: string, localId: string): DecryptedMessage | null {
     const state = getMessageWindowState(sessionId)
     for (const message of state.messages) {
         if (message.localId === localId) return message
@@ -70,8 +63,8 @@ export function useSendMessage(
                     content: {
                         type: 'text',
                         text: input.text,
-                        attachments: input.attachments
-                    }
+                        attachments: input.attachments,
+                    },
                 },
                 createdAt: input.createdAt,
                 status: 'sending',

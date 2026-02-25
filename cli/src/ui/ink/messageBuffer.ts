@@ -17,7 +17,7 @@ export class MessageBuffer {
             id: `msg-${this.nextId++}`,
             timestamp: new Date(),
             content,
-            type
+            type,
         }
         this.messages.push(message)
         if (this.messages.length > MAX_MESSAGE_COUNT) {
@@ -48,6 +48,6 @@ export class MessageBuffer {
 
     private notifyListeners(): void {
         const messages = this.getMessages()
-        this.listeners.forEach(listener => listener(messages))
+        this.listeners.forEach((listener) => listener(messages))
     }
 }

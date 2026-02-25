@@ -40,7 +40,7 @@ export function buildMachineMetadata(): MachineMetadata {
         happyCliVersion: packageJson.version,
         homeDir: os.homedir(),
         happyHomeDir: configuration.happyHomeDir,
-        happyLibDir: runtimePath()
+        happyLibDir: runtimePath(),
     }
 }
 
@@ -71,7 +71,7 @@ export function buildSessionMetadata(options: {
         lifecycleState: 'running',
         lifecycleStateSince: now,
         flavor: options.flavor,
-        worktree: worktreeInfo ?? undefined
+        worktree: worktreeInfo ?? undefined,
     }
 }
 
@@ -79,7 +79,9 @@ async function getMachineIdOrExit(): Promise<string> {
     const settings = await readSettings()
     const machineId = settings?.machineId
     if (!machineId) {
-        console.error(`[START] No machine ID found in settings, which is unexpected since authAndSetupMachineIfNeeded should have created it. Please report this issue on ${packageJson.bugs}`)
+        console.error(
+            `[START] No machine ID found in settings, which is unexpected since authAndSetupMachineIfNeeded should have created it. Please report this issue on ${packageJson.bugs}`
+        )
         process.exit(1)
     }
     logger.debug(`Using machineId: ${machineId}`)
@@ -111,20 +113,20 @@ export async function bootstrapSession(options: SessionBootstrapOptions): Promis
     const machineId = await getMachineIdOrExit()
     await api.getOrCreateMachine({
         machineId,
-        metadata: buildMachineMetadata()
+        metadata: buildMachineMetadata(),
     })
 
     const metadata = buildSessionMetadata({
         flavor: options.flavor,
         startedBy,
         workingDirectory,
-        machineId
+        machineId,
     })
 
     const sessionInfo = await api.getOrCreateSession({
         tag: sessionTag,
         metadata,
-        state: agentState
+        state: agentState,
     })
 
     const session = api.sessionSyncClient(sessionInfo)
@@ -138,6 +140,6 @@ export async function bootstrapSession(options: SessionBootstrapOptions): Promis
         metadata,
         machineId,
         startedBy,
-        workingDirectory
+        workingDirectory,
     }
 }

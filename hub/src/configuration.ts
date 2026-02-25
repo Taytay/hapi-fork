@@ -132,9 +132,7 @@ class Configuration {
         }
 
         // 2. Determine DB path (env only - not persisted)
-        const dbPath = process.env.DB_PATH
-            ? process.env.DB_PATH.replace(/^~/, homedir())
-            : join(dataDir, 'hapi.db')
+        const dbPath = process.env.DB_PATH ? process.env.DB_PATH.replace(/^~/, homedir()) : join(dataDir, 'hapi.db')
 
         // 3. Load hub settings (with persistence)
         const settingsResult = await loadServerSettings(dataDir)
@@ -144,12 +142,7 @@ class Configuration {
         }
 
         // 4. Create configuration instance
-        const config = new Configuration(
-            dataDir,
-            dbPath,
-            settingsResult.settings,
-            settingsResult.sources
-        )
+        const config = new Configuration(dataDir, dbPath, settingsResult.settings, settingsResult.sources)
 
         // 5. Load CLI API token
         const tokenResult = await getOrCreateCliApiToken(dataDir)
@@ -197,5 +190,5 @@ export function getConfiguration(): Configuration {
 export const configuration = new Proxy({} as Configuration, {
     get(_, prop) {
         return getConfiguration()[prop as keyof Configuration]
-    }
+    },
 })

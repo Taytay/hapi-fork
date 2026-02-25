@@ -8,7 +8,7 @@ import {
     getMachinesByNamespace,
     getOrCreateMachine,
     updateMachineRunnerState,
-    updateMachineMetadata
+    updateMachineMetadata,
 } from './machines'
 
 export class MachineStore {

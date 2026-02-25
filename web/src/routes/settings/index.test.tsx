@@ -32,21 +32,13 @@ vi.mock('@/lib/languages', () => ({
 }))
 
 function renderWithProviders(ui: React.ReactElement) {
-    return render(
-        <I18nProvider>
-            {ui}
-        </I18nProvider>
-    )
+    return render(<I18nProvider>{ui}</I18nProvider>)
 }
 
 function renderWithSpyT(ui: React.ReactElement) {
     const translations = en as Record<string, string>
     const spyT = vi.fn((key: string) => translations[key] ?? key)
-    render(
-        <I18nContext.Provider value={{ t: spyT, locale: 'en', setLocale: vi.fn() }}>
-            {ui}
-        </I18nContext.Provider>
-    )
+    render(<I18nContext.Provider value={{ t: spyT, locale: 'en', setLocale: vi.fn() }}>{ui}</I18nContext.Provider>)
     return spyT
 }
 

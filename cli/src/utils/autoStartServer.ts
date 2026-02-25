@@ -57,7 +57,7 @@ async function checkPortListening(port: number, host: string = '127.0.0.1'): Pro
 async function checkServerHealth(url: string): Promise<boolean> {
     try {
         const response = await fetch(`${url}/health`, {
-            signal: AbortSignal.timeout(1000)
+            signal: AbortSignal.timeout(1000),
         })
         return response.ok
     } catch {
@@ -80,7 +80,7 @@ async function waitForServerReady(
             logger.debug(`[AUTO-START] Server ready after ${Date.now() - startTime}ms`)
             return true
         }
-        await new Promise(resolve => setTimeout(resolve, pollIntervalMs))
+        await new Promise((resolve) => setTimeout(resolve, pollIntervalMs))
     }
 
     return false
@@ -128,7 +128,7 @@ function startServerAsChild(): void {
     const serverProcess = spawnHappyCLI(['hub'], {
         detached: false,
         stdio: 'ignore',
-        env: process.env
+        env: process.env,
     })
 
     logger.debug(`[AUTO-START] Hub process spawned with PID ${serverProcess.pid}`)

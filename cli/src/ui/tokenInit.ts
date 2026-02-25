@@ -43,9 +43,9 @@ export async function initializeToken(): Promise<void> {
     const token = await promptForToken()
 
     // 5. Save and update configuration
-    await updateSettings(current => ({
+    await updateSettings((current) => ({
         ...current,
-        cliApiToken: token
+        cliApiToken: token,
     }))
     configuration._setCliApiToken(token)
 }

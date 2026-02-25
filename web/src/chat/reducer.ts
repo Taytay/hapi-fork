@@ -43,16 +43,20 @@ export function reduceChatBlocks(
 
     const consumedGroupIds = new Set<string>()
     const emittedTitleChangeToolUseIds = new Set<string>()
-    const reducerContext = { permissionsById, groups, consumedGroupIds, titleChangesByToolUseId, emittedTitleChangeToolUseIds }
+    const reducerContext = {
+        permissionsById,
+        groups,
+        consumedGroupIds,
+        titleChangesByToolUseId,
+        emittedTitleChangeToolUseIds,
+    }
     const rootResult = reduceTimeline(root, reducerContext)
     let hasReadyEvent = rootResult.hasReadyEvent
 
     // Only create permission-only tool cards when there is no tool call/result in the transcript.
     // Also skip if the permission is older than the oldest message in the current view,
     // to avoid mixing old tool cards with newer messages when paginating.
-    const oldestMessageTime = normalized.length > 0
-        ? Math.min(...normalized.map(m => m.createdAt))
-        : null
+    const oldestMessageTime = normalized.length > 0 ? Math.min(...normalized.map((m) => m.createdAt)) : null
 
     for (const [id, entry] of permissionsById) {
         if (toolIdsInMessages.has(id)) continue
@@ -72,7 +76,7 @@ export function reduceChatBlocks(
             name: entry.toolName,
             input: entry.input,
             description: null,
-            permission: entry.permission
+            permission: entry.permission,
         })
 
         if (entry.permission.status === 'approved') {
@@ -101,7 +105,7 @@ export function reduceChatBlocks(
                 cacheCreation: msg.usage.cache_creation_input_tokens ?? 0,
                 cacheRead: msg.usage.cache_read_input_tokens ?? 0,
                 contextSize: calculateContextSize(msg.usage),
-                timestamp: msg.createdAt
+                timestamp: msg.createdAt,
             }
             break
         }

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test'
+import { describe, expect, it } from 'vitest'
 import { SSEManager } from './sseManager'
 import type { SyncEvent } from '../sync/syncEngine'
 import { VisibilityTracker } from '../visibility/visibilityTracker'
@@ -16,7 +16,7 @@ describe('SSEManager namespace filtering', () => {
             send: (event) => {
                 receivedAlpha.push(event)
             },
-            sendHeartbeat: () => {}
+            sendHeartbeat: () => {},
         })
 
         manager.subscribe({
@@ -26,7 +26,7 @@ describe('SSEManager namespace filtering', () => {
             send: (event) => {
                 receivedBeta.push(event)
             },
-            sendHeartbeat: () => {}
+            sendHeartbeat: () => {},
         })
 
         manager.broadcast({ type: 'session-updated', sessionId: 's1', namespace: 'alpha' })
@@ -46,7 +46,7 @@ describe('SSEManager namespace filtering', () => {
             send: (event) => {
                 received.push({ id: 'alpha', event })
             },
-            sendHeartbeat: () => {}
+            sendHeartbeat: () => {},
         })
 
         manager.subscribe({
@@ -56,7 +56,7 @@ describe('SSEManager namespace filtering', () => {
             send: (event) => {
                 received.push({ id: 'beta', event })
             },
-            sendHeartbeat: () => {}
+            sendHeartbeat: () => {},
         })
 
         manager.broadcast({ type: 'connection-changed', data: { status: 'connected' } })
@@ -77,7 +77,7 @@ describe('SSEManager namespace filtering', () => {
             send: (event) => {
                 received.push({ id: 'visible', event })
             },
-            sendHeartbeat: () => {}
+            sendHeartbeat: () => {},
         })
 
         manager.subscribe({
@@ -88,7 +88,7 @@ describe('SSEManager namespace filtering', () => {
             send: (event) => {
                 received.push({ id: 'hidden', event })
             },
-            sendHeartbeat: () => {}
+            sendHeartbeat: () => {},
         })
 
         manager.subscribe({
@@ -99,7 +99,7 @@ describe('SSEManager namespace filtering', () => {
             send: (event) => {
                 received.push({ id: 'other', event })
             },
-            sendHeartbeat: () => {}
+            sendHeartbeat: () => {},
         })
 
         const toastEvent: Extract<SyncEvent, { type: 'toast' }> = {
@@ -108,8 +108,8 @@ describe('SSEManager namespace filtering', () => {
                 title: 'Test',
                 body: 'Toast body',
                 sessionId: 'session-1',
-                url: '/sessions/session-1'
-            }
+                url: '/sessions/session-1',
+            },
         }
 
         const delivered = await manager.sendToast('alpha', toastEvent)

@@ -34,7 +34,7 @@ export function registerRipgrepHandlers(rpcHandlerManager: RpcHandlerManager, wo
                 success: true,
                 exitCode: result.exitCode,
                 stdout: result.stdout.toString(),
-                stderr: result.stderr.toString()
+                stderr: result.stderr.toString(),
             }
         } catch (error) {
             logger.debug('Failed to run ripgrep:', error)

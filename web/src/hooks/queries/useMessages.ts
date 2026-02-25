@@ -27,7 +27,10 @@ const EMPTY_STATE: MessageWindowState = {
     messagesVersion: 0,
 }
 
-export function useMessages(api: ApiClient | null, sessionId: string | null): {
+export function useMessages(
+    api: ApiClient | null,
+    sessionId: string | null
+): {
     messages: DecryptedMessage[]
     warning: string | null
     isLoading: boolean
@@ -41,12 +44,15 @@ export function useMessages(api: ApiClient | null, sessionId: string | null): {
     setAtBottom: (atBottom: boolean) => void
 } {
     const state = useSyncExternalStore(
-        useCallback((listener) => {
-            if (!sessionId) {
-                return () => {}
-            }
-            return subscribeMessageWindow(sessionId, listener)
-        }, [sessionId]),
+        useCallback(
+            (listener) => {
+                if (!sessionId) {
+                    return () => {}
+                }
+                return subscribeMessageWindow(sessionId, listener)
+            },
+            [sessionId]
+        ),
         useCallback(() => {
             if (!sessionId) {
                 return EMPTY_STATE
@@ -91,10 +97,13 @@ export function useMessages(api: ApiClient | null, sessionId: string | null): {
         }
     }, [api, sessionId])
 
-    const setAtBottom = useCallback((atBottom: boolean) => {
-        if (!sessionId) return
-        setMessageWindowAtBottom(sessionId, atBottom)
-    }, [sessionId])
+    const setAtBottom = useCallback(
+        (atBottom: boolean) => {
+            if (!sessionId) return
+            setMessageWindowAtBottom(sessionId, atBottom)
+        },
+        [sessionId]
+    )
 
     return {
         messages: state.messages,

@@ -8,17 +8,14 @@ export function formatAttachmentsForClaude(attachments: AttachmentMetadata[] | u
     if (!attachments || attachments.length === 0) {
         return ''
     }
-    return attachments.map(a => `@${a.path}`).join(' ')
+    return attachments.map((a) => `@${a.path}`).join(' ')
 }
 
 /**
  * Combines text and formatted attachments into a single prompt string.
  * Attachments are formatted as @path references and prepended to the text.
  */
-export function formatMessageWithAttachments(
-    text: string,
-    attachments: AttachmentMetadata[] | undefined
-): string {
+export function formatMessageWithAttachments(text: string, attachments: AttachmentMetadata[] | undefined): string {
     const attachmentText = formatAttachmentsForClaude(attachments)
     if (!attachmentText) {
         return text

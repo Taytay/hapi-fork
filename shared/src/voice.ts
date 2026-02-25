@@ -138,13 +138,14 @@ For builds, tests, or large file operations:
 - Keep conversations forward-moving with fresh insights
 - Assume a technical software developer audience`
 
-export const VOICE_FIRST_MESSAGE = "Hey! Hapi here."
+export const VOICE_FIRST_MESSAGE = 'Hey! Hapi here.'
 
 export const VOICE_TOOLS = [
     {
         type: 'client' as const,
         name: 'messageCodingAgent',
-        description: 'Send a message to the active coding agent. Use this tool to relay the user\'s coding requests, questions, or instructions to the agent. The message should be clear and complete.',
+        description:
+            "Send a message to the active coding agent. Use this tool to relay the user's coding requests, questions, or instructions to the agent. The message should be clear and complete.",
         expects_response: true,
         response_timeout_secs: 120,
         parameters: {
@@ -153,15 +154,17 @@ export const VOICE_TOOLS = [
             properties: {
                 message: {
                     type: 'string',
-                    description: 'The message to send to the coding agent. Should contain the user\'s complete request or instruction.'
-                }
-            }
-        }
+                    description:
+                        "The message to send to the coding agent. Should contain the user's complete request or instruction.",
+                },
+            },
+        },
     },
     {
         type: 'client' as const,
         name: 'processPermissionRequest',
-        description: 'Process a permission request from the coding agent. Use this when the user wants to allow or deny a pending permission request.',
+        description:
+            'Process a permission request from the coding agent. Use this when the user wants to allow or deny a pending permission request.',
         expects_response: true,
         response_timeout_secs: 30,
         parameters: {
@@ -170,11 +173,11 @@ export const VOICE_TOOLS = [
             properties: {
                 decision: {
                     type: 'string',
-                    description: "The user's decision: must be either 'allow' or 'deny'"
-                }
-            }
-        }
-    }
+                    description: "The user's decision: must be either 'allow' or 'deny'",
+                },
+            },
+        },
+    },
 ]
 
 export interface VoiceAgentConfig {
@@ -229,18 +232,18 @@ export function buildVoiceAgentConfig(): VoiceAgentConfig {
                     llm: 'gemini-2.5-flash',
                     temperature: 0.7,
                     max_tokens: 1024,
-                    tools: VOICE_TOOLS
-                }
+                    tools: VOICE_TOOLS,
+                },
             },
             turn: {
                 turn_timeout: 30.0,
-                silence_end_call_timeout: 600.0
+                silence_end_call_timeout: 600.0,
             },
             tts: {
                 voice_id: 'cgSgspJ2msm6clMCkdW9', // Jessica
                 model_id: 'eleven_flash_v2',
-                speed: 1.1
-            }
+                speed: 1.1,
+            },
         },
         // Enable runtime overrides for language selection
         // See: https://elevenlabs.io/docs/agents-platform/customization/personalization/overrides
@@ -248,10 +251,10 @@ export function buildVoiceAgentConfig(): VoiceAgentConfig {
             overrides: {
                 conversation_config_override: {
                     agent: {
-                        language: true
-                    }
-                }
-            }
-        }
+                        language: true,
+                    },
+                },
+            },
+        },
     }
 }

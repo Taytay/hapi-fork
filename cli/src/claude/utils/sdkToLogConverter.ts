@@ -5,13 +5,7 @@
 
 import { randomUUID } from 'node:crypto'
 import { execSync } from 'node:child_process'
-import type {
-    SDKMessage,
-    SDKUserMessage,
-    SDKAssistantMessage,
-    SDKSystemMessage,
-    SDKResultMessage
-} from '@/claude/sdk'
+import type { SDKMessage, SDKUserMessage, SDKAssistantMessage, SDKSystemMessage, SDKResultMessage } from '@/claude/sdk'
 import type { RawJSONLines } from '@/claude/types'
 import type { ClaudePermissionMode } from '@hapi/protocol/types'
 
@@ -40,7 +34,7 @@ function getGitBranch(cwd: string): string | undefined {
         const branch = execSync('git rev-parse --abbrev-ref HEAD', {
             cwd,
             encoding: 'utf8',
-            stdio: ['ignore', 'pipe', 'ignore']
+            stdio: ['ignore', 'pipe', 'ignore'],
         }).trim()
         return branch || undefined
     } catch {
@@ -56,17 +50,14 @@ export class SDKToLogConverter {
     private lastUuid: string | null = null
     private context: ConversionContext
     private responses?: Map<string, PermissionResponse>
-    private sidechainLastUUID = new Map<string, string>();
+    private sidechainLastUUID = new Map<string, string>()
 
-    constructor(
-        context: Omit<ConversionContext, 'parentUuid'>,
-        responses?: Map<string, PermissionResponse>
-    ) {
+    constructor(context: Omit<ConversionContext, 'parentUuid'>, responses?: Map<string, PermissionResponse>) {
         this.context = {
             ...context,
             gitBranch: context.gitBranch ?? getGitBranch(context.cwd),
             version: context.version ?? process.env.npm_package_version ?? '0.0.0',
-            parentUuid: null
+            parentUuid: null,
         }
         this.responses = responses
     }
@@ -92,12 +83,12 @@ export class SDKToLogConverter {
     convert(sdkMessage: SDKMessage): RawJSONLines | null {
         const uuid = randomUUID()
         const timestamp = new Date().toISOString()
-        let parentUuid = this.lastUuid;
-        let isSidechain = false;
+        let parentUuid = this.lastUuid
+        let isSidechain = false
         if (sdkMessage.parent_tool_use_id) {
-            isSidechain = true;
-            parentUuid = this.sidechainLastUUID.get((sdkMessage as any).parent_tool_use_id) ?? null;
-            this.sidechainLastUUID.set((sdkMessage as any).parent_tool_use_id!, uuid);
+            isSidechain = true
+            parentUuid = this.sidechainLastUUID.get((sdkMessage as any).parent_tool_use_id) ?? null
+            this.sidechainLastUUID.set((sdkMessage as any).parent_tool_use_id!, uuid)
         }
         const baseFields = {
             parentUuid: parentUuid,
@@ -108,7 +99,7 @@ export class SDKToLogConverter {
             version: this.context.version,
             gitBranch: this.context.gitBranch,
             uuid,
-            timestamp
+            timestamp,
         }
 
         let logMessage: RawJSONLines | null = null
@@ -119,16 +110,20 @@ export class SDKToLogConverter {
                 logMessage = {
                     ...baseFields,
                     type: 'user',
-                    message: userMsg.message
+                    message: userMsg.message,
                 }
 
                 // Check if this is a tool result and add mode if available
                 if (Array.isArray(userMsg.message.content)) {
                     for (const content of userMsg.message.content) {
-                        if (content.type === 'tool_result' && content.tool_use_id && this.responses?.has(content.tool_use_id)) {
+                        if (
+                            content.type === 'tool_result' &&
+                            content.tool_use_id &&
+                            this.responses?.has(content.tool_use_id)
+                        ) {
                             const response = this.responses.get(content.tool_use_id)
                             if (response?.mode) {
-                                (logMessage as any).mode = response.mode
+                                ;(logMessage as any).mode = response.mode
                             }
                         }
                     }
@@ -145,7 +140,7 @@ export class SDKToLogConverter {
                     type: 'assistant',
                     message: assistantMsg.message,
                     // Assistant messages often have additional fields
-                    requestId: (assistantMsg as any).requestId
+                    requestId: (assistantMsg as any).requestId,
                 }
                 // if (assistantMsg.message.content && Array.isArray(assistantMsg.message.content)) {
                 //     for (const content of assistantMsg.message.content) {
@@ -174,7 +169,7 @@ export class SDKToLogConverter {
                     model: systemMsg.model,
                     tools: systemMsg.tools,
                     // Include all other fields
-                    ...(systemMsg as any)
+                    ...(systemMsg as any),
                 }
                 break
             }
@@ -194,13 +189,15 @@ export class SDKToLogConverter {
                     type: 'user',
                     message: {
                         role: 'user',
-                        content: [{
-                            type: 'tool_result',
-                            tool_use_id: toolMsg.tool_use_id,
-                            content: toolMsg.content
-                        }]
+                        content: [
+                            {
+                                type: 'tool_result',
+                                tool_use_id: toolMsg.tool_use_id,
+                                content: toolMsg.content,
+                            },
+                        ],
                     },
-                    toolUseResult: toolMsg.content
+                    toolUseResult: toolMsg.content,
                 }
 
                 // Add mode if available from responses
@@ -220,7 +217,7 @@ export class SDKToLogConverter {
                 logMessage = {
                     ...baseFields,
                     ...sdkMessage,
-                    type: (sdkMessage as any).type // Override type last to ensure it's set
+                    type: (sdkMessage as any).type, // Override type last to ensure it's set
                 } as any
         }
 
@@ -236,9 +233,7 @@ export class SDKToLogConverter {
      * Convert multiple SDK messages to log format
      */
     convertMany(sdkMessages: SDKMessage[]): RawJSONLines[] {
-        return sdkMessages
-            .map(msg => this.convert(msg))
-            .filter((msg): msg is RawJSONLines => msg !== null)
+        return sdkMessages.map((msg) => this.convert(msg)).filter((msg): msg is RawJSONLines => msg !== null)
     }
 
     /**
@@ -248,7 +243,7 @@ export class SDKToLogConverter {
     convertSidechainUserMessage(toolUseId: string, content: string): RawJSONLines {
         const uuid = randomUUID()
         const timestamp = new Date().toISOString()
-        this.sidechainLastUUID.set(toolUseId, uuid);
+        this.sidechainLastUUID.set(toolUseId, uuid)
         return {
             parentUuid: null,
             isSidechain: true,
@@ -260,10 +255,10 @@ export class SDKToLogConverter {
             type: 'user',
             message: {
                 role: 'user',
-                content: content
+                content: content,
             },
             uuid,
-            timestamp
+            timestamp,
         }
     }
 
@@ -276,12 +271,12 @@ export class SDKToLogConverter {
     generateInterruptedToolResult(toolUseId: string, parentToolUseId?: string | null): RawJSONLines {
         const uuid = randomUUID()
         const timestamp = new Date().toISOString()
-        const errorMessage = "[Request interrupted by user for tool use]"
-        
+        const errorMessage = '[Request interrupted by user for tool use]'
+
         // Determine if this is a sidechain and get parent UUID
         let isSidechain = false
         let parentUuid: string | null = this.lastUuid
-        
+
         if (parentToolUseId) {
             isSidechain = true
             // Look up the parent tool's UUID
@@ -289,7 +284,7 @@ export class SDKToLogConverter {
             // Track this tool in the sidechain map
             this.sidechainLastUUID.set(parentToolUseId, uuid)
         }
-        
+
         const logMessage: RawJSONLines = {
             type: 'user',
             isSidechain: isSidechain,
@@ -301,9 +296,9 @@ export class SDKToLogConverter {
                         type: 'tool_result',
                         content: errorMessage,
                         is_error: true,
-                        tool_use_id: toolUseId
-                    }
-                ]
+                        tool_use_id: toolUseId,
+                    },
+                ],
             },
             parentUuid: parentUuid,
             userType: 'external' as const,
@@ -312,12 +307,12 @@ export class SDKToLogConverter {
             version: this.context.version,
             gitBranch: this.context.gitBranch,
             timestamp,
-            toolUseResult: `Error: ${errorMessage}`
+            toolUseResult: `Error: ${errorMessage}`,
         } as any
-        
+
         // Update last UUID for tracking
         this.lastUuid = uuid
-        
+
         return logMessage
     }
 }

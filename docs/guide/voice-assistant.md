@@ -54,13 +54,13 @@ export ELEVENLABS_AGENT_ID="your-agent-id"
 
 ### Voice Commands
 
-| Say this | What happens |
-|----------|--------------|
-| "Ask Claude to..." / "Have it..." | Sends your request to the coding agent |
-| "Refactor the auth module" | Coding requests are forwarded automatically |
-| "Yes" / "Allow" / "Go ahead" | Approves pending permission requests |
-| "No" / "Deny" / "Cancel" | Denies pending permission requests |
-| Direct questions | The voice assistant answers itself if it can |
+| Say this                          | What happens                                 |
+| --------------------------------- | -------------------------------------------- |
+| "Ask Claude to..." / "Have it..." | Sends your request to the coding agent       |
+| "Refactor the auth module"        | Coding requests are forwarded automatically  |
+| "Yes" / "Allow" / "Go ahead"      | Approves pending permission requests         |
+| "No" / "Deny" / "Cancel"          | Denies pending permission requests           |
+| Direct questions                  | The voice assistant answers itself if it can |
 
 ## How It Works
 

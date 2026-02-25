@@ -22,7 +22,10 @@ export class MessageStore {
         return getMessagesAfter(this.db, sessionId, afterSeq, limit)
     }
 
-    mergeSessionMessages(fromSessionId: string, toSessionId: string): { moved: number; oldMaxSeq: number; newMaxSeq: number } {
+    mergeSessionMessages(
+        fromSessionId: string,
+        toSessionId: string
+    ): { moved: number; oldMaxSeq: number; newMaxSeq: number } {
         return mergeSessionMessages(this.db, fromSessionId, toSessionId)
     }
 }

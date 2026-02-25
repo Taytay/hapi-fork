@@ -3,7 +3,7 @@ import type {
     Session,
     SessionSummary,
     SyncEvent as ProtocolSyncEvent,
-    WorktreeMetadata
+    WorktreeMetadata,
 } from '@hapi/protocol/types'
 
 export type {
@@ -15,7 +15,7 @@ export type {
     SessionSummary,
     SessionSummaryMetadata,
     TodoItem,
-    WorktreeMetadata
+    WorktreeMetadata,
 } from '@hapi/protocol/types'
 
 export type SessionMetadataSummary = {
@@ -74,9 +74,7 @@ export type MessagesResponse = {
 export type MachinesResponse = { machines: Machine[] }
 export type MachinePathsExistsResponse = { exists: Record<string, boolean> }
 
-export type SpawnResponse =
-    | { type: 'success'; sessionId: string }
-    | { type: 'error'; message: string }
+export type SpawnResponse = { type: 'success'; sessionId: string } | { type: 'error'; message: string }
 
 export type GitCommandResponse = {
     success: boolean
@@ -152,7 +150,7 @@ export type SlashCommand = {
     name: string
     description?: string
     source: 'builtin' | 'user' | 'plugin'
-    content?: string  // Expanded content for Codex user prompts
+    content?: string // Expanded content for Codex user prompts
     pluginName?: string
 }
 

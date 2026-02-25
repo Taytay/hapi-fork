@@ -34,11 +34,11 @@ function isWeakToken(token: string): boolean {
 
     // Detect common weak patterns
     const weakPatterns = [
-        /^[0-9]+$/,                              // Pure numbers
-        /^(.)\1+$/,                              // Repeated character
-        /^(abc|123|password|secret|token)/i,    // Common prefixes
+        /^[0-9]+$/, // Pure numbers
+        /^(.)\1+$/, // Repeated character
+        /^(abc|123|password|secret|token)/i, // Common prefixes
     ]
-    return weakPatterns.some(p => p.test(token))
+    return weakPatterns.some((p) => p.test(token))
 }
 
 type CliApiTokenSource = 'env' | 'file'
@@ -47,7 +47,9 @@ function normalizeCliApiToken(rawToken: string, source: CliApiTokenSource): { to
     const parsed = parseAccessToken(rawToken)
     if (!parsed) {
         if (rawToken.includes(':')) {
-            console.warn(`[WARN] CLI_API_TOKEN from ${source} contains ":" but is not a valid token. Server expects a base token without namespace.`)
+            console.warn(
+                `[WARN] CLI_API_TOKEN from ${source} contains ":" but is not a valid token. Server expects a base token without namespace.`
+            )
         }
         return { token: rawToken, didStrip: false }
     }
@@ -58,7 +60,7 @@ function normalizeCliApiToken(rawToken: string, source: CliApiTokenSource): { to
 
     console.warn(
         `[WARN] CLI_API_TOKEN from ${source} includes namespace suffix "${parsed.namespace}". ` +
-        'Server expects the base token only; stripping the suffix.'
+            'Server expects the base token only; stripping the suffix.'
     )
     return { token: parsed.baseToken, didStrip: true }
 }
@@ -108,13 +110,13 @@ export async function getOrCreateCliApiToken(dataDir: string): Promise<CliApiTok
         writeValue: (settings, value) => {
             settings.cliApiToken = value
         },
-        generate: generateSecureToken
+        generate: generateSecureToken,
     })
 
     return {
         token: result.value,
         source: result.created ? 'generated' : 'file',
         isNew: result.created,
-        filePath: settingsFile
+        filePath: settingsFile,
     }
 }

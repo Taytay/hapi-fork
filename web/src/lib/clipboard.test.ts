@@ -7,7 +7,7 @@ describe('safeCopyToClipboard', () => {
         Object.defineProperty(document, 'execCommand', {
             configurable: true,
             writable: true,
-            value: vi.fn(() => false)
+            value: vi.fn(() => false),
         })
     })
 
@@ -15,7 +15,7 @@ describe('safeCopyToClipboard', () => {
         const writeText = vi.fn(async () => {})
         Object.defineProperty(navigator, 'clipboard', {
             configurable: true,
-            value: { writeText }
+            value: { writeText },
         })
         const execCommand = vi.mocked(document.execCommand)
         execCommand.mockReturnValue(true)
@@ -32,7 +32,7 @@ describe('safeCopyToClipboard', () => {
         })
         Object.defineProperty(navigator, 'clipboard', {
             configurable: true,
-            value: { writeText }
+            value: { writeText },
         })
         const execCommand = vi.mocked(document.execCommand)
         execCommand.mockReturnValue(true)
@@ -46,7 +46,7 @@ describe('safeCopyToClipboard', () => {
     it('throws when both modern and legacy copy strategies fail', async () => {
         Object.defineProperty(navigator, 'clipboard', {
             configurable: true,
-            value: undefined
+            value: undefined,
         })
         const execCommand = vi.mocked(document.execCommand)
         execCommand.mockReturnValue(false)

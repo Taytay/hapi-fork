@@ -1,6 +1,6 @@
 // Disable Ink devtools in compiled binaries to avoid optional dependencies.
-process.env.DEV = 'false';
+process.env.DEV = 'false'
 
-await import('./index');
+await import('./index')
 
-export {};
+export {}

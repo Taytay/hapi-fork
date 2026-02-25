@@ -80,14 +80,23 @@ function extractCommandName(text: string): string | null {
     const match = text.match(COMMAND_NAME_REGEX)
     if (!match) return null
     const normalized = normalizeCliText(match[1] ?? '')
-    const firstLine = normalized.split('\n').find((line) => line.trim().length > 0)?.trim()
+    const firstLine = normalized
+        .split('\n')
+        .find((line) => line.trim().length > 0)
+        ?.trim()
     return firstLine && firstLine.length > 0 ? firstLine : null
 }
 
 function DetailsIcon() {
     return (
         <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none">
-            <path d="M6 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+                d="M6 3l5 5-5 5"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
         </svg>
     )
 }
@@ -95,7 +104,13 @@ function DetailsIcon() {
 function CliIcon() {
     return (
         <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none">
-            <path d="M3 4.5l3 3-3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+                d="M3 4.5l3 3-3 3"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
             <path d="M8.5 10.5h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         </svg>
     )

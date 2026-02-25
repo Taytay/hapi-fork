@@ -1,4 +1,9 @@
-import { getPermissionModesForFlavor, isModelModeAllowedForFlavor, isPermissionModeAllowedForFlavor, toSessionSummary } from '@hapi/protocol'
+import {
+    getPermissionModesForFlavor,
+    isModelModeAllowedForFlavor,
+    isPermissionModeAllowedForFlavor,
+    toSessionSummary,
+} from '@hapi/protocol'
 import { ModelModeSchema, PermissionModeSchema } from '@hapi/protocol/schemas'
 import { Hono } from 'hono'
 import { z } from 'zod'
@@ -7,25 +12,25 @@ import type { WebAppEnv } from '../middleware/auth'
 import { requireSessionFromParam, requireSyncEngine } from './guards'
 
 const permissionModeSchema = z.object({
-    mode: PermissionModeSchema
+    mode: PermissionModeSchema,
 })
 
 const modelModeSchema = z.object({
-    model: ModelModeSchema
+    model: ModelModeSchema,
 })
 
 const renameSessionSchema = z.object({
-    name: z.string().min(1).max(255)
+    name: z.string().min(1).max(255),
 })
 
 const uploadSchema = z.object({
     filename: z.string().min(1).max(255),
     content: z.string().min(1),
-    mimeType: z.string().min(1).max(255)
+    mimeType: z.string().min(1).max(255),
 })
 
 const uploadDeleteSchema = z.object({
-    path: z.string().min(1)
+    path: z.string().min(1),
 })
 
 const MAX_UPLOAD_BYTES = 50 * 1024 * 1024
@@ -46,10 +51,11 @@ export function createSessionsRoutes(getSyncEngine: () => SyncEngine | null): Ho
             return engine
         }
 
-        const getPendingCount = (s: Session) => s.agentState?.requests ? Object.keys(s.agentState.requests).length : 0
+        const getPendingCount = (s: Session) => (s.agentState?.requests ? Object.keys(s.agentState.requests).length : 0)
 
         const namespace = c.get('namespace')
-        const sessions = engine.getSessionsByNamespace(namespace)
+        const sessions = engine
+            .getSessionsByNamespace(namespace)
             .sort((a, b) => {
                 // Active sessions first
                 if (a.active !== b.active) {
@@ -97,9 +103,13 @@ export function createSessionsRoutes(getSyncEngine: () => SyncEngine | null): Ho
         const namespace = c.get('namespace')
         const result = await engine.resumeSession(sessionResult.sessionId, namespace)
         if (result.type === 'error') {
-            const status = result.code === 'no_machine_online' ? 503
-                : result.code === 'access_denied' ? 403
-                    : result.code === 'session_not_found' ? 404
+            const status =
+                result.code === 'no_machine_online'
+                    ? 503
+                    : result.code === 'access_denied'
+                      ? 403
+                      : result.code === 'session_not_found'
+                        ? 404
                         : 500
             return c.json({ error: result.message, code: result.code }, status)
         }
@@ -138,10 +148,13 @@ export function createSessionsRoutes(getSyncEngine: () => SyncEngine | null): Ho
             )
             return c.json(result)
         } catch (error) {
-            return c.json({
-                success: false,
-                error: error instanceof Error ? error.message : 'Failed to upload file'
-            }, 500)
+            return c.json(
+                {
+                    success: false,
+                    error: error instanceof Error ? error.message : 'Failed to upload file',
+                },
+                500
+            )
         }
     })
 
@@ -166,10 +179,13 @@ export function createSessionsRoutes(getSyncEngine: () => SyncEngine | null): Ho
             const result = await engine.deleteUploadFile(sessionResult.sessionId, parsed.data.path)
             return c.json(result)
         } catch (error) {
-            return c.json({
-                success: false,
-                error: error instanceof Error ? error.message : 'Failed to delete upload'
-            }, 500)
+            return c.json(
+                {
+                    success: false,
+                    error: error instanceof Error ? error.message : 'Failed to delete upload',
+                },
+                500
+            )
         }
     })
 
@@ -366,7 +382,7 @@ export function createSessionsRoutes(getSyncEngine: () => SyncEngine | null): Ho
         } catch (error) {
             return c.json({
                 success: false,
-                error: error instanceof Error ? error.message : 'Failed to list slash commands'
+                error: error instanceof Error ? error.message : 'Failed to list slash commands',
             })
         }
     })
@@ -389,7 +405,7 @@ export function createSessionsRoutes(getSyncEngine: () => SyncEngine | null): Ho
         } catch (error) {
             return c.json({
                 success: false,
-                error: error instanceof Error ? error.message : 'Failed to list skills'
+                error: error instanceof Error ? error.message : 'Failed to list skills',
             })
         }
     })

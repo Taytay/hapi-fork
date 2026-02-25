@@ -1,11 +1,5 @@
 import { useState, useEffect } from 'react'
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useTranslation } from '@/lib/use-translation'
 
@@ -32,7 +26,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
         confirmingLabel,
         onConfirm,
         isPending,
-        destructive = false
+        destructive = false,
     } = props
 
     const [error, setError] = useState<string | null>(null)
@@ -50,10 +44,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
             await onConfirm()
             onClose()
         } catch (err) {
-            const message =
-                err instanceof Error && err.message
-                    ? err.message
-                    : t('dialog.error.default')
+            const message = err instanceof Error && err.message ? err.message : t('dialog.error.default')
             setError(message)
         }
     }
@@ -63,9 +54,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
             <DialogContent className="max-w-sm">
                 <DialogHeader>
                     <DialogTitle>{title}</DialogTitle>
-                    <DialogDescription className="mt-2">
-                        {description}
-                    </DialogDescription>
+                    <DialogDescription className="mt-2">{description}</DialogDescription>
                 </DialogHeader>
 
                 {error ? (
@@ -75,12 +64,7 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
                 ) : null}
 
                 <div className="mt-4 flex gap-2 justify-end">
-                    <Button
-                        type="button"
-                        variant="secondary"
-                        onClick={onClose}
-                        disabled={isPending}
-                    >
+                    <Button type="button" variant="secondary" onClick={onClose} disabled={isPending}>
                         {t('button.cancel')}
                     </Button>
                     <Button

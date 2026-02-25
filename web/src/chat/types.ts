@@ -50,32 +50,36 @@ export type ToolResult = {
 
 export type NormalizedAgentContent =
     | {
-        type: 'text'
-        text: string
-        uuid: string
-        parentUUID: string | null
-    }
+          type: 'text'
+          text: string
+          uuid: string
+          parentUUID: string | null
+      }
     | {
-        type: 'reasoning'
-        text: string
-        uuid: string
-        parentUUID: string | null
-    }
+          type: 'reasoning'
+          text: string
+          uuid: string
+          parentUUID: string | null
+      }
     | ToolUse
     | ToolResult
     | { type: 'summary'; summary: string }
     | { type: 'sidechain'; uuid: string; prompt: string }
 
-export type NormalizedMessage = ({
-    role: 'user'
-    content: { type: 'text'; text: string; attachments?: AttachmentMetadata[] }
-} | {
-    role: 'agent'
-    content: NormalizedAgentContent[]
-} | {
-    role: 'event'
-    content: AgentEvent
-}) & {
+export type NormalizedMessage = (
+    | {
+          role: 'user'
+          content: { type: 'text'; text: string; attachments?: AttachmentMetadata[] }
+      }
+    | {
+          role: 'agent'
+          content: NormalizedAgentContent[]
+      }
+    | {
+          role: 'event'
+          content: AgentEvent
+      }
+) & {
     id: string
     localId: string | null
     createdAt: number
@@ -178,4 +182,11 @@ export type TurnSeparatorBlock = {
     turnId: string
 }
 
-export type ChatBlock = UserTextBlock | AgentTextBlock | AgentReasoningBlock | CliOutputBlock | ToolCallBlock | AgentEventBlock | TurnSeparatorBlock
+export type ChatBlock =
+    | UserTextBlock
+    | AgentTextBlock
+    | AgentReasoningBlock
+    | CliOutputBlock
+    | ToolCallBlock
+    | AgentEventBlock
+    | TurnSeparatorBlock

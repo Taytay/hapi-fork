@@ -53,7 +53,7 @@ export function traceMessages(messages: NormalizedMessage[]): TracedMessage[] {
     const state: TracerState = {
         promptToTaskId: new Map(),
         uuidToSidechainId: new Map(),
-        orphanMessages: new Map()
+        orphanMessages: new Map(),
     }
 
     const results: TracedMessage[] = []

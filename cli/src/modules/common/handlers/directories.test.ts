@@ -33,7 +33,7 @@ describe('directory RPC handlers', () => {
     it('lists root directory via empty path', async () => {
         const response = await rpc.handleRequest({
             method: 'session-test:listDirectory',
-            params: JSON.stringify({ path: '' })
+            params: JSON.stringify({ path: '' }),
         })
 
         const parsed = JSON.parse(response) as { success: boolean; entries?: Array<{ name: string; type: string }> }
@@ -54,9 +54,12 @@ describe('directory RPC handlers', () => {
 
         const response = await rpc.handleRequest({
             method: 'session-test:listDirectory',
-            params: JSON.stringify({ path: '' })
+            params: JSON.stringify({ path: '' }),
         })
-        const parsed = JSON.parse(response) as { success: boolean; entries?: Array<{ name: string; type: string; size?: number }> }
+        const parsed = JSON.parse(response) as {
+            success: boolean
+            entries?: Array<{ name: string; type: string; size?: number }>
+        }
         expect(parsed.success).toBe(true)
         const link = (parsed.entries ?? []).find((entry) => entry.name === 'bad-link')
         expect(link).toBeTruthy()

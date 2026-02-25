@@ -3,11 +3,11 @@ import type { RpcRegistry } from '../../rpcRegistry'
 import type { CliSocketWithData } from '../../socketTypes'
 
 const rpcRegisterSchema = z.object({
-    method: z.string().min(1)
+    method: z.string().min(1),
 })
 
 const rpcUnregisterSchema = z.object({
-    method: z.string().min(1)
+    method: z.string().min(1),
 })
 
 export function registerRpcHandlers(socket: CliSocketWithData, rpcRegistry: RpcRegistry): void {

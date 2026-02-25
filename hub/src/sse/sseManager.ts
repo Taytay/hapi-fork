@@ -43,7 +43,7 @@ export class SSEManager {
             sessionId: options.sessionId ?? null,
             machineId: options.machineId ?? null,
             send: options.send,
-            sendHeartbeat: options.sendHeartbeat
+            sendHeartbeat: options.sendHeartbeat,
         }
 
         this.connections.set(subscription.id, subscription)
@@ -58,7 +58,7 @@ export class SSEManager {
             namespace: subscription.namespace,
             all: subscription.all,
             sessionId: subscription.sessionId,
-            machineId: subscription.machineId
+            machineId: subscription.machineId,
         }
     }
 

@@ -3,21 +3,19 @@ import type { ApiClient } from '@/api/client'
 import type { ChatToolCall } from '@/chat/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { isAskUserQuestionToolName, parseAskUserQuestionInput, type AskUserQuestionQuestion } from '@/components/ToolCard/askUserQuestion'
+import {
+    isAskUserQuestionToolName,
+    parseAskUserQuestionInput,
+    type AskUserQuestionQuestion,
+} from '@/components/ToolCard/askUserQuestion'
 import { cn } from '@/lib/utils'
 import { usePlatform } from '@/hooks/usePlatform'
 import { Spinner } from '@/components/Spinner'
 import { useTranslation } from '@/lib/use-translation'
 
 function SelectionMark(props: { checked: boolean; mode: 'single' | 'multi' }) {
-    const mark = props.mode === 'multi'
-        ? (props.checked ? '☑' : '☐')
-        : (props.checked ? '●' : '○')
-    return (
-        <span className="mt-0.5 w-4 shrink-0 text-center text-[var(--app-hint)]">
-            {mark}
-        </span>
-    )
+    const mark = props.mode === 'multi' ? (props.checked ? '☑' : '☐') : props.checked ? '●' : '○'
+    return <span className="mt-0.5 w-4 shrink-0 text-center text-[var(--app-hint)]">{mark}</span>
 }
 
 function OptionRow(props: {
@@ -42,9 +40,7 @@ function OptionRow(props: {
             <span className="min-w-0 flex-1">
                 <div className="font-medium text-[var(--app-fg)] break-words">{props.title}</div>
                 {props.description ? (
-                    <div className="mt-0.5 text-xs text-[var(--app-hint)] break-words">
-                        {props.description}
-                    </div>
+                    <div className="mt-0.5 text-xs text-[var(--app-hint)] break-words">{props.description}</div>
                 ) : null}
             </span>
         </button>
@@ -262,9 +258,7 @@ export function AskUserQuestionFooter(props: {
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                     <div className="flex items-center gap-2">
-                        <Badge variant="default">
-                            {t('tool.question')}
-                        </Badge>
+                        <Badge variant="default">{t('tool.question')}</Badge>
                         <span className="font-mono text-xs text-[var(--app-hint)]">
                             [{clampedStep + 1}/{total}]
                         </span>
@@ -272,17 +266,11 @@ export function AskUserQuestionFooter(props: {
                 </div>
             </div>
 
-            {error ? (
-                <div className="mt-2 text-xs text-red-600">
-                    {error}
-                </div>
-            ) : null}
+            {error ? <div className="mt-2 text-xs text-red-600">{error}</div> : null}
 
             {questions.length === 0 ? (
                 <div className="mt-3">
-                    <div className="text-sm text-[var(--app-hint)]">
-                        {t('tool.askUserQuestion.fallback')}
-                    </div>
+                    <div className="text-sm text-[var(--app-hint)]">{t('tool.askUserQuestion.fallback')}</div>
                     <textarea
                         value={fallbackText}
                         onChange={(e) => setFallbackText(e.target.value)}
@@ -297,16 +285,16 @@ export function AskUserQuestionFooter(props: {
                         <div className="min-w-0 flex-1">
                             {questions[clampedStep]?.header ? (
                                 <div className="flex items-center gap-2">
-                                    <Badge variant="default">
-                                        {questions[clampedStep].header}
-                                    </Badge>
+                                    <Badge variant="default">{questions[clampedStep].header}</Badge>
                                 </div>
                             ) : null}
                             {questions[clampedStep]?.question ? (
-                                <div className={cn(
-                                    "text-sm text-[var(--app-fg)] break-words",
-                                    questions[clampedStep]?.header ? "mt-2" : ""
-                                )}>
+                                <div
+                                    className={cn(
+                                        'text-sm text-[var(--app-fg)] break-words',
+                                        questions[clampedStep]?.header ? 'mt-2' : ''
+                                    )}
+                                >
                                     {questions[clampedStep].question}
                                 </div>
                             ) : null}

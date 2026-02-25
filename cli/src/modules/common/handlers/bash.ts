@@ -35,7 +35,7 @@ export function registerBashHandlers(rpcHandlerManager: RpcHandlerManager, worki
         try {
             const options: ExecOptions = {
                 cwd: data.cwd,
-                timeout: data.timeout || 30000
+                timeout: data.timeout || 30000,
             }
 
             const { stdout, stderr } = await execAsync(data.command, options)
@@ -44,7 +44,7 @@ export function registerBashHandlers(rpcHandlerManager: RpcHandlerManager, worki
                 success: true,
                 stdout: stdout ? stdout.toString() : '',
                 stderr: stderr ? stderr.toString() : '',
-                exitCode: 0
+                exitCode: 0,
             }
         } catch (error) {
             const execError = error as NodeJS.ErrnoException & {
@@ -58,14 +58,14 @@ export function registerBashHandlers(rpcHandlerManager: RpcHandlerManager, worki
                 return rpcError('Command timed out', {
                     stdout: execError.stdout ? execError.stdout.toString() : '',
                     stderr: execError.stderr ? execError.stderr.toString() : '',
-                    exitCode: typeof execError.code === 'number' ? execError.code : -1
+                    exitCode: typeof execError.code === 'number' ? execError.code : -1,
                 })
             }
 
             return rpcError(getErrorMessage(execError, 'Command failed'), {
                 stdout: execError.stdout ? execError.stdout.toString() : '',
                 stderr: execError.stderr ? execError.stderr.toString() : execError.message || 'Command failed',
-                exitCode: typeof execError.code === 'number' ? execError.code : 1
+                exitCode: typeof execError.code === 'number' ? execError.code : 1,
             })
         }
     })

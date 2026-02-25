@@ -13,12 +13,7 @@ import { AgentSelector } from './AgentSelector'
 import { DirectorySection } from './DirectorySection'
 import { MachineSelector } from './MachineSelector'
 import { ModelSelector } from './ModelSelector'
-import {
-    loadPreferredAgent,
-    loadPreferredYoloMode,
-    savePreferredAgent,
-    savePreferredYoloMode,
-} from './preferences'
+import { loadPreferredAgent, loadPreferredYoloMode, savePreferredAgent, savePreferredYoloMode } from './preferences'
 import { SessionTypeSelector } from './SessionTypeSelector'
 import { YoloToggle } from './YoloToggle'
 
@@ -82,27 +77,24 @@ export function NewSession(props: {
         }
     }, [props.machines, machineId, getLastUsedMachineId, getRecentPaths])
 
-    const recentPaths = useMemo(
-        () => getRecentPaths(machineId),
-        [getRecentPaths, machineId]
-    )
+    const recentPaths = useMemo(() => getRecentPaths(machineId), [getRecentPaths, machineId])
 
     const allPaths = useDirectorySuggestions(machineId, sessions, recentPaths)
 
-    const pathsToCheck = useMemo(
-        () => Array.from(new Set(allPaths)).slice(0, 1000),
-        [allPaths]
-    )
+    const pathsToCheck = useMemo(() => Array.from(new Set(allPaths)).slice(0, 1000), [allPaths])
 
     useEffect(() => {
         let cancelled = false
 
         if (!machineId || pathsToCheck.length === 0) {
             setPathExistence({})
-            return () => { cancelled = true }
+            return () => {
+                cancelled = true
+            }
         }
 
-        void props.api.checkMachinePathsExists(machineId, pathsToCheck)
+        void props.api
+            .checkMachinePathsExists(machineId, pathsToCheck)
             .then((result) => {
                 if (cancelled) return
                 setPathExistence(result.exists ?? {})
@@ -117,24 +109,24 @@ export function NewSession(props: {
         }
     }, [machineId, pathsToCheck, props.api])
 
-    const verifiedPaths = useMemo(
-        () => allPaths.filter((path) => pathExistence[path]),
-        [allPaths, pathExistence]
+    const verifiedPaths = useMemo(() => allPaths.filter((path) => pathExistence[path]), [allPaths, pathExistence])
+
+    const getSuggestions = useCallback(
+        async (query: string): Promise<Suggestion[]> => {
+            const lowered = query.toLowerCase()
+            return verifiedPaths
+                .filter((path) => path.toLowerCase().includes(lowered))
+                .slice(0, 8)
+                .map((path) => ({
+                    key: path,
+                    text: path,
+                    label: path,
+                }))
+        },
+        [verifiedPaths]
     )
 
-    const getSuggestions = useCallback(async (query: string): Promise<Suggestion[]> => {
-        const lowered = query.toLowerCase()
-        return verifiedPaths
-            .filter((path) => path.toLowerCase().includes(lowered))
-            .slice(0, 8)
-            .map((path) => ({
-                key: path,
-                text: path,
-                label: path
-            }))
-    }, [verifiedPaths])
-
-    const activeQuery = (!isDirectoryFocused || suppressSuggestions) ? null : directory
+    const activeQuery = !isDirectoryFocused || suppressSuggestions ? null : directory
 
     const [suggestions, selectedIndex, moveUp, moveDown, clearSuggestions] = useActiveSuggestions(
         activeQuery,
@@ -142,28 +134,34 @@ export function NewSession(props: {
         { allowEmptyQuery: true, autoSelectFirst: false }
     )
 
-    const handleMachineChange = useCallback((newMachineId: string) => {
-        setMachineId(newMachineId)
-        const paths = getRecentPaths(newMachineId)
-        if (paths[0]) {
-            setDirectory(paths[0])
-        } else {
-            setDirectory('')
-        }
-    }, [getRecentPaths])
+    const handleMachineChange = useCallback(
+        (newMachineId: string) => {
+            setMachineId(newMachineId)
+            const paths = getRecentPaths(newMachineId)
+            if (paths[0]) {
+                setDirectory(paths[0])
+            } else {
+                setDirectory('')
+            }
+        },
+        [getRecentPaths]
+    )
 
     const handlePathClick = useCallback((path: string) => {
         setDirectory(path)
     }, [])
 
-    const handleSuggestionSelect = useCallback((index: number) => {
-        const suggestion = suggestions[index]
-        if (suggestion) {
-            setDirectory(suggestion.text)
-            clearSuggestions()
-            setSuppressSuggestions(true)
-        }
-    }, [suggestions, clearSuggestions])
+    const handleSuggestionSelect = useCallback(
+        (index: number) => {
+            const suggestion = suggestions[index]
+            if (suggestion) {
+                setDirectory(suggestion.text)
+                clearSuggestions()
+                setSuppressSuggestions(true)
+            }
+        },
+        [suggestions, clearSuggestions]
+    )
 
     const handleDirectoryChange = useCallback((value: string) => {
         setSuppressSuggestions(false)
@@ -179,30 +177,33 @@ export function NewSession(props: {
         setIsDirectoryFocused(false)
     }, [])
 
-    const handleDirectoryKeyDown = useCallback((event: ReactKeyboardEvent<HTMLInputElement>) => {
-        if (suggestions.length === 0) return
+    const handleDirectoryKeyDown = useCallback(
+        (event: ReactKeyboardEvent<HTMLInputElement>) => {
+            if (suggestions.length === 0) return
 
-        if (event.key === 'ArrowUp') {
-            event.preventDefault()
-            moveUp()
-        }
-
-        if (event.key === 'ArrowDown') {
-            event.preventDefault()
-            moveDown()
-        }
-
-        if (event.key === 'Enter' || event.key === 'Tab') {
-            if (selectedIndex >= 0) {
+            if (event.key === 'ArrowUp') {
                 event.preventDefault()
-                handleSuggestionSelect(selectedIndex)
+                moveUp()
             }
-        }
 
-        if (event.key === 'Escape') {
-            clearSuggestions()
-        }
-    }, [suggestions, selectedIndex, moveUp, moveDown, clearSuggestions, handleSuggestionSelect])
+            if (event.key === 'ArrowDown') {
+                event.preventDefault()
+                moveDown()
+            }
+
+            if (event.key === 'Enter' || event.key === 'Tab') {
+                if (selectedIndex >= 0) {
+                    event.preventDefault()
+                    handleSuggestionSelect(selectedIndex)
+                }
+            }
+
+            if (event.key === 'Escape') {
+                clearSuggestions()
+            }
+        },
+        [suggestions, selectedIndex, moveUp, moveDown, clearSuggestions, handleSuggestionSelect]
+    )
 
     async function handleCreate() {
         if (!machineId || !directory.trim()) return
@@ -217,7 +218,7 @@ export function NewSession(props: {
                 model: resolvedModel,
                 yolo: yoloMode,
                 sessionType,
-                worktreeName: sessionType === 'worktree' ? (worktreeName.trim() || undefined) : undefined
+                worktreeName: sessionType === 'worktree' ? worktreeName.trim() || undefined : undefined,
             })
 
             if (result.type === 'success') {
@@ -268,28 +269,11 @@ export function NewSession(props: {
                 onSessionTypeChange={setSessionType}
                 onWorktreeNameChange={setWorktreeName}
             />
-            <AgentSelector
-                agent={agent}
-                isDisabled={isFormDisabled}
-                onAgentChange={setAgent}
-            />
-            <ModelSelector
-                agent={agent}
-                model={model}
-                isDisabled={isFormDisabled}
-                onModelChange={setModel}
-            />
-            <YoloToggle
-                yoloMode={yoloMode}
-                isDisabled={isFormDisabled}
-                onToggle={setYoloMode}
-            />
+            <AgentSelector agent={agent} isDisabled={isFormDisabled} onAgentChange={setAgent} />
+            <ModelSelector agent={agent} model={model} isDisabled={isFormDisabled} onModelChange={setModel} />
+            <YoloToggle yoloMode={yoloMode} isDisabled={isFormDisabled} onToggle={setYoloMode} />
 
-            {(error ?? spawnError) ? (
-                <div className="px-3 py-2 text-sm text-red-600">
-                    {error ?? spawnError}
-                </div>
-            ) : null}
+            {(error ?? spawnError) ? <div className="px-3 py-2 text-sm text-red-600">{error ?? spawnError}</div> : null}
 
             <ActionButtons
                 isPending={isPending}

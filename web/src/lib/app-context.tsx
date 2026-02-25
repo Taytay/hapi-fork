@@ -9,15 +9,8 @@ type AppContextValue = {
 
 const AppContext = createContext<AppContextValue | null>(null)
 
-export function AppContextProvider(props: {
-    value: AppContextValue
-    children: ReactNode
-}) {
-    return (
-        <AppContext.Provider value={props.value}>
-            {props.children}
-        </AppContext.Provider>
-    )
+export function AppContextProvider(props: { value: AppContextValue; children: ReactNode }) {
+    return <AppContext.Provider value={props.value}>{props.children}</AppContext.Provider>
 }
 
 export function useAppContext(): AppContextValue {

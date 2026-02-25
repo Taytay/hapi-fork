@@ -10,7 +10,7 @@ import {
     getSessionsByNamespace,
     setSessionTodos,
     updateSessionAgentState,
-    updateSessionMetadata
+    updateSessionMetadata,
 } from './sessions'
 
 export class SessionStore {

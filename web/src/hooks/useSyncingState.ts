@@ -44,16 +44,19 @@ export function useSyncingState() {
         }, DEBOUNCE_MS)
     }, [clearAllTimeouts])
 
-    const startSync = useCallback((options?: { force?: boolean }) => {
-        if (options?.force) {
-            doStartSync()
-            return
-        }
-        // Only show syncing state when returning from background
-        if (lastHiddenTimestamp && Date.now() - lastHiddenTimestamp < BACKGROUND_THRESHOLD_MS) {
-            doStartSync()
-        }
-    }, [doStartSync])
+    const startSync = useCallback(
+        (options?: { force?: boolean }) => {
+            if (options?.force) {
+                doStartSync()
+                return
+            }
+            // Only show syncing state when returning from background
+            if (lastHiddenTimestamp && Date.now() - lastHiddenTimestamp < BACKGROUND_THRESHOLD_MS) {
+                doStartSync()
+            }
+        },
+        [doStartSync]
+    )
 
     const endSync = useCallback(() => {
         // Clear all timeouts - if still in debounce period, banner never shows

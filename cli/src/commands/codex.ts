@@ -63,5 +63,5 @@ export const codexCommand: CommandDefinition = {
             }
             process.exit(1)
         }
-    }
+    },
 }

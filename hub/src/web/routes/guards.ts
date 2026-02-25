@@ -46,11 +46,7 @@ export function requireSessionFromParam(
     return result
 }
 
-export function requireMachine(
-    c: Context<WebAppEnv>,
-    engine: SyncEngine,
-    machineId: string
-): Machine | Response {
+export function requireMachine(c: Context<WebAppEnv>, engine: SyncEngine, machineId: string): Machine | Response {
     const namespace = c.get('namespace')
     const machine = engine.getMachine(machineId)
     if (!machine) {

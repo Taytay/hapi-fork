@@ -19,9 +19,7 @@ export class PushNotificationChannel implements NotificationChannel {
         }
 
         const name = getSessionName(session)
-        const request = session.agentState?.requests
-            ? Object.values(session.agentState.requests)[0]
-            : null
+        const request = session.agentState?.requests ? Object.values(session.agentState.requests)[0] : null
         const toolName = request?.tool ? ` (${request.tool})` : ''
 
         const payload: PushPayload = {
@@ -31,8 +29,8 @@ export class PushNotificationChannel implements NotificationChannel {
             data: {
                 type: 'permission-request',
                 sessionId: session.id,
-                url: this.buildSessionPath(session.id)
-            }
+                url: this.buildSessionPath(session.id),
+            },
         }
 
         const url = payload.data?.url ?? this.buildSessionPath(session.id)
@@ -43,8 +41,8 @@ export class PushNotificationChannel implements NotificationChannel {
                     title: payload.title,
                     body: payload.body,
                     sessionId: session.id,
-                    url
-                }
+                    url,
+                },
             })
             if (delivered > 0) {
                 return
@@ -69,8 +67,8 @@ export class PushNotificationChannel implements NotificationChannel {
             data: {
                 type: 'ready',
                 sessionId: session.id,
-                url: this.buildSessionPath(session.id)
-            }
+                url: this.buildSessionPath(session.id),
+            },
         }
 
         const url = payload.data?.url ?? this.buildSessionPath(session.id)
@@ -81,8 +79,8 @@ export class PushNotificationChannel implements NotificationChannel {
                     title: payload.title,
                     body: payload.body,
                     sessionId: session.id,
-                    url
-                }
+                    url,
+                },
             })
             if (delivered > 0) {
                 return

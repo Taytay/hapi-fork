@@ -54,14 +54,16 @@ function DiffDisplay(props: { diffContent: string }) {
                     isAdd ? 'bg-[var(--app-diff-added-bg)] text-[var(--app-diff-added-text)]' : '',
                     isRemove ? 'bg-[var(--app-diff-removed-bg)] text-[var(--app-diff-removed-text)]' : '',
                     isHunk ? 'bg-[var(--app-subtle-bg)] text-[var(--app-hint)] font-semibold' : '',
-                    isHeader ? 'text-[var(--app-hint)] font-semibold' : ''
-                ].filter(Boolean).join(' ')
+                    isHeader ? 'text-[var(--app-hint)] font-semibold' : '',
+                ]
+                    .filter(Boolean)
+                    .join(' ')
 
                 const style = isAdd
                     ? { borderLeft: '2px solid var(--app-git-staged-color)' }
                     : isRemove
-                        ? { borderLeft: '2px solid var(--app-git-deleted-color)' }
-                        : undefined
+                      ? { borderLeft: '2px solid var(--app-git-deleted-color)' }
+                      : undefined
 
                 return (
                     <div key={`${index}-${line}`} className={className} style={style}>
@@ -81,7 +83,10 @@ function FileContentSkeleton() {
             <span className="sr-only">Loading file…</span>
             <div className="animate-pulse space-y-2 rounded-md border border-[var(--app-border)] bg-[var(--app-code-bg)] p-3">
                 {Array.from({ length: 12 }).map((_, index) => (
-                    <div key={`file-skeleton-${index}`} className={`h-3 ${widths[index % widths.length]} rounded bg-[var(--app-subtle-bg)]`} />
+                    <div
+                        key={`file-skeleton-${index}`}
+                        className={`h-3 ${widths[index % widths.length]} rounded bg-[var(--app-subtle-bg)]`}
+                    />
                 ))}
             </div>
         </div>
@@ -137,7 +142,7 @@ export default function FilePage() {
             }
             return await api.getGitDiffFile(sessionId, filePath, staged)
         },
-        enabled: Boolean(api && sessionId && filePath)
+        enabled: Boolean(api && sessionId && filePath),
     })
 
     const fileQuery = useQuery({
@@ -148,7 +153,7 @@ export default function FilePage() {
             }
             return await api.readSessionFile(sessionId, filePath)
         },
-        enabled: Boolean(api && sessionId && filePath)
+        enabled: Boolean(api && sessionId && filePath),
     })
 
     const diffContent = diffQuery.data?.success ? (diffQuery.data.stdout ?? '') : ''
@@ -157,24 +162,21 @@ export default function FilePage() {
     const diffFailed = diffQuery.data?.success === false
 
     const fileContentResult = fileQuery.data
-    const decodedContentResult = fileContentResult?.success && fileContentResult.content
-        ? decodeBase64(fileContentResult.content)
-        : { text: '', ok: true }
+    const decodedContentResult =
+        fileContentResult?.success && fileContentResult.content
+            ? decodeBase64(fileContentResult.content)
+            : { text: '', ok: true }
     const decodedContent = decodedContentResult.text
-    const binaryFile = fileContentResult?.success
-        ? !decodedContentResult.ok || isBinaryContent(decodedContent)
-        : false
+    const binaryFile = fileContentResult?.success ? !decodedContentResult.ok || isBinaryContent(decodedContent) : false
 
     const language = useMemo(() => resolveLanguage(filePath), [filePath])
     const highlighted = useShikiHighlighter(decodedContent, language)
-    const contentSizeBytes = useMemo(
-        () => (decodedContent ? getUtf8ByteLength(decodedContent) : 0),
-        [decodedContent]
-    )
-    const canCopyContent = fileContentResult?.success === true
-        && !binaryFile
-        && decodedContent.length > 0
-        && contentSizeBytes <= MAX_COPYABLE_FILE_BYTES
+    const contentSizeBytes = useMemo(() => (decodedContent ? getUtf8ByteLength(decodedContent) : 0), [decodedContent])
+    const canCopyContent =
+        fileContentResult?.success === true &&
+        !binaryFile &&
+        decodedContent.length > 0 &&
+        contentSizeBytes <= MAX_COPYABLE_FILE_BYTES
 
     const [displayMode, setDisplayMode] = useState<'diff' | 'file'>('diff')
 
@@ -189,9 +191,8 @@ export default function FilePage() {
     }, [diffSuccess, diffFailed, diffContent])
 
     const loading = diffQuery.isLoading || fileQuery.isLoading
-    const fileError = fileContentResult && !fileContentResult.success
-        ? (fileContentResult.error ?? 'Failed to read file')
-        : null
+    const fileError =
+        fileContentResult && !fileContentResult.success ? (fileContentResult.error ?? 'Failed to read file') : null
     const missingPath = !filePath
     const diffErrorMessage = diffError ? `Diff unavailable: ${diffError}` : null
 
@@ -280,7 +281,11 @@ export default function FilePage() {
                                         className="absolute right-2 top-2 z-10 rounded p-1 text-[var(--app-hint)] hover:bg-[var(--app-subtle-bg)] hover:text-[var(--app-fg)] transition-colors"
                                         title="Copy file content"
                                     >
-                                        {contentCopied ? <CheckIcon className="h-3.5 w-3.5" /> : <CopyIcon className="h-3.5 w-3.5" />}
+                                        {contentCopied ? (
+                                            <CheckIcon className="h-3.5 w-3.5" />
+                                        ) : (
+                                            <CopyIcon className="h-3.5 w-3.5" />
+                                        )}
                                     </button>
                                 ) : null}
                                 <pre className="shiki overflow-auto rounded-md bg-[var(--app-code-bg)] p-3 pr-8 text-xs font-mono">

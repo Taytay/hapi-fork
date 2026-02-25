@@ -22,7 +22,13 @@ function isToolCallBlock(value: unknown): value is ToolCallBlock {
     if (typeof value.tool.name !== 'string') return false
     if (!('input' in value.tool)) return false
     if (value.tool.description !== null && typeof value.tool.description !== 'string') return false
-    if (value.tool.state !== 'pending' && value.tool.state !== 'running' && value.tool.state !== 'completed' && value.tool.state !== 'error') return false
+    if (
+        value.tool.state !== 'pending' &&
+        value.tool.state !== 'running' &&
+        value.tool.state !== 'completed' &&
+        value.tool.state !== 'error'
+    )
+        return false
     return true
 }
 
@@ -45,18 +51,18 @@ function splitTaskChildren(block: ToolCallBlock): { pending: ChatBlock[]; rest: 
     return { pending, rest }
 }
 
-function HappyNestedBlockList(props: {
-    blocks: ChatBlock[]
-}) {
+function HappyNestedBlockList(props: { blocks: ChatBlock[] }) {
     const ctx = useHappyChatContext()
 
     return (
         <div className="flex flex-col gap-3">
             {props.blocks.map((block) => {
                 if (block.kind === 'user-text') {
-                    const userBubbleClass = 'w-fit max-w-[92%] ml-auto rounded-xl bg-[var(--app-secondary-bg)] px-3 py-2 text-[var(--app-fg)] shadow-sm'
+                    const userBubbleClass =
+                        'w-fit max-w-[92%] ml-auto rounded-xl bg-[var(--app-secondary-bg)] px-3 py-2 text-[var(--app-fg)] shadow-sm'
                     const status = block.status
-                    const canRetry = status === 'failed' && typeof block.localId === 'string' && Boolean(ctx.onRetryMessage)
+                    const canRetry =
+                        status === 'failed' && typeof block.localId === 'string' && Boolean(ctx.onRetryMessage)
                     const onRetry = canRetry ? () => ctx.onRetryMessage!(block.localId!) : undefined
 
                     return (
@@ -171,12 +177,8 @@ export function HappyToolMessage(props: ToolCallMessagePartProps) {
             <div className="py-1 min-w-0 max-w-full overflow-x-hidden">
                 <div className="rounded-xl bg-[var(--app-secondary-bg)] p-3 shadow-sm">
                     <div className="flex items-center gap-2 text-xs">
-                        <div className="font-mono text-[var(--app-hint)]">
-                            Tool: {props.toolName}
-                        </div>
-                        {props.isError ? (
-                            <span className="text-red-500">Error</span>
-                        ) : null}
+                        <div className="font-mono text-[var(--app-hint)]">Tool: {props.toolName}</div>
+                        {props.isError ? <span className="text-red-500">Error</span> : null}
                         {props.status.type === 'running' && !hasResult ? (
                             <span className="text-[var(--app-hint)]">Running…</span>
                         ) : null}
@@ -190,7 +192,10 @@ export function HappyToolMessage(props: ToolCallMessagePartProps) {
 
                     {hasResult ? (
                         <div className="mt-2">
-                            <CodeBlock code={resultText} language={typeof props.result === 'string' ? 'text' : 'json'} />
+                            <CodeBlock
+                                code={resultText}
+                                language={typeof props.result === 'string' ? 'text' : 'json'}
+                            />
                         </div>
                     ) : null}
                 </div>

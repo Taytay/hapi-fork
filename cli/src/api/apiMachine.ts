@@ -23,28 +23,44 @@ interface ServerToRunnerEvents {
 
 interface RunnerToServerEvents {
     'machine-alive': (data: { machineId: string; time: number }) => void
-    'machine-update-metadata': (data: { machineId: string; metadata: unknown; expectedVersion: number }, cb: (answer: {
-        result: 'error'
-    } | {
-        result: 'version-mismatch'
-        version: number
-        metadata: unknown | null
-    } | {
-        result: 'success'
-        version: number
-        metadata: unknown | null
-    }) => void) => void
-    'machine-update-state': (data: { machineId: string; runnerState: unknown | null; expectedVersion: number }, cb: (answer: {
-        result: 'error'
-    } | {
-        result: 'version-mismatch'
-        version: number
-        runnerState: unknown | null
-    } | {
-        result: 'success'
-        version: number
-        runnerState: unknown | null
-    }) => void) => void
+    'machine-update-metadata': (
+        data: { machineId: string; metadata: unknown; expectedVersion: number },
+        cb: (
+            answer:
+                | {
+                      result: 'error'
+                  }
+                | {
+                      result: 'version-mismatch'
+                      version: number
+                      metadata: unknown | null
+                  }
+                | {
+                      result: 'success'
+                      version: number
+                      metadata: unknown | null
+                  }
+        ) => void
+    ) => void
+    'machine-update-state': (
+        data: { machineId: string; runnerState: unknown | null; expectedVersion: number },
+        cb: (
+            answer:
+                | {
+                      result: 'error'
+                  }
+                | {
+                      result: 'version-mismatch'
+                      version: number
+                      runnerState: unknown | null
+                  }
+                | {
+                      result: 'success'
+                      version: number
+                      runnerState: unknown | null
+                  }
+        ) => void
+    ) => void
     'rpc-register': (data: { method: string }) => void
     'rpc-unregister': (data: { method: string }) => void
 }
@@ -74,7 +90,7 @@ export class ApiMachineClient {
     ) {
         this.rpcHandlerManager = new RpcHandlerManager({
             scopePrefix: this.machine.id,
-            logger: (msg, data) => logger.debug(msg, data)
+            logger: (msg, data) => logger.debug(msg, data),
         })
 
         registerCommonHandlers(this.rpcHandlerManager, process.cwd())
@@ -84,16 +100,18 @@ export class ApiMachineClient {
             const uniquePaths = Array.from(new Set(rawPaths.filter((path): path is string => typeof path === 'string')))
             const exists: Record<string, boolean> = {}
 
-            await Promise.all(uniquePaths.map(async (path) => {
-                const trimmed = path.trim()
-                if (!trimmed) return
-                try {
-                    const stats = await stat(trimmed)
-                    exists[trimmed] = stats.isDirectory()
-                } catch {
-                    exists[trimmed] = false
-                }
-            }))
+            await Promise.all(
+                uniquePaths.map(async (path) => {
+                    const trimmed = path.trim()
+                    if (!trimmed) return
+                    try {
+                        const stats = await stat(trimmed)
+                        exists[trimmed] = stats.isDirectory()
+                    } catch {
+                        exists[trimmed] = false
+                    }
+                })
+            )
 
             return { exists }
         })
@@ -101,7 +119,19 @@ export class ApiMachineClient {
 
     setRPCHandlers({ spawnSession, stopSession, requestShutdown }: MachineRpcHandlers): void {
         this.rpcHandlerManager.registerHandler('spawn-happy-session', async (params: any) => {
-            const { directory, sessionId, resumeSessionId, machineId, approvedNewDirectoryCreation, agent, model, yolo, token, sessionType, worktreeName } = params || {}
+            const {
+                directory,
+                sessionId,
+                resumeSessionId,
+                machineId,
+                approvedNewDirectoryCreation,
+                agent,
+                model,
+                yolo,
+                token,
+                sessionType,
+                worktreeName,
+            } = params || {}
 
             if (!directory) {
                 throw new Error('Directory is required')
@@ -118,7 +148,7 @@ export class ApiMachineClient {
                 yolo,
                 token,
                 sessionType,
-                worktreeName
+                worktreeName,
             })
 
             switch (result.type) {
@@ -155,11 +185,11 @@ export class ApiMachineClient {
         await backoff(async () => {
             const updated = handler(this.machine.metadata)
 
-            const answer = await this.socket.emitWithAck('machine-update-metadata', {
+            const answer = (await this.socket.emitWithAck('machine-update-metadata', {
                 machineId: this.machine.id,
                 metadata: updated,
-                expectedVersion: this.machine.metadataVersion
-            }) as unknown
+                expectedVersion: this.machine.metadataVersion,
+            })) as unknown
 
             applyVersionedAck(answer, {
                 valueKey: 'metadata',
@@ -179,7 +209,7 @@ export class ApiMachineClient {
                 },
                 invalidResponseMessage: 'Invalid machine-update-metadata response',
                 errorMessage: 'Machine metadata update failed',
-                versionMismatchMessage: 'Metadata version mismatch'
+                versionMismatchMessage: 'Metadata version mismatch',
             })
         })
     }
@@ -188,11 +218,11 @@ export class ApiMachineClient {
         await backoff(async () => {
             const updated = handler(this.machine.runnerState)
 
-            const answer = await this.socket.emitWithAck('machine-update-state', {
+            const answer = (await this.socket.emitWithAck('machine-update-state', {
                 machineId: this.machine.id,
                 runnerState: updated,
-                expectedVersion: this.machine.runnerStateVersion
-            }) as unknown
+                expectedVersion: this.machine.runnerStateVersion,
+            })) as unknown
 
             applyVersionedAck(answer, {
                 valueKey: 'runnerState',
@@ -212,7 +242,7 @@ export class ApiMachineClient {
                 },
                 invalidResponseMessage: 'Invalid machine-update-state response',
                 errorMessage: 'Machine state update failed',
-                versionMismatchMessage: 'Runner state version mismatch'
+                versionMismatchMessage: 'Runner state version mismatch',
             })
         })
     }
@@ -223,12 +253,12 @@ export class ApiMachineClient {
             auth: {
                 token: this.token,
                 clientType: 'machine-scoped' as const,
-                machineId: this.machine.id
+                machineId: this.machine.id,
             },
             path: '/socket.io/',
             reconnection: true,
             reconnectionDelay: 1000,
-            reconnectionDelayMax: 5000
+            reconnectionDelayMax: 5000,
         })
 
         this.socket.on('connect', () => {
@@ -239,7 +269,7 @@ export class ApiMachineClient {
                 status: 'running',
                 pid: process.pid,
                 httpPort: this.machine.runnerState?.httpPort,
-                startedAt: Date.now()
+                startedAt: Date.now(),
             })).catch((error) => {
                 logger.debug('[API MACHINE] Failed to update runner state on connect', error)
             })
@@ -252,9 +282,12 @@ export class ApiMachineClient {
             this.stopKeepAlive()
         })
 
-        this.socket.on('rpc-request', async (data: { method: string; params: string }, callback: (response: string) => void) => {
-            callback(await this.rpcHandlerManager.handleRequest(data))
-        })
+        this.socket.on(
+            'rpc-request',
+            async (data: { method: string; params: string }, callback: (response: string) => void) => {
+                callback(await this.rpcHandlerManager.handleRequest(data))
+            }
+        )
 
         this.socket.on('update', (data: Update) => {
             if (data.body.t !== 'update-machine') {
@@ -285,7 +318,9 @@ export class ApiMachineClient {
                     if (parsed.success) {
                         this.machine.runnerState = parsed.data
                     } else {
-                        logger.debug('[API MACHINE] Ignoring invalid runnerState update', { version: update.runnerState.version })
+                        logger.debug('[API MACHINE] Ignoring invalid runnerState update', {
+                            version: update.runnerState.version,
+                        })
                     }
                 }
                 this.machine.runnerStateVersion = update.runnerState.version
@@ -306,7 +341,7 @@ export class ApiMachineClient {
         this.keepAliveInterval = setInterval(() => {
             this.socket.emit('machine-alive', {
                 machineId: this.machine.id,
-                time: Date.now()
+                time: Date.now(),
             })
         }, 20_000)
     }

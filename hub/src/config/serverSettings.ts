@@ -38,7 +38,7 @@ export interface ServerSettingsResult {
 function parseCorsOrigins(str: string): string[] {
     const entries = str
         .split(',')
-        .map(origin => origin.trim())
+        .map((origin) => origin.trim())
         .filter(Boolean)
 
     if (entries.includes('*')) {
@@ -78,9 +78,7 @@ export async function loadServerSettings(dataDir: string): Promise<ServerSetting
 
     // If settings file exists but couldn't be parsed, fail fast
     if (settings === null) {
-        throw new Error(
-            `Cannot read ${settingsFile}. Please fix or remove the file and restart.`
-        )
+        throw new Error(`Cannot read ${settingsFile}. Please fix or remove the file and restart.`)
     }
 
     let needsSave = false

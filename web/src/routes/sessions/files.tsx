@@ -145,21 +145,13 @@ function LineChanges(props: { added: number; removed: number }) {
 
     return (
         <span className="flex items-center gap-1 text-[11px] font-mono">
-            {props.added ? (
-                <span className="text-[var(--app-diff-added-text)]">+{props.added}</span>
-            ) : null}
-            {props.removed ? (
-                <span className="text-[var(--app-diff-removed-text)]">-{props.removed}</span>
-            ) : null}
+            {props.added ? <span className="text-[var(--app-diff-added-text)]">+{props.added}</span> : null}
+            {props.removed ? <span className="text-[var(--app-diff-removed-text)]">-{props.removed}</span> : null}
         </span>
     )
 }
 
-function GitFileRow(props: {
-    file: GitFileStatus
-    onOpen: () => void
-    showDivider: boolean
-}) {
+function GitFileRow(props: { file: GitFileStatus; onOpen: () => void; showDivider: boolean }) {
     const subtitle = props.file.filePath || 'project root'
 
     return (
@@ -181,15 +173,14 @@ function GitFileRow(props: {
     )
 }
 
-function SearchResultRow(props: {
-    file: FileSearchItem
-    onOpen: () => void
-    showDivider: boolean
-}) {
+function SearchResultRow(props: { file: FileSearchItem; onOpen: () => void; showDivider: boolean }) {
     const subtitle = props.file.filePath || 'project root'
-    const icon = props.file.fileType === 'file'
-        ? <FileIcon fileName={props.file.fileName} size={22} />
-        : <FolderIcon className="text-[var(--app-link)]" />
+    const icon =
+        props.file.fileType === 'file' ? (
+            <FileIcon fileName={props.file.fileName} size={22} />
+        ) : (
+            <FolderIcon className="text-[var(--app-link)]" />
+        )
 
     return (
         <button
@@ -218,8 +209,12 @@ function FileListSkeleton(props: { label: string; rows?: number }) {
                 <div key={`skeleton-row-${index}`} className="flex items-center gap-3">
                     <div className="h-6 w-6 rounded bg-[var(--app-subtle-bg)]" />
                     <div className="flex-1 space-y-2">
-                        <div className={`h-3 ${titleWidths[index % titleWidths.length]} rounded bg-[var(--app-subtle-bg)]`} />
-                        <div className={`h-2 ${subtitleWidths[index % subtitleWidths.length]} rounded bg-[var(--app-subtle-bg)]`} />
+                        <div
+                            className={`h-3 ${titleWidths[index % titleWidths.length]} rounded bg-[var(--app-subtle-bg)]`}
+                        />
+                        <div
+                            className={`h-2 ${subtitleWidths[index % subtitleWidths.length]} rounded bg-[var(--app-subtle-bg)]`}
+                        />
                     </div>
                 </div>
             ))}
@@ -244,29 +239,33 @@ export default function FilesPage() {
         status: gitStatus,
         error: gitError,
         isLoading: gitLoading,
-        refetch: refetchGit
+        refetch: refetchGit,
     } = useGitStatusFiles(api, sessionId)
 
     const shouldSearch = Boolean(searchQuery)
 
     const searchResults = useSessionFileSearch(api, sessionId, searchQuery, {
-        enabled: shouldSearch
+        enabled: shouldSearch,
     })
 
-    const handleOpenFile = useCallback((path: string, staged?: boolean) => {
-        const fileSearch = staged === undefined
-            ? (activeTab === 'directories'
-                ? { path: encodeBase64(path), tab: 'directories' as const }
-                : { path: encodeBase64(path) })
-            : (activeTab === 'directories'
-                ? { path: encodeBase64(path), staged, tab: 'directories' as const }
-                : { path: encodeBase64(path), staged })
-        navigate({
-            to: '/sessions/$sessionId/file',
-            params: { sessionId },
-            search: fileSearch
-        })
-    }, [activeTab, navigate, sessionId])
+    const handleOpenFile = useCallback(
+        (path: string, staged?: boolean) => {
+            const fileSearch =
+                staged === undefined
+                    ? activeTab === 'directories'
+                        ? { path: encodeBase64(path), tab: 'directories' as const }
+                        : { path: encodeBase64(path) }
+                    : activeTab === 'directories'
+                      ? { path: encodeBase64(path), staged, tab: 'directories' as const }
+                      : { path: encodeBase64(path), staged }
+            navigate({
+                to: '/sessions/$sessionId/file',
+                params: { sessionId },
+                search: fileSearch,
+            })
+        },
+        [activeTab, navigate, sessionId]
+    )
 
     const branchLabel = gitStatus?.branch ?? 'detached'
     const subtitle = session?.metadata?.path ?? sessionId
@@ -280,14 +279,14 @@ export default function FilesPage() {
     const handleRefresh = useCallback(() => {
         if (searchQuery) {
             void queryClient.invalidateQueries({
-                queryKey: queryKeys.sessionFiles(sessionId, searchQuery)
+                queryKey: queryKeys.sessionFiles(sessionId, searchQuery),
             })
             return
         }
 
         if (activeTab === 'directories') {
             void queryClient.invalidateQueries({
-                queryKey: ['session-directory', sessionId]
+                queryKey: ['session-directory', sessionId],
             })
             return
         }
@@ -295,15 +294,18 @@ export default function FilesPage() {
         void refetchGit()
     }, [activeTab, queryClient, refetchGit, searchQuery, sessionId])
 
-    const handleTabChange = useCallback((nextTab: 'changes' | 'directories') => {
-        setActiveTab(nextTab)
-        navigate({
-            to: '/sessions/$sessionId/files',
-            params: { sessionId },
-            search: nextTab === 'changes' ? {} : { tab: nextTab },
-            replace: true,
-        })
-    }, [navigate, sessionId])
+    const handleTabChange = useCallback(
+        (nextTab: 'changes' | 'directories') => {
+            setActiveTab(nextTab)
+            navigate({
+                to: '/sessions/$sessionId/files',
+                params: { sessionId },
+                search: nextTab === 'changes' ? {} : { tab: nextTab },
+                replace: true,
+            })
+        },
+        [navigate, sessionId]
+    )
 
     return (
         <div className="flex h-full flex-col">
@@ -439,7 +441,10 @@ export default function FilesPage() {
                                             key={`staged-${file.fullPath}-${index}`}
                                             file={file}
                                             onOpen={() => handleOpenFile(file.fullPath, file.isStaged)}
-                                            showDivider={index < gitStatus.stagedFiles.length - 1 || gitStatus.unstagedFiles.length > 0}
+                                            showDivider={
+                                                index < gitStatus.stagedFiles.length - 1 ||
+                                                gitStatus.unstagedFiles.length > 0
+                                            }
                                         />
                                     ))}
                                 </div>

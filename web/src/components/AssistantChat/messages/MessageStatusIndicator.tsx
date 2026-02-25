@@ -10,10 +10,7 @@ function ErrorIcon() {
     )
 }
 
-export function MessageStatusIndicator(props: {
-    status?: MessageStatus
-    onRetry?: () => void
-}) {
+export function MessageStatusIndicator(props: { status?: MessageStatus; onRetry?: () => void }) {
     if (props.status !== 'failed') {
         return null
     }
@@ -24,11 +21,7 @@ export function MessageStatusIndicator(props: {
                 <ErrorIcon />
             </span>
             {props.onRetry ? (
-                <button
-                    type="button"
-                    onClick={props.onRetry}
-                    className="text-xs text-blue-500 hover:underline"
-                >
+                <button type="button" onClick={props.onRetry} className="text-xs text-blue-500 hover:underline">
                     Retry
                 </button>
             ) : null}

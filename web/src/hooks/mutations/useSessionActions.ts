@@ -114,12 +114,13 @@ export function useSessionActions(
         setModelMode: modelMutation.mutateAsync,
         renameSession: renameMutation.mutateAsync,
         deleteSession: deleteMutation.mutateAsync,
-        isPending: abortMutation.isPending
-            || archiveMutation.isPending
-            || switchMutation.isPending
-            || permissionMutation.isPending
-            || modelMutation.isPending
-            || renameMutation.isPending
-            || deleteMutation.isPending,
+        isPending:
+            abortMutation.isPending ||
+            archiveMutation.isPending ||
+            switchMutation.isPending ||
+            permissionMutation.isPending ||
+            modelMutation.isPending ||
+            renameMutation.isPending ||
+            deleteMutation.isPending,
     }
 }

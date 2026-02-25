@@ -15,11 +15,7 @@ export type HappyChatContextValue = {
 const HappyChatContext = createContext<HappyChatContextValue | null>(null)
 
 export function HappyChatProvider(props: { value: HappyChatContextValue; children: ReactNode }) {
-    return (
-        <HappyChatContext.Provider value={props.value}>
-            {props.children}
-        </HappyChatContext.Provider>
-    )
+    return <HappyChatContext.Provider value={props.value}>{props.children}</HappyChatContext.Provider>
 }
 
 export function useHappyChatContext(): HappyChatContextValue {

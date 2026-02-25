@@ -51,7 +51,7 @@ export function parseAskUserQuestionInput(input: unknown): { questions: AskUserQ
             header: header.length > 0 ? header : null,
             question,
             options,
-            multiSelect
+            multiSelect,
         })
     }
 
@@ -70,7 +70,7 @@ export function extractAskUserQuestionQuestionsInfo(input: unknown): AskUserQues
         const question = typeof q.question === 'string' ? q.question.trim() : null
         questions.push({
             header: header && header.length > 0 ? header : null,
-            question: question && question.length > 0 ? question : null
+            question: question && question.length > 0 ? question : null,
         })
     }
     return questions

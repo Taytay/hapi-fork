@@ -5,22 +5,22 @@
  * bridge server and generating the MCP server configuration that Codex needs.
  */
 
-import { startHappyServer } from '@/claude/utils/startHappyServer';
-import { getHappyCliCommand } from '@/utils/spawnHappyCLI';
-import type { ApiSessionClient } from '@/api/apiSession';
+import { startHappyServer } from '@/claude/utils/startHappyServer'
+import { getHappyCliCommand } from '@/utils/spawnHappyCLI'
+import type { ApiSessionClient } from '@/api/apiSession'
 
 /**
  * MCP server entry configuration.
  */
 export interface McpServerEntry {
-    command: string;
-    args: string[];
+    command: string
+    args: string[]
 }
 
 /**
  * Map of MCP server names to their configurations.
  */
-export type McpServersConfig = Record<string, McpServerEntry>;
+export type McpServersConfig = Record<string, McpServerEntry>
 
 /**
  * Result of starting the hapi MCP bridge.
@@ -28,11 +28,11 @@ export type McpServersConfig = Record<string, McpServerEntry>;
 export interface HapiMcpBridge {
     /** The running server instance */
     server: {
-        url: string;
-        stop: () => void;
-    };
+        url: string
+        stop: () => void
+    }
     /** MCP server config to pass to Codex (works for both CLI and SDK) */
-    mcpServers: McpServersConfig;
+    mcpServers: McpServersConfig
 }
 
 /**
@@ -43,19 +43,19 @@ export interface HapiMcpBridge {
  * used by both local and remote launchers.
  */
 export async function buildHapiMcpBridge(client: ApiSessionClient): Promise<HapiMcpBridge> {
-    const happyServer = await startHappyServer(client);
-    const bridgeCommand = getHappyCliCommand(['mcp', '--url', happyServer.url]);
+    const happyServer = await startHappyServer(client)
+    const bridgeCommand = getHappyCliCommand(['mcp', '--url', happyServer.url])
 
     return {
         server: {
             url: happyServer.url,
-            stop: happyServer.stop
+            stop: happyServer.stop,
         },
         mcpServers: {
             hapi: {
                 command: bridgeCommand.command,
-                args: bridgeCommand.args
-            }
-        }
-    };
+                args: bridgeCommand.args,
+            },
+        },
+    }
 }

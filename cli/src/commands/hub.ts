@@ -41,5 +41,5 @@ export const hubCommand: CommandDefinition = {
             }
             process.exit(1)
         }
-    }
+    },
 }

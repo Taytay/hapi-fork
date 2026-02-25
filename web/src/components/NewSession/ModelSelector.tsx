@@ -17,8 +17,7 @@ export function ModelSelector(props: {
     return (
         <div className="flex flex-col gap-1.5 px-3 py-3">
             <label className="text-xs font-medium text-[var(--app-hint)]">
-                {t('newSession.model')}{' '}
-                <span className="font-normal">({t('newSession.model.optional')})</span>
+                {t('newSession.model')} <span className="font-normal">({t('newSession.model.optional')})</span>
             </label>
             <select
                 value={props.model}

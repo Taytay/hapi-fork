@@ -9,8 +9,7 @@ export class EventPublisher {
     constructor(
         private readonly sseManager: SSEManager,
         private readonly resolveNamespace: (event: SyncEvent) => string | undefined
-    ) {
-    }
+    ) {}
 
     subscribe(listener: SyncEventListener): () => void {
         this.listeners.add(listener)

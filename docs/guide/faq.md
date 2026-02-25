@@ -32,17 +32,20 @@ HAPI includes an embedded hub. Just run `hapi hub` on your machine - no external
 ### How do I access HAPI from my phone?
 
 For local network access:
+
 ```
 http://<your-computer-ip>:3006
 ```
 
 For internet access:
+
 - If the hub has a public IP, access it directly (use HTTPS via reverse proxy for production)
 - If behind NAT, set up a tunnel (Cloudflare Tunnel, Tailscale, or ngrok)
 
 ### What's the access token for?
 
 The `CLI_API_TOKEN` is a shared secret that authenticates:
+
 - CLI connections to the hub
 - Web app logins
 - Telegram account binding
@@ -84,6 +87,7 @@ Yes, with runner mode:
 ### How do I see what files were changed?
 
 In the session view, tap the "Files" tab to:
+
 - Browse project files
 - View git status
 - See diffs of changed files
@@ -105,6 +109,7 @@ Set `ELEVENLABS_API_KEY`, open a session in the web app, and click the microphon
 ### Is my data safe?
 
 Yes. HAPI is local-first:
+
 - All data stays on your machine
 - Nothing is uploaded to external servers
 - The database is stored locally in `~/.hapi/`
@@ -116,6 +121,7 @@ The auto-generated token is 256-bit (cryptographically secure). For external acc
 ### Can others access my HAPI instance?
 
 Only if they have your access token. For additional security:
+
 - Use a strong, unique token
 - Always use HTTPS for external access
 - Consider Tailscale for private networking
@@ -150,6 +156,7 @@ hapi runner logs
 ### Claude Code not found
 
 Install Claude Code or set custom path:
+
 ```bash
 npm install -g @anthropic-ai/claude-code
 # or
@@ -168,30 +175,31 @@ This checks hub connectivity, token validity, agent availability, and more.
 
 ### HAPI vs Happy
 
-| Aspect | Happy | HAPI |
-|--------|-------|------|
-| Design | Cloud-first | Local-first |
-| Users | Multi-user | Single user |
-| Deployment | Multiple services | Single binary |
-| Data | Encrypted on server | Never leaves your machine |
+| Aspect     | Happy               | HAPI                      |
+| ---------- | ------------------- | ------------------------- |
+| Design     | Cloud-first         | Local-first               |
+| Users      | Multi-user          | Single user               |
+| Deployment | Multiple services   | Single binary             |
+| Data       | Encrypted on server | Never leaves your machine |
 
 See [Why HAPI](./why-hapi.md) for detailed comparison.
 
 ### HAPI vs running Claude Code directly
 
-| Feature | Claude Code | HAPI + Claude Code |
-|---------|-------------|-------------------|
-| Remote access | No | Yes |
-| Mobile control | No | Yes |
-| Permission approval | Terminal only | Phone/web |
-| Session persistence | No | Yes |
-| Multi-machine | Manual | Built-in |
+| Feature             | Claude Code   | HAPI + Claude Code |
+| ------------------- | ------------- | ------------------ |
+| Remote access       | No            | Yes                |
+| Mobile control      | No            | Yes                |
+| Permission approval | Terminal only | Phone/web          |
+| Session persistence | No            | Yes                |
+| Multi-machine       | Manual        | Built-in           |
 
 ## Contributing
 
 ### How can I contribute?
 
 Visit our [GitHub repository](https://github.com/tiann/hapi) to:
+
 - Report issues
 - Submit pull requests
 - Suggest features

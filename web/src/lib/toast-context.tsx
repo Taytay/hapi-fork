@@ -46,26 +46,28 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         }
     }, [])
 
-    const addToast = useCallback((toast: Omit<Toast, 'id'>) => {
-        const id = createToastId()
-        setToasts((prev) => [...prev, { id, ...toast }])
-        const timer = setTimeout(() => {
-            removeToast(id)
-        }, TOAST_DURATION_MS)
-        timersRef.current.set(id, timer)
-    }, [removeToast])
-
-    const value = useMemo<ToastContextValue>(() => ({
-        toasts,
-        addToast,
-        removeToast
-    }), [toasts, addToast, removeToast])
-
-    return (
-        <ToastContext.Provider value={value}>
-            {children}
-        </ToastContext.Provider>
+    const addToast = useCallback(
+        (toast: Omit<Toast, 'id'>) => {
+            const id = createToastId()
+            setToasts((prev) => [...prev, { id, ...toast }])
+            const timer = setTimeout(() => {
+                removeToast(id)
+            }, TOAST_DURATION_MS)
+            timersRef.current.set(id, timer)
+        },
+        [removeToast]
     )
+
+    const value = useMemo<ToastContextValue>(
+        () => ({
+            toasts,
+            addToast,
+            removeToast,
+        }),
+        [toasts, addToast, removeToast]
+    )
+
+    return <ToastContext.Provider value={value}>{children}</ToastContext.Provider>
 }
 
 export function useToast(): ToastContextValue {

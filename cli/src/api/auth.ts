@@ -6,4 +6,3 @@ export function getAuthToken(): string {
     }
     return configuration.cliApiToken
 }
-

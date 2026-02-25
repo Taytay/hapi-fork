@@ -16,11 +16,7 @@ function ChevronIcon(props: { className?: string; open?: boolean }) {
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className={cn(
-                'transition-transform duration-200',
-                props.open ? 'rotate-90' : '',
-                props.className
-            )}
+            className={cn('transition-transform duration-200', props.open ? 'rotate-90' : '', props.className)}
         >
             <polyline points="9 18 15 12 9 6" />
         </svg>
@@ -28,9 +24,7 @@ function ChevronIcon(props: { className?: string; open?: boolean }) {
 }
 
 function ShimmerDot() {
-    return (
-        <span className="inline-block w-1.5 h-1.5 bg-current rounded-full animate-pulse" />
-    )
+    return <span className="inline-block w-1.5 h-1.5 bg-current rounded-full animate-pulse" />
 }
 
 /**
@@ -55,9 +49,10 @@ export const ReasoningGroup: FC<PropsWithChildren> = ({ children }) => {
 
     // Check if reasoning is still streaming
     const message = useMessage()
-    const isStreaming = message.status?.type === 'running'
-        && message.content.length > 0
-        && message.content[message.content.length - 1]?.type === 'reasoning'
+    const isStreaming =
+        message.status?.type === 'running' &&
+        message.content.length > 0 &&
+        message.content[message.content.length - 1]?.type === 'reasoning'
 
     // Auto-expand while streaming
     useEffect(() => {
@@ -92,9 +87,7 @@ export const ReasoningGroup: FC<PropsWithChildren> = ({ children }) => {
                     isOpen ? 'max-h-[5000px] opacity-100' : 'max-h-0 opacity-0'
                 )}
             >
-                <div className="pl-4 pt-2 border-l-2 border-[var(--app-border)] ml-0.5">
-                    {children}
-                </div>
+                <div className="pl-4 pt-2 border-l-2 border-[var(--app-border)] ml-0.5">{children}</div>
             </div>
         </div>
     )

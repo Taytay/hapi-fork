@@ -9,26 +9,23 @@ type TodoItem = {
 }
 
 function extractTodos(input: unknown, result: unknown): TodoItem[] {
-    const todosFromInput = isObject(input) && Array.isArray(input.todos)
-        ? input.todos.filter(isObject)
-        : []
+    const todosFromInput = isObject(input) && Array.isArray(input.todos) ? input.todos.filter(isObject) : []
     if (todosFromInput.length > 0) {
         return todosFromInput.map((t) => ({
             id: typeof t.id === 'string' ? t.id : undefined,
             content: typeof t.content === 'string' ? t.content : undefined,
-            status: t.status === 'pending' || t.status === 'in_progress' || t.status === 'completed' ? t.status : undefined,
-            priority: t.priority === 'high' || t.priority === 'medium' || t.priority === 'low' ? t.priority : undefined
+            status:
+                t.status === 'pending' || t.status === 'in_progress' || t.status === 'completed' ? t.status : undefined,
+            priority: t.priority === 'high' || t.priority === 'medium' || t.priority === 'low' ? t.priority : undefined,
         }))
     }
 
-    const newTodos = isObject(result) && Array.isArray(result.newTodos)
-        ? result.newTodos.filter(isObject)
-        : []
+    const newTodos = isObject(result) && Array.isArray(result.newTodos) ? result.newTodos.filter(isObject) : []
     return newTodos.map((t) => ({
         id: typeof t.id === 'string' ? t.id : undefined,
         content: typeof t.content === 'string' ? t.content : undefined,
         status: t.status === 'pending' || t.status === 'in_progress' || t.status === 'completed' ? t.status : undefined,
-        priority: t.priority === 'high' || t.priority === 'medium' || t.priority === 'low' ? t.priority : undefined
+        priority: t.priority === 'high' || t.priority === 'medium' || t.priority === 'low' ? t.priority : undefined,
     }))
 }
 

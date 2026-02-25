@@ -18,9 +18,7 @@ export const Autocomplete = memo(function Autocomplete(props: AutocompleteProps)
         if (selectedIndex < 0 || selectedIndex >= suggestions.length) return
         const listEl = listRef.current
         if (!listEl) return
-        const selectedEl = listEl.querySelector<HTMLButtonElement>(
-            `[data-suggestion-index="${selectedIndex}"]`
-        )
+        const selectedEl = listEl.querySelector<HTMLButtonElement>(`[data-suggestion-index="${selectedIndex}"]`)
         selectedEl?.scrollIntoView({ block: 'nearest' })
     }, [selectedIndex, suggestions])
 
@@ -45,11 +43,11 @@ export const Autocomplete = memo(function Autocomplete(props: AutocompleteProps)
                 >
                     <span className="w-full font-medium">{suggestion.label}</span>
                     {suggestion.description && (
-                        <span className={`w-full min-h-[2.25rem] text-xs leading-snug line-clamp-2 ${
-                            index === selectedIndex
-                                ? 'opacity-80'
-                                : 'text-[var(--app-hint)]'
-                        }`}>
+                        <span
+                            className={`w-full min-h-[2.25rem] text-xs leading-snug line-clamp-2 ${
+                                index === selectedIndex ? 'opacity-80' : 'text-[var(--app-hint)]'
+                            }`}
+                        >
                             {suggestion.description}
                         </span>
                     )}

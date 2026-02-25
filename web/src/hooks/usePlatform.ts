@@ -64,20 +64,17 @@ const haptic: PlatformHaptic = {
         } else {
             vibrate(vibrationPatterns.selection)
         }
-    }
+    },
 }
 
 export function usePlatform(): Platform {
     const isTelegram = useMemo(() => isTelegramApp(), [])
-    const isTouch = useMemo(
-        () => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches,
-        []
-    )
+    const isTouch = useMemo(() => typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches, [])
 
     return {
         isTelegram,
         isTouch,
-        haptic
+        haptic,
     }
 }
 
@@ -87,6 +84,6 @@ export function getPlatform(): Platform {
     return {
         isTelegram: isTelegramApp(),
         isTouch,
-        haptic
+        haptic,
     }
 }

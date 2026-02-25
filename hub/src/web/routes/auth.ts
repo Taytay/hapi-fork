@@ -10,11 +10,11 @@ import type { WebAppEnv } from '../middleware/auth'
 import type { Store } from '../../store'
 
 const telegramAuthSchema = z.object({
-    initData: z.string()
+    initData: z.string(),
 })
 
 const accessTokenAuthSchema = z.object({
-    accessToken: z.string()
+    accessToken: z.string(),
 })
 
 const authBodySchema = z.union([telegramAuthSchema, accessTokenAuthSchema])
@@ -80,8 +80,8 @@ export function createAuthRoutes(jwtSecret: Uint8Array, store: Store): Hono<WebA
                 id: userId,
                 username,
                 firstName,
-                lastName
-            }
+                lastName,
+            },
         })
     })
 

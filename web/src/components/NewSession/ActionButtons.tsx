@@ -13,19 +13,10 @@ export function ActionButtons(props: {
 
     return (
         <div className="flex gap-2 px-3 py-3">
-            <Button
-                variant="secondary"
-                onClick={props.onCancel}
-                disabled={props.isDisabled}
-            >
+            <Button variant="secondary" onClick={props.onCancel} disabled={props.isDisabled}>
                 {t('button.cancel')}
             </Button>
-            <Button
-                onClick={props.onCreate}
-                disabled={!props.canCreate}
-                aria-busy={props.isPending}
-                className="gap-2"
-            >
+            <Button onClick={props.onCreate} disabled={!props.canCreate} aria-busy={props.isPending} className="gap-2">
                 {props.isPending ? (
                     <>
                         <Spinner size="sm" label={null} className="text-[var(--app-button-text)]" />

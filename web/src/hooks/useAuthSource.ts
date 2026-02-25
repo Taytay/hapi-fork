@@ -135,10 +135,13 @@ export function useAuthSource(baseUrl: string): {
         }
     }, [accessTokenKey])
 
-    const setAccessToken = useCallback((token: string) => {
-        storeAccessToken(accessTokenKey, token)
-        setAuthSource({ type: 'accessToken', token })
-    }, [accessTokenKey])
+    const setAccessToken = useCallback(
+        (token: string) => {
+            storeAccessToken(accessTokenKey, token)
+            setAuthSource({ type: 'accessToken', token })
+        },
+        [accessTokenKey]
+    )
 
     const clearAuth = useCallback(() => {
         clearStoredAccessToken(accessTokenKey)
@@ -150,6 +153,6 @@ export function useAuthSource(baseUrl: string): {
         isLoading,
         isTelegram,
         setAccessToken,
-        clearAuth
+        clearAuth,
     }
 }

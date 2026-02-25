@@ -32,9 +32,9 @@ function toThreadMessageLike(block: ChatBlock): ThreadMessageLike {
                     status: block.status,
                     localId: block.localId,
                     originalText: block.originalText,
-                    attachments: block.attachments
-                } satisfies HappyChatMessageMetadata
-            }
+                    attachments: block.attachments,
+                } satisfies HappyChatMessageMetadata,
+            },
         }
     }
 
@@ -46,8 +46,8 @@ function toThreadMessageLike(block: ChatBlock): ThreadMessageLike {
             createdAt: new Date(block.createdAt),
             content: [{ type: 'text', text: block.text }],
             metadata: {
-                custom: { kind: 'assistant' } satisfies HappyChatMessageMetadata
-            }
+                custom: { kind: 'assistant' } satisfies HappyChatMessageMetadata,
+            },
         }
     }
 
@@ -59,8 +59,8 @@ function toThreadMessageLike(block: ChatBlock): ThreadMessageLike {
             createdAt: new Date(block.createdAt),
             content: [{ type: 'reasoning', text: block.text }],
             metadata: {
-                custom: { kind: 'assistant' } satisfies HappyChatMessageMetadata
-            }
+                custom: { kind: 'assistant' } satisfies HappyChatMessageMetadata,
+            },
         }
     }
 
@@ -72,8 +72,8 @@ function toThreadMessageLike(block: ChatBlock): ThreadMessageLike {
             createdAt: new Date(block.createdAt),
             content: [{ type: 'text', text: renderEventLabel(block.event) }],
             metadata: {
-                custom: { kind: 'event', event: block.event } satisfies HappyChatMessageMetadata
-            }
+                custom: { kind: 'event', event: block.event } satisfies HappyChatMessageMetadata,
+            },
         }
     }
 
@@ -85,8 +85,8 @@ function toThreadMessageLike(block: ChatBlock): ThreadMessageLike {
             createdAt: new Date(block.createdAt),
             content: [{ type: 'text', text: block.text }],
             metadata: {
-                custom: { kind: 'cli-output', source: block.source } satisfies HappyChatMessageMetadata
-            }
+                custom: { kind: 'cli-output', source: block.source } satisfies HappyChatMessageMetadata,
+            },
         }
     }
 
@@ -98,8 +98,8 @@ function toThreadMessageLike(block: ChatBlock): ThreadMessageLike {
             createdAt: new Date(block.createdAt),
             content: [{ type: 'text', text: '' }],
             metadata: {
-                custom: { kind: 'turn-separator' } satisfies HappyChatMessageMetadata
-            }
+                custom: { kind: 'turn-separator' } satisfies HappyChatMessageMetadata,
+            },
         }
     }
 
@@ -111,18 +111,20 @@ function toThreadMessageLike(block: ChatBlock): ThreadMessageLike {
         role: 'assistant',
         id: messageId,
         createdAt: new Date(toolBlock.createdAt),
-        content: [{
-            type: 'tool-call',
-            toolCallId: toolBlock.id,
-            toolName: toolBlock.tool.name,
-            argsText: inputText,
-            result: toolBlock.tool.result,
-            isError: toolBlock.tool.state === 'error',
-            artifact: toolBlock
-        }],
+        content: [
+            {
+                type: 'tool-call',
+                toolCallId: toolBlock.id,
+                toolName: toolBlock.tool.name,
+                argsText: inputText,
+                result: toolBlock.tool.result,
+                isError: toolBlock.tool.state === 'error',
+                artifact: toolBlock,
+            },
+        ],
         metadata: {
-            custom: { kind: 'tool', toolCallId: toolBlock.id } satisfies HappyChatMessageMetadata
-        }
+            custom: { kind: 'tool', toolCallId: toolBlock.id } satisfies HappyChatMessageMetadata,
+        },
     }
 }
 
@@ -132,7 +134,10 @@ function getTextFromParts(parts: readonly { type: string }[] | undefined): strin
     if (!parts) return ''
 
     return parts
-        .filter((part): part is TextMessagePart => part.type === 'text' && typeof (part as TextMessagePart).text === 'string')
+        .filter(
+            (part): part is TextMessagePart =>
+                part.type === 'text' && typeof (part as TextMessagePart).text === 'string'
+        )
         .map((part) => part.text)
         .join('\n')
         .trim()
@@ -198,11 +203,14 @@ export function useHappyRuntime(props: {
         isRunning: props.session.thinking,
     })
 
-    const onNew = useCallback(async (message: AppendMessage) => {
-        const { text, attachments } = extractMessageContent(message)
-        if (!text && attachments.length === 0) return
-        props.onSendMessage(text, attachments.length > 0 ? attachments : undefined)
-    }, [props.onSendMessage])
+    const onNew = useCallback(
+        async (message: AppendMessage) => {
+            const { text, attachments } = extractMessageContent(message)
+            if (!text && attachments.length === 0) return
+            props.onSendMessage(text, attachments.length > 0 ? attachments : undefined)
+        },
+        [props.onSendMessage]
+    )
 
     const onCancel = useCallback(async () => {
         await props.onAbort()
@@ -210,24 +218,27 @@ export function useHappyRuntime(props: {
 
     // Memoize the adapter to avoid recreating on every render
     // useExternalStoreRuntime may use adapter identity for subscriptions
-    const adapter = useMemo(() => ({
-        isDisabled: props.isSending || (!props.session.active && !props.allowSendWhenInactive),
-        isRunning: props.session.thinking,
-        messages: convertedMessages,
-        onNew,
-        onCancel,
-        adapters: props.attachmentAdapter ? { attachments: props.attachmentAdapter } : undefined,
-        unstable_capabilities: { copy: true }
-    }), [
-        props.session.active,
-        props.isSending,
-        props.allowSendWhenInactive,
-        props.session.thinking,
-        convertedMessages,
-        onNew,
-        onCancel,
-        props.attachmentAdapter
-    ])
+    const adapter = useMemo(
+        () => ({
+            isDisabled: props.isSending || (!props.session.active && !props.allowSendWhenInactive),
+            isRunning: props.session.thinking,
+            messages: convertedMessages,
+            onNew,
+            onCancel,
+            adapters: props.attachmentAdapter ? { attachments: props.attachmentAdapter } : undefined,
+            unstable_capabilities: { copy: true },
+        }),
+        [
+            props.session.active,
+            props.isSending,
+            props.allowSendWhenInactive,
+            props.session.thinking,
+            convertedMessages,
+            onNew,
+            onCancel,
+            props.attachmentAdapter,
+        ]
+    )
 
     return useExternalStoreRuntime(adapter)
 }

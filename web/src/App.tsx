@@ -121,7 +121,12 @@ function AppInner() {
     const isFirstConnectRef = useRef(true)
     const baseUrlRef = useRef(baseUrl)
     const pushPromptedRef = useRef(false)
-    const { isSupported: isPushSupported, permission: pushPermission, requestPermission, subscribe } = usePushNotifications(api)
+    const {
+        isSupported: isPushSupported,
+        permission: pushPermission,
+        requestPermission,
+        subscribe,
+    } = usePushNotifications(api)
 
     useEffect(() => {
         if (baseUrlRef.current === baseUrl) {
@@ -196,13 +201,12 @@ function AppInner() {
         }
         const invalidations = [
             queryClient.invalidateQueries({ queryKey: queryKeys.sessions }),
-            ...(selectedSessionId ? [
-                queryClient.invalidateQueries({ queryKey: queryKeys.session(selectedSessionId) })
-            ] : [])
+            ...(selectedSessionId
+                ? [queryClient.invalidateQueries({ queryKey: queryKeys.session(selectedSessionId) })]
+                : []),
         ]
-        const refreshMessages = (selectedSessionId && api)
-            ? fetchLatestMessages(api, selectedSessionId)
-            : Promise.resolve()
+        const refreshMessages =
+            selectedSessionId && api ? fetchLatestMessages(api, selectedSessionId) : Promise.resolve()
         Promise.all([...invalidations, refreshMessages])
             .catch((error) => {
                 console.error('Failed to invalidate queries on SSE connect:', error)
@@ -223,14 +227,17 @@ function AppInner() {
     }, [])
 
     const handleSseEvent = useCallback(() => {}, [])
-    const handleToast = useCallback((event: ToastEvent) => {
-        addToast({
-            title: event.data.title,
-            body: event.data.body,
-            sessionId: event.data.sessionId,
-            url: event.data.url
-        })
-    }, [addToast])
+    const handleToast = useCallback(
+        (event: ToastEvent) => {
+            addToast({
+                title: event.data.title,
+                body: event.data.body,
+                sessionId: event.data.sessionId,
+                url: event.data.url,
+            })
+        },
+        [addToast]
+    )
 
     const eventSubscription = useMemo(() => {
         if (selectedSessionId) {
@@ -247,13 +254,13 @@ function AppInner() {
         onConnect: handleSseConnect,
         onDisconnect: handleSseDisconnect,
         onEvent: handleSseEvent,
-        onToast: handleToast
+        onToast: handleToast,
     })
 
     useVisibilityReporter({
         api,
         subscriptionId,
-        enabled: Boolean(api && token)
+        enabled: Boolean(api && token),
     })
 
     // Loading auth source
@@ -324,9 +331,7 @@ function AppInner() {
         return (
             <div className="p-4 space-y-3">
                 <div className="text-base font-semibold">{t('login.title')}</div>
-                <div className="text-sm text-red-600">
-                    {authError ?? t('login.error.authFailed')}
-                </div>
+                <div className="text-sm text-red-600">{authError ?? t('login.error.authFailed')}</div>
                 <div className="text-xs text-[var(--app-hint)]">
                     Open this page from Telegram using the bot's "Open App" button (not "Open in browser").
                 </div>

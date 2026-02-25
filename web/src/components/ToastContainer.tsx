@@ -26,7 +26,7 @@ export function ToastContainer() {
                         if (toast.sessionId) {
                             void navigate({
                                 to: '/sessions/$sessionId',
-                                params: { sessionId: toast.sessionId }
+                                params: { sessionId: toast.sessionId },
                             })
                             return
                         }

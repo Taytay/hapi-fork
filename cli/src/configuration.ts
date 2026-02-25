@@ -34,7 +34,7 @@ class Configuration {
 
         // Check if we're running as runner based on process args
         const args = getCliArgs()
-        this.isRunnerProcess = args.length >= 2 && args[0] === 'runner' && (args[1] === 'start-sync')
+        this.isRunnerProcess = args.length >= 2 && args[0] === 'runner' && args[1] === 'start-sync'
 
         // Directory configuration - Priority: HAPI_HOME env > default home dir
         if (process.env.HAPI_HOME) {

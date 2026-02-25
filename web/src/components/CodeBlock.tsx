@@ -3,11 +3,7 @@ import { useShikiHighlighter } from '@/lib/shiki'
 import { CopyIcon, CheckIcon } from '@/components/icons'
 import { useTranslation } from '@/lib/use-translation'
 
-export function CodeBlock(props: {
-    code: string
-    language?: string
-    showCopyButton?: boolean
-}) {
+export function CodeBlock(props: { code: string; language?: string; showCopyButton?: boolean }) {
     const { t } = useTranslation()
     const showCopyButton = props.showCopyButton ?? true
     const { copied, copy } = useCopyToClipboard()

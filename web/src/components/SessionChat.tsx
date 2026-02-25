@@ -41,7 +41,9 @@ export function SessionChat(props: {
     const { haptic } = usePlatform()
     const navigate = useNavigate()
     const sessionInactive = !props.session.active
-    const normalizedCacheRef = useRef<Map<string, { source: DecryptedMessage; normalized: NormalizedMessage | null }>>(new Map())
+    const normalizedCacheRef = useRef<Map<string, { source: DecryptedMessage; normalized: NormalizedMessage | null }>>(
+        new Map()
+    )
     const blocksByIdRef = useRef<Map<string, ChatBlock>>(new Map())
     const [forceScrollToken, setForceScrollToken] = useState(0)
     const agentFlavor = props.session.metadata?.flavor ?? null
@@ -66,7 +68,7 @@ export function SessionChat(props: {
             denyPermission: async (_sessionId: string, requestId: string) => {
                 await props.api.denyPermission(props.session.id, requestId)
                 props.onRefresh()
-            }
+            },
         })
     }, [props.session, props.api, props.onSend, props.onRefresh])
 
@@ -82,8 +84,8 @@ export function SessionChat(props: {
     const prevMessagesRef = useRef<DecryptedMessage[]>([])
 
     useEffect(() => {
-        const prevIds = new Set(prevMessagesRef.current.map(m => m.id))
-        const newMessages = props.messages.filter(m => !prevIds.has(m.id))
+        const prevIds = new Set(prevMessagesRef.current.map((m) => m.id))
+        const newMessages = props.messages.filter((m) => !prevIds.has(m.id))
 
         if (newMessages.length > 0) {
             voiceHooks.onMessages(props.session.id, newMessages)
@@ -183,38 +185,41 @@ export function SessionChat(props: {
         () => reduceChatBlocks(normalizedMessages, props.session.agentState),
         [normalizedMessages, props.session.agentState]
     )
-    const reconciled = useMemo(
-        () => reconcileChatBlocks(reduced.blocks, blocksByIdRef.current),
-        [reduced.blocks]
-    )
+    const reconciled = useMemo(() => reconcileChatBlocks(reduced.blocks, blocksByIdRef.current), [reduced.blocks])
 
     useEffect(() => {
         blocksByIdRef.current = reconciled.byId
     }, [reconciled.byId])
 
     // Permission mode change handler
-    const handlePermissionModeChange = useCallback(async (mode: PermissionMode) => {
-        try {
-            await setPermissionMode(mode)
-            haptic.notification('success')
-            props.onRefresh()
-        } catch (e) {
-            haptic.notification('error')
-            console.error('Failed to set permission mode:', e)
-        }
-    }, [setPermissionMode, props.onRefresh, haptic])
+    const handlePermissionModeChange = useCallback(
+        async (mode: PermissionMode) => {
+            try {
+                await setPermissionMode(mode)
+                haptic.notification('success')
+                props.onRefresh()
+            } catch (e) {
+                haptic.notification('error')
+                console.error('Failed to set permission mode:', e)
+            }
+        },
+        [setPermissionMode, props.onRefresh, haptic]
+    )
 
     // Model mode change handler
-    const handleModelModeChange = useCallback(async (mode: ModelMode) => {
-        try {
-            await setModelMode(mode)
-            haptic.notification('success')
-            props.onRefresh()
-        } catch (e) {
-            haptic.notification('error')
-            console.error('Failed to set model mode:', e)
-        }
-    }, [setModelMode, props.onRefresh, haptic])
+    const handleModelModeChange = useCallback(
+        async (mode: ModelMode) => {
+            try {
+                await setModelMode(mode)
+                haptic.notification('success')
+                props.onRefresh()
+            } catch (e) {
+                haptic.notification('error')
+                console.error('Failed to set model mode:', e)
+            }
+        },
+        [setModelMode, props.onRefresh, haptic]
+    )
 
     // Abort handler
     const handleAbort = useCallback(async () => {
@@ -231,21 +236,24 @@ export function SessionChat(props: {
     const handleViewFiles = useCallback(() => {
         navigate({
             to: '/sessions/$sessionId/files',
-            params: { sessionId: props.session.id }
+            params: { sessionId: props.session.id },
         })
     }, [navigate, props.session.id])
 
     const handleViewTerminal = useCallback(() => {
         navigate({
             to: '/sessions/$sessionId/terminal',
-            params: { sessionId: props.session.id }
+            params: { sessionId: props.session.id },
         })
     }, [navigate, props.session.id])
 
-    const handleSend = useCallback((text: string, attachments?: AttachmentMetadata[]) => {
-        props.onSend(text, attachments)
-        setForceScrollToken((token) => token + 1)
-    }, [props.onSend])
+    const handleSend = useCallback(
+        (text: string, attachments?: AttachmentMetadata[]) => {
+            props.onSend(text, attachments)
+            setForceScrollToken((token) => token + 1)
+        },
+        [props.onSend]
+    )
 
     const attachmentAdapter = useMemo(() => {
         if (!props.session.active) {
@@ -261,7 +269,7 @@ export function SessionChat(props: {
         onSendMessage: handleSend,
         onAbort: handleAbort,
         attachmentAdapter,
-        allowSendWhenInactive: true
+        allowSendWhenInactive: true,
     })
 
     return (
@@ -332,11 +340,7 @@ export function SessionChat(props: {
 
             {/* Voice session component - renders nothing but initializes ElevenLabs */}
             {voice && (
-                <RealtimeVoiceSession
-                    api={props.api}
-                    micMuted={voice.micMuted}
-                    onStatusChange={voice.setStatus}
-                />
+                <RealtimeVoiceSession api={props.api} micMuted={voice.micMuted} onStatusChange={voice.setStatus} />
             )}
         </div>
     )

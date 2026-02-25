@@ -2,17 +2,17 @@ import { useCallback, useEffect, useState } from 'react'
 import type { ApiClient } from '@/api/client'
 
 function isPushSupported(): boolean {
-    return typeof window !== 'undefined'
-        && 'serviceWorker' in navigator
-        && 'PushManager' in window
-        && 'Notification' in window
+    return (
+        typeof window !== 'undefined' &&
+        'serviceWorker' in navigator &&
+        'PushManager' in window &&
+        'Notification' in window
+    )
 }
 
 function base64UrlToUint8Array(base64Url: string): Uint8Array {
     const padding = '='.repeat((4 - (base64Url.length % 4)) % 4)
-    const base64 = (base64Url + padding)
-        .replace(/-/g, '+')
-        .replace(/_/g, '/')
+    const base64 = (base64Url + padding).replace(/-/g, '+').replace(/_/g, '/')
     const raw = atob(base64)
     const output = new Uint8Array(raw.length)
     for (let i = 0; i < raw.length; i += 1) {
@@ -78,10 +78,12 @@ export function usePushNotifications(api: ApiClient | null) {
             const existing = await registration.pushManager.getSubscription()
             const { publicKey } = await api.getPushVapidPublicKey()
             const applicationServerKey = base64UrlToUint8Array(publicKey).buffer as ArrayBuffer
-            const subscription = existing ?? await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey
-            })
+            const subscription =
+                existing ??
+                (await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey,
+                }))
 
             const json = subscription.toJSON()
             const keys = json.keys
@@ -93,8 +95,8 @@ export function usePushNotifications(api: ApiClient | null) {
                 endpoint: json.endpoint,
                 keys: {
                     p256dh: keys.p256dh,
-                    auth: keys.auth
-                }
+                    auth: keys.auth,
+                },
             })
             setIsSubscribed(true)
             return true
@@ -134,6 +136,6 @@ export function usePushNotifications(api: ApiClient | null) {
         isSubscribed,
         requestPermission,
         subscribe,
-        unsubscribe
+        unsubscribe,
     }
 }

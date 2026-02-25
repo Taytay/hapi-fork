@@ -13,8 +13,7 @@ export class SessionCache {
     constructor(
         private readonly store: Store,
         private readonly publisher: EventPublisher
-    ) {
-    }
+    ) {}
 
     getSessions(): Session[] {
         return Array.from(this.sessions.values())
@@ -57,7 +56,12 @@ export class SessionCache {
 
     getOrCreateSession(tag: string, metadata: unknown, agentState: unknown, namespace: string): Session {
         const stored = this.store.sessions.getOrCreateSession(tag, metadata, agentState, namespace)
-        return this.refreshSession(stored.id) ?? (() => { throw new Error('Failed to load session') })()
+        return (
+            this.refreshSession(stored.id) ??
+            (() => {
+                throw new Error('Failed to load session')
+            })()
+        )
     }
 
     refreshSession(sessionId: string): Session | null {
@@ -79,7 +83,12 @@ export class SessionCache {
                 const message = messages[i]
                 const todos = extractTodoWriteTodosFromMessageContent(message.content)
                 if (todos) {
-                    const updated = this.store.sessions.setSessionTodos(sessionId, todos, message.createdAt, stored.namespace)
+                    const updated = this.store.sessions.setSessionTodos(
+                        sessionId,
+                        todos,
+                        message.createdAt,
+                        stored.namespace
+                    )
                     if (updated) {
                         stored = this.store.sessions.getSession(sessionId) ?? stored
                     }
@@ -111,7 +120,7 @@ export class SessionCache {
             createdAt: stored.createdAt,
             updatedAt: stored.updatedAt,
             active: existing?.active ?? stored.active,
-            activeAt: existing?.activeAt ?? (stored.activeAt ?? stored.createdAt),
+            activeAt: existing?.activeAt ?? stored.activeAt ?? stored.createdAt,
             metadata,
             metadataVersion: stored.metadataVersion,
             agentState,
@@ -120,7 +129,7 @@ export class SessionCache {
             thinkingAt: existing?.thinkingAt ?? 0,
             todos,
             permissionMode: existing?.permissionMode,
-            modelMode: existing?.modelMode
+            modelMode: existing?.modelMode,
         }
 
         this.sessions.set(sessionId, session)
@@ -168,10 +177,11 @@ export class SessionCache {
         const now = Date.now()
         const lastBroadcastAt = this.lastBroadcastAtBySessionId.get(session.id) ?? 0
         const modeChanged = previousPermissionMode !== session.permissionMode || previousModelMode !== session.modelMode
-        const shouldBroadcast = (!wasActive && session.active)
-            || (wasThinking !== session.thinking)
-            || modeChanged
-            || (now - lastBroadcastAt > 10_000)
+        const shouldBroadcast =
+            (!wasActive && session.active) ||
+            wasThinking !== session.thinking ||
+            modeChanged ||
+            now - lastBroadcastAt > 10_000
 
         if (shouldBroadcast) {
             this.lastBroadcastAtBySessionId.set(session.id, now)
@@ -182,8 +192,8 @@ export class SessionCache {
                     activeAt: session.activeAt,
                     thinking: session.thinking,
                     permissionMode: session.permissionMode,
-                    modelMode: session.modelMode
-                }
+                    modelMode: session.modelMode,
+                },
             })
         }
     }
@@ -202,7 +212,11 @@ export class SessionCache {
         session.thinking = false
         session.thinkingAt = t
 
-        this.publisher.emit({ type: 'session-updated', sessionId: session.id, data: { active: false, thinking: false } })
+        this.publisher.emit({
+            type: 'session-updated',
+            sessionId: session.id,
+            data: { active: false, thinking: false },
+        })
     }
 
     expireInactive(now: number = Date.now()): void {
@@ -318,12 +332,7 @@ export class SessionCache {
         }
 
         if (oldStored.todos !== null && oldStored.todosUpdatedAt !== null) {
-            this.store.sessions.setSessionTodos(
-                newSessionId,
-                oldStored.todos,
-                oldStored.todosUpdatedAt,
-                namespace
-            )
+            this.store.sessions.setSessionTodos(newSessionId, oldStored.todos, oldStored.todosUpdatedAt, namespace)
         }
 
         const deleted = this.store.sessions.deleteSession(oldSessionId, namespace)

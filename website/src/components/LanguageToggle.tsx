@@ -5,7 +5,7 @@ export function LanguageToggle() {
   const { i18n } = useTranslation();
 
   const toggleLanguage = () => {
-    const newLang = i18n.language.startsWith('zh') ? 'en' : 'zh';
+    const newLang = i18n.language.startsWith("zh") ? "en" : "zh";
     i18n.changeLanguage(newLang);
   };
 
@@ -16,7 +16,7 @@ export function LanguageToggle() {
       onClick={toggleLanguage}
       className="font-bold border-2 border-border shadow-hard hover:translate-y-0.5 hover:shadow-none transition-all w-12"
     >
-      {i18n.language.startsWith('zh') ? 'EN' : '中'}
+      {i18n.language.startsWith("zh") ? "EN" : "中"}
     </Button>
   );
 }

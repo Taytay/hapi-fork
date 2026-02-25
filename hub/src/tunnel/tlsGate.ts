@@ -14,8 +14,8 @@ function parseSubjectAltNames(value: string | undefined): SubjectAltName[] {
 
     return value
         .split(',')
-        .map(entry => entry.trim())
-        .map(entry => {
+        .map((entry) => entry.trim())
+        .map((entry) => {
             const match = entry.match(/^(DNS|IP Address):\s*(.+)$/i)
             if (!match) {
                 return null
@@ -53,9 +53,9 @@ function hostMatchesCertificate(host: string, cert: PeerCertificate): boolean {
 
     if (altNames.length > 0) {
         if (hostIsIp) {
-            return altNames.some(name => name.type === 'IP' && name.value === host)
+            return altNames.some((name) => name.type === 'IP' && name.value === host)
         }
-        return altNames.some(name => name.type === 'DNS' && dnsNameMatchesHost(host, name.value))
+        return altNames.some((name) => name.type === 'DNS' && dnsNameMatchesHost(host, name.value))
     }
 
     const commonName = cert.subject?.CN
@@ -114,14 +114,14 @@ function isValidTunnelCertificate(host: string, cert: PeerCertificate): boolean 
 }
 
 async function checkTunnelCertificate(host: string, port: number, timeoutMs: number): Promise<boolean> {
-    return await new Promise(resolve => {
+    return await new Promise((resolve) => {
         let resolved = false
         const servername = isIP(host) === 0 ? host : undefined
         const socket = connect({
             host,
             port,
             servername,
-            rejectUnauthorized: false
+            rejectUnauthorized: false,
         })
 
         const finalize = (result: boolean) => {
@@ -196,7 +196,7 @@ export async function waitForTunnelTlsReady(tunnelUrl: string, tunnelManager: Tu
             lastLogAt = now
         }
 
-        await new Promise(resolve => setTimeout(resolve, pollIntervalMs))
+        await new Promise((resolve) => setTimeout(resolve, pollIntervalMs))
     }
 
     return false

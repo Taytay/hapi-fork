@@ -1,14 +1,14 @@
 export const CLAUDE_PERMISSION_MODES = ['default', 'acceptEdits', 'bypassPermissions', 'plan'] as const
-export type ClaudePermissionMode = typeof CLAUDE_PERMISSION_MODES[number]
+export type ClaudePermissionMode = (typeof CLAUDE_PERMISSION_MODES)[number]
 
 export const CODEX_PERMISSION_MODES = ['default', 'read-only', 'safe-yolo', 'yolo'] as const
-export type CodexPermissionMode = typeof CODEX_PERMISSION_MODES[number]
+export type CodexPermissionMode = (typeof CODEX_PERMISSION_MODES)[number]
 
 export const GEMINI_PERMISSION_MODES = ['default', 'read-only', 'safe-yolo', 'yolo'] as const
-export type GeminiPermissionMode = typeof GEMINI_PERMISSION_MODES[number]
+export type GeminiPermissionMode = (typeof GEMINI_PERMISSION_MODES)[number]
 
 export const OPENCODE_PERMISSION_MODES = ['default', 'yolo'] as const
-export type OpencodePermissionMode = typeof OPENCODE_PERMISSION_MODES[number]
+export type OpencodePermissionMode = (typeof OPENCODE_PERMISSION_MODES)[number]
 
 export const PERMISSION_MODES = [
     'default',
@@ -17,12 +17,12 @@ export const PERMISSION_MODES = [
     'plan',
     'read-only',
     'safe-yolo',
-    'yolo'
+    'yolo',
 ] as const
-export type PermissionMode = typeof PERMISSION_MODES[number]
+export type PermissionMode = (typeof PERMISSION_MODES)[number]
 
 export const MODEL_MODES = ['default', 'sonnet', 'opus'] as const
-export type ModelMode = typeof MODEL_MODES[number]
+export type ModelMode = (typeof MODEL_MODES)[number]
 
 export type AgentFlavor = 'claude' | 'codex' | 'gemini' | 'opencode'
 
@@ -33,7 +33,7 @@ export const PERMISSION_MODE_LABELS: Record<PermissionMode, string> = {
     bypassPermissions: 'Yolo',
     'read-only': 'Read Only',
     'safe-yolo': 'Safe Yolo',
-    yolo: 'Yolo'
+    yolo: 'Yolo',
 }
 
 export type PermissionModeTone = 'neutral' | 'info' | 'warning' | 'danger'
@@ -45,7 +45,7 @@ export const PERMISSION_MODE_TONES: Record<PermissionMode, PermissionModeTone> =
     bypassPermissions: 'danger',
     'read-only': 'warning',
     'safe-yolo': 'warning',
-    yolo: 'danger'
+    yolo: 'danger',
 }
 
 export type PermissionModeOption = {
@@ -57,7 +57,7 @@ export type PermissionModeOption = {
 export const MODEL_MODE_LABELS: Record<ModelMode, string> = {
     default: 'Default',
     sonnet: 'Sonnet',
-    opus: 'Opus'
+    opus: 'Opus',
 }
 
 export function getPermissionModeLabel(mode: PermissionMode): string {
@@ -85,7 +85,7 @@ export function getPermissionModeOptionsForFlavor(flavor?: string | null): Permi
     return getPermissionModesForFlavor(flavor).map((mode) => ({
         mode,
         label: getPermissionModeLabel(mode),
-        tone: getPermissionModeTone(mode)
+        tone: getPermissionModeTone(mode),
     }))
 }
 

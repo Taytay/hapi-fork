@@ -20,7 +20,7 @@ function parseAttachments(raw: unknown): AttachmentMetadata[] | undefined {
                 mimeType: item.mimeType,
                 size: item.size,
                 path: item.path,
-                previewUrl: typeof item.previewUrl === 'string' ? item.previewUrl : undefined
+                previewUrl: typeof item.previewUrl === 'string' ? item.previewUrl : undefined,
             })
         }
     }
@@ -42,7 +42,7 @@ export function normalizeUserRecord(
             role: 'user',
             content: { type: 'text', text: content },
             isSidechain: false,
-            meta
+            meta,
         }
     }
 
@@ -55,7 +55,7 @@ export function normalizeUserRecord(
             role: 'user',
             content: { type: 'text', text: content.text, attachments },
             isSidechain: false,
-            meta
+            meta,
         }
     }
 

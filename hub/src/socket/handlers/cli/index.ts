@@ -41,7 +41,8 @@ export type CliHandlersDeps = {
 }
 
 export function registerCliHandlers(socket: CliSocketWithData, deps: CliHandlersDeps): void {
-    const { io, store, rpcRegistry, terminalRegistry, onSessionAlive, onSessionEnd, onMachineAlive, onWebappEvent } = deps
+    const { io, store, rpcRegistry, terminalRegistry, onSessionAlive, onSessionEnd, onMachineAlive, onWebappEvent } =
+        deps
     const terminalNamespace = io.of('/terminal')
     const namespace = typeof socket.data.namespace === 'string' ? socket.data.namespace : null
 
@@ -85,11 +86,12 @@ export function registerCliHandlers(socket: CliSocketWithData, deps: CliHandlers
     }
 
     const emitAccessError = (scope: 'session' | 'machine', id: string, reason: AccessErrorReason) => {
-        const message = reason === 'access-denied'
-            ? `${scope} access denied`
-            : reason === 'not-found'
-                ? `${scope} not found`
-                : 'Namespace missing'
+        const message =
+            reason === 'access-denied'
+                ? `${scope} access denied`
+                : reason === 'not-found'
+                  ? `${scope} not found`
+                  : 'Namespace missing'
         socket.emit('error', { message, code: reason, scope, id })
     }
 
@@ -100,20 +102,20 @@ export function registerCliHandlers(socket: CliSocketWithData, deps: CliHandlers
         emitAccessError,
         onSessionAlive,
         onSessionEnd,
-        onWebappEvent
+        onWebappEvent,
     })
     registerMachineHandlers(socket, {
         store,
         resolveMachineAccess,
         emitAccessError,
         onMachineAlive,
-        onWebappEvent
+        onWebappEvent,
     })
     registerTerminalHandlers(socket, {
         terminalRegistry,
         terminalNamespace,
         resolveSessionAccess,
-        emitAccessError
+        emitAccessError,
     })
 
     socket.on('ping', (callback: () => void) => {

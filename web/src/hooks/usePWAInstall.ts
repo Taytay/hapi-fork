@@ -122,6 +122,6 @@ export function usePWAInstall(): {
         isStandalone,
         isIOS,
         promptInstall,
-        dismissInstall
+        dismissInstall,
     }
 }

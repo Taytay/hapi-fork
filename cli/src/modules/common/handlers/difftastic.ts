@@ -34,7 +34,7 @@ export function registerDifftasticHandlers(rpcHandlerManager: RpcHandlerManager,
                 success: true,
                 exitCode: result.exitCode,
                 stdout: result.stdout.toString(),
-                stderr: result.stderr.toString()
+                stderr: result.stderr.toString(),
             }
         } catch (error) {
             logger.debug('Failed to run difftastic:', error)

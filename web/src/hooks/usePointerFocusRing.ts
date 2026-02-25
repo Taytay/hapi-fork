@@ -19,6 +19,6 @@ export function usePointerFocusRing() {
         suppressFocusRing,
         onTriggerPointerDown,
         onTriggerKeyDown,
-        onTriggerBlur
+        onTriggerBlur,
     }
 }

@@ -16,11 +16,11 @@ function parseUnifiedDiff(unifiedDiff: string): { oldText: string; newText: stri
         }
 
         if (
-            line.startsWith('diff --git')
-            || line.startsWith('index ')
-            || line.startsWith('---')
-            || line.startsWith('new file mode')
-            || line.startsWith('deleted file mode')
+            line.startsWith('diff --git') ||
+            line.startsWith('index ') ||
+            line.startsWith('---') ||
+            line.startsWith('new file mode') ||
+            line.startsWith('deleted file mode')
         ) {
             continue
         }
@@ -50,7 +50,7 @@ function parseUnifiedDiff(unifiedDiff: string): { oldText: string; newText: stri
     return {
         oldText: oldLines.join('\n'),
         newText: newLines.join('\n'),
-        fileName
+        fileName,
     }
 }
 

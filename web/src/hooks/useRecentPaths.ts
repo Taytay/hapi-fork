@@ -25,10 +25,13 @@ function saveRecentPaths(data: RecentPathsData): void {
 export function useRecentPaths() {
     const [data, setData] = useState<RecentPathsData>(loadRecentPaths)
 
-    const getRecentPaths = useCallback((machineId: string | null): string[] => {
-        if (!machineId) return []
-        return data[machineId] ?? []
-    }, [data])
+    const getRecentPaths = useCallback(
+        (machineId: string | null): string[] => {
+            if (!machineId) return []
+            return data[machineId] ?? []
+        },
+        [data]
+    )
 
     const addRecentPath = useCallback((machineId: string, path: string): void => {
         const trimmed = path.trim()
@@ -62,10 +65,13 @@ export function useRecentPaths() {
         }
     }, [])
 
-    return useMemo(() => ({
-        getRecentPaths,
-        addRecentPath,
-        getLastUsedMachineId,
-        setLastUsedMachineId,
-    }), [getRecentPaths, addRecentPath, getLastUsedMachineId, setLastUsedMachineId])
+    return useMemo(
+        () => ({
+            getRecentPaths,
+            addRecentPath,
+            getLastUsedMachineId,
+            setLastUsedMachineId,
+        }),
+        [getRecentPaths, addRecentPath, getLastUsedMachineId, setLastUsedMachineId]
+    )
 }

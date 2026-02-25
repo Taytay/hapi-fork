@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test'
+import { describe, expect, it } from 'vitest'
 import type { Session, SyncEvent, SyncEventListener, SyncEngine } from '../sync/syncEngine'
 import type { NotificationChannel } from './notificationTypes'
 import { NotificationHub } from './notificationHub'
@@ -57,7 +57,7 @@ function createSession(overrides: Partial<Session> = {}): Session {
         agentStateVersion: 0,
         thinking: false,
         thinkingAt: 0,
-        ...overrides
+        ...overrides,
     }
 }
 
@@ -67,15 +67,15 @@ describe('NotificationHub', () => {
         const channel = new StubChannel()
         const hub = new NotificationHub(engine as unknown as SyncEngine, [channel], {
             permissionDebounceMs: 5,
-            readyCooldownMs: 5
+            readyCooldownMs: 5,
         })
 
         const firstSession = createSession({
             agentState: {
                 requests: {
-                    req1: { tool: 'Edit', arguments: {}, createdAt: 1 }
-                }
-            }
+                    req1: { tool: 'Edit', arguments: {}, createdAt: 1 },
+                },
+            },
         })
 
         engine.setSession(firstSession)
@@ -94,9 +94,9 @@ describe('NotificationHub', () => {
             namespace: firstSession.namespace,
             agentState: {
                 requests: {
-                    req2: { tool: 'Read', arguments: {}, createdAt: 2 }
-                }
-            }
+                    req2: { tool: 'Read', arguments: {}, createdAt: 2 },
+                },
+            },
         })
 
         engine.setSession(secondSession)
@@ -113,7 +113,7 @@ describe('NotificationHub', () => {
         const channel = new StubChannel()
         const hub = new NotificationHub(engine as unknown as SyncEngine, [channel], {
             permissionDebounceMs: 1,
-            readyCooldownMs: 20
+            readyCooldownMs: 20,
         })
 
         const session = createSession()
@@ -132,10 +132,10 @@ describe('NotificationHub', () => {
                     content: {
                         id: 'event-1',
                         type: 'event',
-                        data: { type: 'ready' }
-                    }
-                }
-            }
+                        data: { type: 'ready' },
+                    },
+                },
+            },
         }
 
         engine.emit(readyEvent)

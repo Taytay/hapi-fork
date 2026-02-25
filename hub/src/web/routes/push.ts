@@ -7,12 +7,12 @@ const subscriptionSchema = z.object({
     endpoint: z.string().min(1),
     keys: z.object({
         p256dh: z.string().min(1),
-        auth: z.string().min(1)
-    })
+        auth: z.string().min(1),
+    }),
 })
 
 const unsubscribeSchema = z.object({
-    endpoint: z.string().min(1)
+    endpoint: z.string().min(1),
 })
 
 export function createPushRoutes(store: Store, vapidPublicKey: string): Hono<WebAppEnv> {
@@ -34,7 +34,7 @@ export function createPushRoutes(store: Store, vapidPublicKey: string): Hono<Web
         store.push.addPushSubscription(namespace, {
             endpoint,
             p256dh: keys.p256dh,
-            auth: keys.auth
+            auth: keys.auth,
         })
 
         return c.json({ ok: true })

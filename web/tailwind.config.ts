@@ -5,10 +5,9 @@ export default {
     theme: {
         extend: {
             maxWidth: {
-                content: '720px'
-            }
-        }
+                content: '720px',
+            },
+        },
     },
-    plugins: []
+    plugins: [],
 } satisfies Config
-

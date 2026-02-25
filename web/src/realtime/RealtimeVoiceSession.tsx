@@ -69,15 +69,15 @@ class RealtimeVoiceSessionImpl implements VoiceSession {
                 connectionType: 'webrtc',
                 dynamicVariables: {
                     sessionId: config.sessionId,
-                    initialConversationContext: config.initialContext || ''
+                    initialConversationContext: config.initialContext || '',
                 },
                 // Language override - requires agent to have platform_settings.overrides enabled
                 // See: https://elevenlabs.io/docs/agents-platform/customization/personalization/overrides
                 overrides: {
                     agent: {
-                        language: config.language
-                    }
-                }
+                        language: config.language,
+                    },
+                },
             })
 
             if (DEBUG) {
@@ -139,7 +139,7 @@ export function RealtimeVoiceSession({
     getSession,
     sendMessage,
     approvePermission,
-    denyPermission
+    denyPermission,
 }: RealtimeVoiceSessionProps) {
     const hasRegistered = useRef(false)
 
@@ -164,10 +164,11 @@ export function RealtimeVoiceSession({
     useEffect(() => {
         if (getSession && sendMessage && approvePermission && denyPermission) {
             registerSessionStore({
-                getSession: (sessionId: string) => getSession(sessionId) as { agentState?: { requests?: Record<string, unknown> } } | null,
+                getSession: (sessionId: string) =>
+                    getSession(sessionId) as { agentState?: { requests?: Record<string, unknown> } } | null,
                 sendMessage,
                 approvePermission,
-                denyPermission
+                denyPermission,
             })
         }
     }, [getSession, sendMessage, approvePermission, denyPermission])
@@ -183,11 +184,14 @@ export function RealtimeVoiceSession({
         onStatusChange?.('disconnected')
     }, [onStatusChange])
 
-    const handleError = useCallback((error: unknown) => {
-        if (DEBUG) console.error('[Voice] Realtime error:', error)
-        const errorMessage = error instanceof Error ? error.message : 'Connection error'
-        onStatusChange?.('error', errorMessage)
-    }, [onStatusChange])
+    const handleError = useCallback(
+        (error: unknown) => {
+            if (DEBUG) console.error('[Voice] Realtime error:', error)
+            const errorMessage = error instanceof Error ? error.message : 'Connection error'
+            onStatusChange?.('error', errorMessage)
+        },
+        [onStatusChange]
+    )
 
     const handleMessage = useCallback((data: unknown) => {
         if (DEBUG) console.log('[Voice] Realtime message:', data)
@@ -219,7 +223,7 @@ export function RealtimeVoiceSession({
         onError: handleError,
         onStatusChange: handleStatusChange,
         onModeChange: handleModeChange,
-        onDebug: handleDebug
+        onDebug: handleDebug,
     })
 
     useEffect(() => {

@@ -36,7 +36,7 @@ export class Stream<T> implements AsyncIterableIterator<T> {
         if (this.queue.length > 0) {
             return Promise.resolve({
                 done: false,
-                value: this.queue.shift()!
+                value: this.queue.shift()!,
             })
         }
 

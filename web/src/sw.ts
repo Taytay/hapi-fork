@@ -31,9 +31,9 @@ registerRoute(
         plugins: [
             new ExpirationPlugin({
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 5
-            })
-        ]
+                maxAgeSeconds: 60 * 5,
+            }),
+        ],
     })
 )
 
@@ -45,9 +45,9 @@ registerRoute(
         plugins: [
             new ExpirationPlugin({
                 maxEntries: 20,
-                maxAgeSeconds: 60 * 5
-            })
-        ]
+                maxAgeSeconds: 60 * 5,
+            }),
+        ],
     })
 )
 
@@ -59,9 +59,9 @@ registerRoute(
         plugins: [
             new ExpirationPlugin({
                 maxEntries: 5,
-                maxAgeSeconds: 60 * 10
-            })
-        ]
+                maxAgeSeconds: 60 * 10,
+            }),
+        ],
     })
 )
 
@@ -72,9 +72,9 @@ registerRoute(
         plugins: [
             new ExpirationPlugin({
                 maxEntries: 5,
-                maxAgeSeconds: 60 * 60 * 24 * 30
-            })
-        ]
+                maxAgeSeconds: 60 * 60 * 24 * 30,
+            }),
+        ],
     })
 )
 
@@ -85,9 +85,9 @@ registerRoute(
         plugins: [
             new ExpirationPlugin({
                 maxEntries: 5,
-                maxAgeSeconds: 60 * 60 * 24 * 7
-            })
-        ]
+                maxAgeSeconds: 60 * 60 * 24 * 7,
+            }),
+        ],
     })
 )
 
@@ -110,7 +110,7 @@ self.addEventListener('push', (event) => {
             icon,
             badge,
             data,
-            tag
+            tag,
         })
     )
 })

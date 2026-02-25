@@ -24,7 +24,12 @@ export class TerminalRegistry {
         this.onIdle = options.onIdle
     }
 
-    register(terminalId: string, sessionId: string, socketId: string, cliSocketId: string): TerminalRegistryEntry | null {
+    register(
+        terminalId: string,
+        sessionId: string,
+        socketId: string,
+        cliSocketId: string
+    ): TerminalRegistryEntry | null {
         if (this.terminals.has(terminalId)) {
             return null
         }
@@ -34,7 +39,7 @@ export class TerminalRegistry {
             sessionId,
             socketId,
             cliSocketId,
-            idleTimer: null
+            idleTimer: null,
         }
 
         this.terminals.set(terminalId, entry)
@@ -80,7 +85,9 @@ export class TerminalRegistry {
         if (!ids || ids.size === 0) {
             return []
         }
-        return Array.from(ids).map((terminalId) => this.remove(terminalId)).filter(Boolean) as TerminalRegistryEntry[]
+        return Array.from(ids)
+            .map((terminalId) => this.remove(terminalId))
+            .filter(Boolean) as TerminalRegistryEntry[]
     }
 
     removeByCliSocket(socketId: string): TerminalRegistryEntry[] {
@@ -88,7 +95,9 @@ export class TerminalRegistry {
         if (!ids || ids.size === 0) {
             return []
         }
-        return Array.from(ids).map((terminalId) => this.remove(terminalId)).filter(Boolean) as TerminalRegistryEntry[]
+        return Array.from(ids)
+            .map((terminalId) => this.remove(terminalId))
+            .filter(Boolean) as TerminalRegistryEntry[]
     }
 
     countForSocket(socketId: string): number {

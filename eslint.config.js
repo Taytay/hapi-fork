@@ -1,0 +1,83 @@
+import eslint from '@eslint/js'
+import tseslint from 'typescript-eslint'
+
+export default tseslint.config(
+    eslint.configs.recommended,
+    ...tseslint.configs.strictTypeChecked,
+    {
+        languageOptions: {
+            parserOptions: {
+                projectService: true,
+                tsconfigRootDir: import.meta.dirname,
+            },
+        },
+        rules: {
+            // Warnings — tighten later
+            'no-unused-vars': 'off',
+            '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+            '@typescript-eslint/no-explicit-any': 'warn',
+            '@typescript-eslint/no-non-null-assertion': 'warn',
+            '@typescript-eslint/no-unnecessary-type-assertion': 'warn',
+
+            // Disable — too noisy with existing code (tighten incrementally)
+            '@typescript-eslint/no-floating-promises': 'off',
+            '@typescript-eslint/no-misused-promises': 'off',
+            '@typescript-eslint/no-unsafe-argument': 'off',
+            '@typescript-eslint/no-unsafe-assignment': 'off',
+            '@typescript-eslint/no-unsafe-call': 'off',
+            '@typescript-eslint/no-unsafe-member-access': 'off',
+            '@typescript-eslint/no-unsafe-return': 'off',
+            '@typescript-eslint/restrict-template-expressions': 'off',
+            '@typescript-eslint/no-unnecessary-condition': 'off',
+            '@typescript-eslint/no-confusing-void-expression': 'off',
+            '@typescript-eslint/restrict-plus-operands': 'off',
+            '@typescript-eslint/no-unnecessary-type-parameters': 'off',
+            '@typescript-eslint/use-unknown-in-catch-callback-variable': 'off',
+            '@typescript-eslint/no-dynamic-delete': 'off',
+            '@typescript-eslint/unified-signatures': 'off',
+            '@typescript-eslint/no-invalid-void-type': 'off',
+            '@typescript-eslint/prefer-promise-reject-errors': 'off',
+            '@typescript-eslint/only-throw-error': 'off',
+            '@typescript-eslint/no-base-to-string': 'off',
+            '@typescript-eslint/require-await': 'off',
+            '@typescript-eslint/no-extraneous-class': 'off',
+            '@typescript-eslint/no-empty-function': 'off',
+            '@typescript-eslint/no-redundant-type-constituents': 'off',
+            '@typescript-eslint/no-deprecated': 'off',
+            '@typescript-eslint/no-unnecessary-type-conversion': 'off',
+            '@typescript-eslint/no-unnecessary-boolean-literal-compare': 'off',
+            '@typescript-eslint/await-thenable': 'off',
+            '@typescript-eslint/unbound-method': 'off',
+            '@typescript-eslint/no-meaningless-void-operator': 'off',
+            '@typescript-eslint/no-unnecessary-template-expression': 'off',
+            '@typescript-eslint/no-unnecessary-type-arguments': 'off',
+            '@typescript-eslint/prefer-reduce-type-parameter': 'off',
+            '@typescript-eslint/no-empty-object-type': 'off',
+            '@typescript-eslint/no-require-imports': 'off',
+            '@typescript-eslint/no-useless-constructor': 'off',
+            'no-control-regex': 'off',
+            'no-useless-assignment': 'off',
+            'no-useless-escape': 'off',
+            'no-empty': 'off',
+            'no-prototype-builtins': 'off',
+            'preserve-caught-error': 'off',
+            'prefer-const': 'warn',
+        },
+    },
+    {
+        ignores: [
+            'dist/',
+            'node_modules/',
+            '.vitepress/',
+            '**/*.js',
+            '**/*.cjs',
+            '**/*.mjs',
+            '**/vite.config.ts',
+            '**/vitest.config.ts',
+            '**/tailwind.config.ts',
+            '**/postcss.config.*',
+            '**/scripts/',
+            'docs/.vitepress/',
+        ],
+    }
+)

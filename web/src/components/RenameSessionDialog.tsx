@@ -1,10 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle
-} from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useTranslation } from '@/lib/use-translation'
 
@@ -82,18 +77,10 @@ export function RenameSessionDialog(props: RenameSessionDialogProps) {
                     ) : null}
 
                     <div className="flex gap-2 justify-end">
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            onClick={onClose}
-                            disabled={isPending}
-                        >
+                        <Button type="button" variant="secondary" onClick={onClose} disabled={isPending}>
                             {t('button.cancel')}
                         </Button>
-                        <Button
-                            type="submit"
-                            disabled={isPending || !name.trim()}
-                        >
+                        <Button type="submit" disabled={isPending || !name.trim()}>
                             {isPending ? t('dialog.rename.saving') : t('button.save')}
                         </Button>
                     </div>

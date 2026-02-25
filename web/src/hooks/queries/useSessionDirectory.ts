@@ -34,16 +34,13 @@ export function useSessionDirectory(
         enabled,
     })
 
-    const queryError = query.error instanceof Error
-        ? query.error.message
-        : query.error
-            ? 'Failed to list directory'
-            : null
+    const queryError =
+        query.error instanceof Error ? query.error.message : query.error ? 'Failed to list directory' : null
 
     return {
         entries: query.data?.entries ?? [],
         error: queryError ?? query.data?.error ?? null,
         isLoading: query.isLoading,
-        refetch: query.refetch
+        refetch: query.refetch,
     }
 }

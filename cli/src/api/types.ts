@@ -4,7 +4,7 @@ import {
     MetadataSchema,
     ModelModeSchema,
     PermissionModeSchema,
-    TodosSchema
+    TodosSchema,
 } from '@hapi/protocol/schemas'
 import type { ModelMode, PermissionMode } from '@hapi/protocol/types'
 import { z } from 'zod'
@@ -18,7 +18,7 @@ export type {
     ClaudePermissionMode,
     CodexPermissionMode,
     Metadata,
-    Session
+    Session,
 } from '@hapi/protocol/types'
 export type SessionPermissionMode = PermissionMode
 export type SessionModelMode = ModelMode
@@ -32,7 +32,7 @@ export const MachineMetadataSchema = z.object({
     displayName: z.string().optional(),
     homeDir: z.string(),
     happyHomeDir: z.string(),
-    happyLibDir: z.string()
+    happyLibDir: z.string(),
 })
 
 export type MachineMetadata = z.infer<typeof MachineMetadataSchema>
@@ -43,7 +43,7 @@ export const RunnerStateSchema = z.object({
     httpPort: z.number().optional(),
     startedAt: z.number().optional(),
     shutdownRequestedAt: z.number().optional(),
-    shutdownSource: z.union([z.enum(['mobile-app', 'cli', 'os-signal', 'unknown']), z.string()]).optional()
+    shutdownSource: z.union([z.enum(['mobile-app', 'cli', 'os-signal', 'unknown']), z.string()]).optional(),
 })
 
 export type RunnerState = z.infer<typeof RunnerStateSchema>
@@ -62,13 +62,15 @@ export type Machine = {
 }
 
 export const CliMessagesResponseSchema = z.object({
-    messages: z.array(z.object({
-        id: z.string(),
-        seq: z.number(),
-        createdAt: z.number(),
-        localId: z.string().nullable().optional(),
-        content: z.unknown()
-    }))
+    messages: z.array(
+        z.object({
+            id: z.string(),
+            seq: z.number(),
+            createdAt: z.number(),
+            localId: z.string().nullable().optional(),
+            content: z.unknown(),
+        })
+    ),
 })
 
 export type CliMessagesResponse = z.infer<typeof CliMessagesResponseSchema>
@@ -90,8 +92,8 @@ export const CreateSessionResponseSchema = z.object({
         thinkingAt: z.number(),
         todos: TodosSchema.optional(),
         permissionMode: PermissionModeSchema.optional(),
-        modelMode: ModelModeSchema.optional()
-    })
+        modelMode: ModelModeSchema.optional(),
+    }),
 })
 
 export type CreateSessionResponse = z.infer<typeof CreateSessionResponseSchema>
@@ -107,8 +109,8 @@ export const CreateMachineResponseSchema = z.object({
         metadata: z.unknown().nullable(),
         metadataVersion: z.number(),
         runnerState: z.unknown().nullable(),
-        runnerStateVersion: z.number()
-    })
+        runnerStateVersion: z.number(),
+    }),
 })
 
 export type CreateMachineResponse = z.infer<typeof CreateMachineResponseSchema>
@@ -119,7 +121,7 @@ export const MessageMetaSchema = z.object({
     customSystemPrompt: z.string().nullable().optional(),
     appendSystemPrompt: z.string().nullable().optional(),
     allowedTools: z.array(z.string()).nullable().optional(),
-    disallowedTools: z.array(z.string()).nullable().optional()
+    disallowedTools: z.array(z.string()).nullable().optional(),
 })
 
 export type MessageMeta = z.infer<typeof MessageMetaSchema>
@@ -129,10 +131,10 @@ export const UserMessageSchema = z.object({
     content: z.object({
         type: z.literal('text'),
         text: z.string(),
-        attachments: z.array(AttachmentMetadataSchema).optional()
+        attachments: z.array(AttachmentMetadataSchema).optional(),
     }),
     localKey: z.string().optional(),
-    meta: MessageMetaSchema.optional()
+    meta: MessageMetaSchema.optional(),
 })
 
 export type UserMessage = z.infer<typeof UserMessageSchema>
@@ -141,9 +143,9 @@ export const AgentMessageSchema = z.object({
     role: z.literal('agent'),
     content: z.object({
         type: z.literal('output'),
-        data: z.unknown()
+        data: z.unknown(),
     }),
-    meta: MessageMetaSchema.optional()
+    meta: MessageMetaSchema.optional(),
 })
 
 export type AgentMessage = z.infer<typeof AgentMessageSchema>

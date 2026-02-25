@@ -256,7 +256,7 @@ function mergeIntoPending(
             pendingVisibleCount: prev.pendingVisibleCount,
             pendingOverflowCount: prev.pendingOverflowCount,
             pendingOverflowVisibleCount: prev.pendingOverflowVisibleCount,
-            warning: prev.warning
+            warning: prev.warning,
         }
     }
     const mergedPending = mergeMessages(prev.pending, incoming)

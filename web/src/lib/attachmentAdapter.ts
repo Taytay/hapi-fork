@@ -36,7 +36,7 @@ export function createAttachmentAdapter(api: ApiClient, sessionId: string): Atta
                 name: file.name,
                 contentType,
                 file,
-                status: { type: 'running', reason: 'uploading', progress: 0 }
+                status: { type: 'running', reason: 'uploading', progress: 0 },
             }
 
             try {
@@ -51,7 +51,7 @@ export function createAttachmentAdapter(api: ApiClient, sessionId: string): Atta
                         name: file.name,
                         contentType,
                         file,
-                        status: { type: 'incomplete', reason: 'error' }
+                        status: { type: 'incomplete', reason: 'error' },
                     }
                     return
                 }
@@ -67,7 +67,7 @@ export function createAttachmentAdapter(api: ApiClient, sessionId: string): Atta
                     name: file.name,
                     contentType,
                     file,
-                    status: { type: 'running', reason: 'uploading', progress: 50 }
+                    status: { type: 'running', reason: 'uploading', progress: 50 },
                 }
 
                 const result = await api.uploadFile(sessionId, file.name, content, contentType)
@@ -85,7 +85,7 @@ export function createAttachmentAdapter(api: ApiClient, sessionId: string): Atta
                         name: file.name,
                         contentType,
                         file,
-                        status: { type: 'incomplete', reason: 'error' }
+                        status: { type: 'incomplete', reason: 'error' },
                     }
                     return
                 }
@@ -104,7 +104,7 @@ export function createAttachmentAdapter(api: ApiClient, sessionId: string): Atta
                     file,
                     status: { type: 'requires-action', reason: 'composer-send' },
                     path: result.path,
-                    previewUrl
+                    previewUrl,
                 } as PendingUploadAttachment
             } catch {
                 yield {
@@ -113,7 +113,7 @@ export function createAttachmentAdapter(api: ApiClient, sessionId: string): Atta
                     name: file.name,
                     contentType,
                     file,
-                    status: { type: 'incomplete', reason: 'error' }
+                    status: { type: 'incomplete', reason: 'error' },
                 }
             }
         },
@@ -129,14 +129,16 @@ export function createAttachmentAdapter(api: ApiClient, sessionId: string): Atta
             const path = pending.path
 
             // Build AttachmentMetadata to be sent with the message
-            const metadata: AttachmentMetadata | undefined = path ? {
-                id: attachment.id,
-                filename: attachment.name,
-                mimeType: attachment.contentType ?? 'application/octet-stream',
-                size: attachment.file?.size ?? 0,
-                path,
-                previewUrl: pending.previewUrl
-            } : undefined
+            const metadata: AttachmentMetadata | undefined = path
+                ? {
+                      id: attachment.id,
+                      filename: attachment.name,
+                      mimeType: attachment.contentType ?? 'application/octet-stream',
+                      size: attachment.file?.size ?? 0,
+                      path,
+                      previewUrl: pending.previewUrl,
+                  }
+                : undefined
 
             return {
                 id: attachment.id,
@@ -145,9 +147,9 @@ export function createAttachmentAdapter(api: ApiClient, sessionId: string): Atta
                 contentType: attachment.contentType,
                 status: { type: 'complete' },
                 // Store metadata as JSON in the text content for extraction by assistant-runtime
-                content: metadata ? [{ type: 'text', text: JSON.stringify({ __attachmentMetadata: metadata }) }] : []
+                content: metadata ? [{ type: 'text', text: JSON.stringify({ __attachmentMetadata: metadata }) }] : [],
             }
-        }
+        },
     }
 }
 

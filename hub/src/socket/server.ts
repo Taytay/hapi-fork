@@ -15,7 +15,7 @@ import type { CliSocketWithData, SocketData, SocketServer } from './socketTypes'
 
 const jwtPayloadSchema = z.object({
     uid: z.number(),
-    ns: z.string()
+    ns: z.string(),
 })
 
 const DEFAULT_IDLE_TIMEOUT_MS = 15 * 60_000
@@ -52,11 +52,11 @@ export function createSocketServer(deps: SocketServerDeps): {
     const corsOptions = {
         origin: corsOriginOption,
         methods: ['GET', 'POST'],
-        credentials: false
+        credentials: false,
     }
 
     const io = new Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>({
-        cors: corsOptions
+        cors: corsOptions,
     })
 
     const engine = new Engine({
@@ -68,7 +68,7 @@ export function createSocketServer(deps: SocketServerDeps): {
                 return
             }
             throw 'Origin not allowed'
-        }
+        },
     })
     io.bind(engine)
 
@@ -85,14 +85,14 @@ export function createSocketServer(deps: SocketServerDeps): {
             const terminalSocket = terminalNs.sockets.get(entry.socketId)
             terminalSocket?.emit('terminal:error', {
                 terminalId: entry.terminalId,
-                message: 'Terminal closed due to inactivity.'
+                message: 'Terminal closed due to inactivity.',
             })
             const cliSocket = cliNs.sockets.get(entry.cliSocketId)
             cliSocket?.emit('terminal:close', {
                 sessionId: entry.sessionId,
-                terminalId: entry.terminalId
+                terminalId: entry.terminalId,
             })
-        }
+        },
     })
 
     cliNs.use((socket, next) => {
@@ -105,16 +105,18 @@ export function createSocketServer(deps: SocketServerDeps): {
         socket.data.namespace = parsedToken.namespace
         next()
     })
-    cliNs.on('connection', (socket) => registerCliHandlers(socket as CliSocketWithData, {
-        io,
-        store: deps.store,
-        rpcRegistry,
-        terminalRegistry,
-        onSessionAlive: deps.onSessionAlive,
-        onSessionEnd: deps.onSessionEnd,
-        onMachineAlive: deps.onMachineAlive,
-        onWebappEvent: deps.onWebappEvent
-    }))
+    cliNs.on('connection', (socket) =>
+        registerCliHandlers(socket as CliSocketWithData, {
+            io,
+            store: deps.store,
+            rpcRegistry,
+            terminalRegistry,
+            onSessionAlive: deps.onSessionAlive,
+            onSessionEnd: deps.onSessionEnd,
+            onMachineAlive: deps.onMachineAlive,
+            onWebappEvent: deps.onWebappEvent,
+        })
+    )
 
     terminalNs.use(async (socket, next) => {
         const auth = socket.handshake.auth as Record<string, unknown> | undefined
@@ -137,15 +139,17 @@ export function createSocketServer(deps: SocketServerDeps): {
             return next(new Error('Invalid token'))
         }
     })
-    terminalNs.on('connection', (socket) => registerTerminalHandlers(socket, {
-        io,
-        getSession: (sessionId) => {
-            return deps.getSession?.(sessionId) ?? deps.store.sessions.getSession(sessionId)
-        },
-        terminalRegistry,
-        maxTerminalsPerSocket,
-        maxTerminalsPerSession
-    }))
+    terminalNs.on('connection', (socket) =>
+        registerTerminalHandlers(socket, {
+            io,
+            getSession: (sessionId) => {
+                return deps.getSession?.(sessionId) ?? deps.store.sessions.getSession(sessionId)
+            },
+            terminalRegistry,
+            maxTerminalsPerSocket,
+            maxTerminalsPerSession,
+        })
+    )
 
     return { io, engine, rpcRegistry }
 }

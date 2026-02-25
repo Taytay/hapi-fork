@@ -97,7 +97,7 @@ function SettingsIcon(props: { className?: string }) {
 function SessionsPage() {
     const { api } = useAppContext()
     const navigate = useNavigate()
-    const pathname = useLocation({ select: location => location.pathname })
+    const pathname = useLocation({ select: (location) => location.pathname })
     const matchRoute = useMatchRoute()
     const { t } = useTranslation()
     const { sessions, isLoading, error, refetch } = useSessions(api)
@@ -106,7 +106,8 @@ function SessionsPage() {
         void refetch()
     }, [refetch])
 
-    const projectCount = new Set(sessions.map(s => s.metadata?.worktree?.basePath ?? s.metadata?.path ?? 'Other')).size
+    const projectCount = new Set(sessions.map((s) => s.metadata?.worktree?.basePath ?? s.metadata?.path ?? 'Other'))
+        .size
     const sessionMatch = matchRoute({ to: '/sessions/$sessionId', fuzzy: true })
     const selectedSessionId = sessionMatch && sessionMatch.sessionId !== 'new' ? sessionMatch.sessionId : null
     const isSessionsIndex = pathname === '/sessions' || pathname === '/sessions/'
@@ -151,10 +152,12 @@ function SessionsPage() {
                     <SessionList
                         sessions={sessions}
                         selectedSessionId={selectedSessionId}
-                        onSelect={(sessionId) => navigate({
-                            to: '/sessions/$sessionId',
-                            params: { sessionId },
-                        })}
+                        onSelect={(sessionId) =>
+                            navigate({
+                                to: '/sessions/$sessionId',
+                                params: { sessionId },
+                            })
+                        }
                         onNewSession={() => navigate({ to: '/sessions/new' })}
                         onRefresh={handleRefresh}
                         isLoading={isLoading}
@@ -164,7 +167,9 @@ function SessionsPage() {
                 </div>
             </div>
 
-            <div className={`${isSessionsIndex ? 'hidden lg:flex' : 'flex'} min-w-0 flex-1 flex-col bg-[var(--app-bg)]`}>
+            <div
+                className={`${isSessionsIndex ? 'hidden lg:flex' : 'flex'} min-w-0 flex-1 flex-col bg-[var(--app-bg)]`}
+            >
                 <div className="flex-1 min-h-0">
                     <Outlet />
                 </div>
@@ -185,10 +190,7 @@ function SessionPage() {
     const queryClient = useQueryClient()
     const { addToast } = useToast()
     const { sessionId } = useParams({ from: '/sessions/$sessionId' })
-    const {
-        session,
-        refetch: refetchSession,
-    } = useSession(api, sessionId)
+    const { session, refetch: refetchSession } = useSession(api, sessionId)
     const {
         messages,
         warning: messagesWarning,
@@ -202,11 +204,7 @@ function SessionPage() {
         flushPending,
         setAtBottom,
     } = useMessages(api, sessionId)
-    const {
-        sendMessage,
-        retryMessage,
-        isSending,
-    } = useSendMessage(api, sessionId, {
+    const { sendMessage, retryMessage, isSending } = useSendMessage(api, sessionId, {
         resolveSessionId: async (currentSessionId) => {
             if (!api || !session || session.active) {
                 return currentSessionId
@@ -219,7 +217,7 @@ function SessionPage() {
                     title: 'Resume failed',
                     body: message,
                     sessionId: currentSessionId,
-                    url: ''
+                    url: '',
                 })
                 throw error
             }
@@ -230,7 +228,7 @@ function SessionPage() {
                     if (session && resolvedSessionId !== session.id) {
                         seedMessageWindowFromSession(session.id, resolvedSessionId)
                         queryClient.setQueryData(queryKeys.session(resolvedSessionId), {
-                            session: { ...session, id: resolvedSessionId, active: true }
+                            session: { ...session, id: resolvedSessionId, active: true },
                         })
                     }
                     try {
@@ -241,13 +239,12 @@ function SessionPage() {
                             }),
                             fetchLatestMessages(api, resolvedSessionId),
                         ])
-                    } catch {
-                    }
+                    } catch {}
                 }
                 navigate({
                     to: '/sessions/$sessionId',
                     params: { sessionId: resolvedSessionId },
-                    replace: true
+                    replace: true,
                 })
             })()
         },
@@ -257,28 +254,27 @@ function SessionPage() {
                     title: t('send.blocked.title'),
                     body: t('send.blocked.noConnection'),
                     sessionId: sessionId ?? '',
-                    url: ''
+                    url: '',
                 })
             }
             // 'no-session' and 'pending' don't need toast - either invalid state or expected behavior
-        }
+        },
     })
 
     // Get agent type from session metadata for slash commands
     const agentType = session?.metadata?.flavor ?? 'claude'
-    const {
-        getSuggestions: getSlashSuggestions,
-    } = useSlashCommands(api, sessionId, agentType)
-    const {
-        getSuggestions: getSkillSuggestions,
-    } = useSkills(api, sessionId)
+    const { getSuggestions: getSlashSuggestions } = useSlashCommands(api, sessionId, agentType)
+    const { getSuggestions: getSkillSuggestions } = useSkills(api, sessionId)
 
-    const getAutocompleteSuggestions = useCallback(async (query: string) => {
-        if (query.startsWith('$')) {
-            return await getSkillSuggestions(query)
-        }
-        return await getSlashSuggestions(query)
-    }, [getSkillSuggestions, getSlashSuggestions])
+    const getAutocompleteSuggestions = useCallback(
+        async (query: string) => {
+            if (query.startsWith('$')) {
+                return await getSkillSuggestions(query)
+            }
+            return await getSlashSuggestions(query)
+        },
+        [getSkillSuggestions, getSlashSuggestions]
+    )
 
     const refreshSelectedSession = useCallback(() => {
         void refetchSession()
@@ -318,7 +314,7 @@ function SessionPage() {
 }
 
 function SessionDetailRoute() {
-    const pathname = useLocation({ select: location => location.pathname })
+    const pathname = useLocation({ select: (location) => location.pathname })
     const { sessionId } = useParams({ from: '/sessions/$sessionId' })
     const basePath = `/sessions/${sessionId}`
     const isChat = pathname === basePath || pathname === `${basePath}/`
@@ -337,18 +333,21 @@ function NewSessionPage() {
         navigate({ to: '/sessions' })
     }, [navigate])
 
-    const handleSuccess = useCallback((sessionId: string) => {
-        void queryClient.invalidateQueries({ queryKey: queryKeys.sessions })
-        // Replace current page with /sessions to clear spawn flow from history
-        navigate({ to: '/sessions', replace: true })
-        // Then navigate to new session
-        requestAnimationFrame(() => {
-            navigate({
-                to: '/sessions/$sessionId',
-                params: { sessionId },
+    const handleSuccess = useCallback(
+        (sessionId: string) => {
+            void queryClient.invalidateQueries({ queryKey: queryKeys.sessions })
+            // Replace current page with /sessions to clear spawn flow from history
+            navigate({ to: '/sessions', replace: true })
+            // Then navigate to new session
+            requestAnimationFrame(() => {
+                navigate({
+                    to: '/sessions/$sessionId',
+                    params: { sessionId },
+                })
             })
-        })
-    }, [navigate, queryClient])
+        },
+        [navigate, queryClient]
+    )
 
     return (
         <div className="flex-1 overflow-y-auto">
@@ -365,11 +364,7 @@ function NewSessionPage() {
                 <div className="flex-1 font-semibold">Create Session</div>
             </div>
 
-            {machinesError ? (
-                <div className="p-3 text-sm text-red-600">
-                    {machinesError}
-                </div>
-            ) : null}
+            {machinesError ? <div className="p-3 text-sm text-red-600">{machinesError}</div> : null}
 
             <NewSession
                 api={api}
@@ -415,11 +410,7 @@ const sessionFilesRoute = createRoute({
     path: 'files',
     validateSearch: (search: Record<string, unknown>): { tab?: 'changes' | 'directories' } => {
         const tabValue = typeof search.tab === 'string' ? search.tab : undefined
-        const tab = tabValue === 'directories'
-            ? 'directories'
-            : tabValue === 'changes'
-                ? 'changes'
-                : undefined
+        const tab = tabValue === 'directories' ? 'directories' : tabValue === 'changes' ? 'changes' : undefined
 
         return tab ? { tab } : {}
     },
@@ -443,18 +434,15 @@ const sessionFileRoute = createRoute({
     path: 'file',
     validateSearch: (search: Record<string, unknown>): SessionFileSearch => {
         const path = typeof search.path === 'string' ? search.path : ''
-        const staged = search.staged === true || search.staged === 'true'
-            ? true
-            : search.staged === false || search.staged === 'false'
-                ? false
-                : undefined
+        const staged =
+            search.staged === true || search.staged === 'true'
+                ? true
+                : search.staged === false || search.staged === 'false'
+                  ? false
+                  : undefined
 
         const tabValue = typeof search.tab === 'string' ? search.tab : undefined
-        const tab = tabValue === 'directories'
-            ? 'directories'
-            : tabValue === 'changes'
-                ? 'changes'
-                : undefined
+        const tab = tabValue === 'directories' ? 'directories' : tabValue === 'changes' ? 'changes' : undefined
 
         const result: SessionFileSearch = { path }
         if (staged !== undefined) {
@@ -485,11 +473,7 @@ export const routeTree = rootRoute.addChildren([
     sessionsRoute.addChildren([
         sessionsIndexRoute,
         newSessionRoute,
-        sessionDetailRoute.addChildren([
-            sessionTerminalRoute,
-            sessionFilesRoute,
-            sessionFileRoute,
-        ]),
+        sessionDetailRoute.addChildren([sessionTerminalRoute, sessionFilesRoute, sessionFileRoute]),
     ]),
     settingsRoute,
 ])

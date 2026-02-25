@@ -32,7 +32,7 @@ function findWebappDistDir(): { distDir: string; indexHtmlPath: string } {
     const candidates = [
         join(process.cwd(), '..', 'web', 'dist'),
         join(import.meta.dir, '..', '..', '..', 'web', 'dist'),
-        join(process.cwd(), 'web', 'dist')
+        join(process.cwd(), 'web', 'dist'),
     ]
 
     for (const distDir of candidates) {
@@ -49,8 +49,8 @@ function findWebappDistDir(): { distDir: string; indexHtmlPath: string } {
 function serveEmbeddedAsset(asset: EmbeddedWebAsset): Response {
     return new Response(Bun.file(asset.sourcePath), {
         headers: {
-            'Content-Type': asset.mimeType
-        }
+            'Content-Type': asset.mimeType,
+        },
     })
 }
 
@@ -78,7 +78,7 @@ function createWebApp(options: {
     const corsMiddleware = cors({
         origin: corsOriginOption,
         allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
-        allowHeaders: ['authorization', 'content-type']
+        allowHeaders: ['authorization', 'content-type'],
     })
     app.use('/api/*', corsMiddleware)
     app.use('/cli/*', corsMiddleware)
@@ -170,10 +170,7 @@ from GitHub Pages instead of through the relay tunnel.
 
     if (!existsSync(indexHtmlPath)) {
         app.get('/', (c) => {
-            return c.text(
-                'Mini App is not built.\n\nRun:\n  cd web\n  bun install\n  bun run build\n',
-                503
-            )
+            return c.text('Mini App is not built.\n\nRun:\n  cd web\n  bun install\n  bun run build\n', 503)
         })
         return app
     }
@@ -225,7 +222,7 @@ export async function startWebServer(options: {
         corsOrigins: options.corsOrigins,
         embeddedAssetMap,
         relayMode: options.relayMode,
-        officialWebUrl: options.officialWebUrl
+        officialWebUrl: options.officialWebUrl,
     })
 
     const socketHandler = options.socketEngine.handler()
@@ -242,7 +239,7 @@ export async function startWebServer(options: {
                 return socketHandler.fetch(req, server)
             }
             return app.fetch(req)
-        }
+        },
     })
 
     console.log(`[Web] hub listening on ${configuration.listenHost}:${configuration.listenPort}`)

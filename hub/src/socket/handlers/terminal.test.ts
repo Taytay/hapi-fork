@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'bun:test'
+import { describe, expect, it } from 'vitest'
 import { registerTerminalHandlers } from './terminal'
 import { TerminalRegistry } from '../terminalRegistry'
 import type { SocketServer, SocketWithData } from '../socketTypes'
@@ -83,7 +83,7 @@ function createHarness(options?: {
         getSession: () => ({ active: options?.sessionActive ?? true, namespace: 'default' }),
         terminalRegistry,
         maxTerminalsPerSocket: options?.maxTerminalsPerSocket ?? 4,
-        maxTerminalsPerSession: options?.maxTerminalsPerSession ?? 4
+        maxTerminalsPerSession: options?.maxTerminalsPerSession ?? 4,
     })
 
     return { io, terminalSocket, cliNamespace, terminalRegistry }
@@ -110,14 +110,14 @@ describe('terminal socket handlers', () => {
             sessionId: 'session-1',
             terminalId: 'terminal-1',
             cols: 80,
-            rows: 24
+            rows: 24,
         })
 
         const errorEvent = lastEmit(terminalSocket, 'terminal:error')
         expect(errorEvent).toBeDefined()
         expect(errorEvent?.data).toEqual({
             terminalId: 'terminal-1',
-            message: 'Session is inactive or unavailable.'
+            message: 'Session is inactive or unavailable.',
         })
         expect(terminalRegistry.get('terminal-1')).toBeNull()
     })
@@ -131,7 +131,7 @@ describe('terminal socket handlers', () => {
             sessionId: 'session-1',
             terminalId: 'terminal-1',
             cols: 120,
-            rows: 40
+            rows: 40,
         })
 
         const openEvent = lastEmit(cliSocket, 'terminal:open')
@@ -139,41 +139,41 @@ describe('terminal socket handlers', () => {
             sessionId: 'session-1',
             terminalId: 'terminal-1',
             cols: 120,
-            rows: 40
+            rows: 40,
         })
         expect(terminalRegistry.get('terminal-1')).not.toBeNull()
 
         terminalSocket.trigger('terminal:write', {
             terminalId: 'terminal-1',
-            data: 'ls\n'
+            data: 'ls\n',
         })
         const writeEvent = lastEmit(cliSocket, 'terminal:write')
         expect(writeEvent?.data).toEqual({
             sessionId: 'session-1',
             terminalId: 'terminal-1',
-            data: 'ls\n'
+            data: 'ls\n',
         })
 
         terminalSocket.trigger('terminal:resize', {
             terminalId: 'terminal-1',
             cols: 100,
-            rows: 30
+            rows: 30,
         })
         const resizeEvent = lastEmit(cliSocket, 'terminal:resize')
         expect(resizeEvent?.data).toEqual({
             sessionId: 'session-1',
             terminalId: 'terminal-1',
             cols: 100,
-            rows: 30
+            rows: 30,
         })
 
         terminalSocket.trigger('terminal:close', {
-            terminalId: 'terminal-1'
+            terminalId: 'terminal-1',
         })
         const closeEvent = lastEmit(cliSocket, 'terminal:close')
         expect(closeEvent?.data).toEqual({
             sessionId: 'session-1',
-            terminalId: 'terminal-1'
+            terminalId: 'terminal-1',
         })
         expect(terminalRegistry.get('terminal-1')).toBeNull()
     })
@@ -187,7 +187,7 @@ describe('terminal socket handlers', () => {
             sessionId: 'session-1',
             terminalId: 'terminal-1',
             cols: 90,
-            rows: 24
+            rows: 24,
         })
 
         terminalSocket.trigger('disconnect')
@@ -195,7 +195,7 @@ describe('terminal socket handlers', () => {
         const closeEvent = lastEmit(cliSocket, 'terminal:close')
         expect(closeEvent?.data).toEqual({
             sessionId: 'session-1',
-            terminalId: 'terminal-1'
+            terminalId: 'terminal-1',
         })
         expect(terminalRegistry.get('terminal-1')).toBeNull()
     })
@@ -209,20 +209,20 @@ describe('terminal socket handlers', () => {
             sessionId: 'session-1',
             terminalId: 'terminal-1',
             cols: 80,
-            rows: 24
+            rows: 24,
         })
 
         terminalSocket.trigger('terminal:create', {
             sessionId: 'session-1',
             terminalId: 'terminal-2',
             cols: 80,
-            rows: 24
+            rows: 24,
         })
 
         const errorEvent = lastEmit(terminalSocket, 'terminal:error')
         expect(errorEvent?.data).toEqual({
             terminalId: 'terminal-2',
-            message: 'Too many terminals open (max 1).'
+            message: 'Too many terminals open (max 1).',
         })
     })
 })

@@ -12,18 +12,18 @@ const decisionSchema = z.enum(['approved', 'approved_for_session', 'denied', 'ab
 // Nested format: Record<string, { answers: string[] }> (request_user_input)
 const answersSchema = z.union([
     z.record(z.string(), z.array(z.string())),
-    z.record(z.string(), z.object({ answers: z.array(z.string()) }))
+    z.record(z.string(), z.object({ answers: z.array(z.string()) })),
 ])
 
 const approveBodySchema = z.object({
     mode: PermissionModeSchema.optional(),
     allowTools: z.array(z.string()).optional(),
     decision: decisionSchema.optional(),
-    answers: answersSchema.optional()
+    answers: answersSchema.optional(),
 })
 
 const denyBodySchema = z.object({
-    decision: decisionSchema.optional()
+    decision: decisionSchema.optional(),
 })
 
 export function createPermissionsRoutes(getSyncEngine: () => SyncEngine | null): Hono<WebAppEnv> {

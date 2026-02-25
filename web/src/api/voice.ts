@@ -10,11 +10,7 @@
  */
 
 import type { ApiClient } from './client'
-import {
-    ELEVENLABS_API_BASE,
-    VOICE_AGENT_NAME,
-    buildVoiceAgentConfig
-} from '@hapi/protocol/voice'
+import { ELEVENLABS_API_BASE, VOICE_AGENT_NAME, buildVoiceAgentConfig } from '@hapi/protocol/voice'
 
 export interface VoiceTokenResponse {
     allowed: boolean
@@ -36,16 +32,13 @@ export interface VoiceTokenRequest {
  * 2. Hub fetches a short-lived conversation token from ElevenLabs
  * 3. Client uses this token to establish WebRTC connection
  */
-export async function fetchVoiceToken(
-    api: ApiClient,
-    options?: VoiceTokenRequest
-): Promise<VoiceTokenResponse> {
+export async function fetchVoiceToken(api: ApiClient, options?: VoiceTokenRequest): Promise<VoiceTokenResponse> {
     try {
         return await api.fetchVoiceToken(options)
     } catch (error) {
         return {
             allowed: false,
-            error: error instanceof Error ? error.message : 'Network error'
+            error: error instanceof Error ? error.message : 'Network error',
         }
     }
 }
@@ -77,22 +70,23 @@ export async function findHapiAgent(apiKey: string): Promise<FindAgentResult> {
             method: 'GET',
             headers: {
                 'xi-api-key': apiKey,
-                'Accept': 'application/json'
-            }
+                Accept: 'application/json',
+            },
         })
 
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({})) as { detail?: { message?: string } | string }
-            const errorMessage = typeof errorData.detail === 'string'
-                ? errorData.detail
-                : errorData.detail?.message || `API error: ${response.status}`
+            const errorData = (await response.json().catch(() => ({}))) as { detail?: { message?: string } | string }
+            const errorMessage =
+                typeof errorData.detail === 'string'
+                    ? errorData.detail
+                    : errorData.detail?.message || `API error: ${response.status}`
             return { success: false, error: errorMessage }
         }
 
-        const data = await response.json() as { agents?: ElevenLabsAgent[] }
+        const data = (await response.json()) as { agents?: ElevenLabsAgent[] }
         const agents: ElevenLabsAgent[] = data.agents || []
 
-        const hapiAgent = agents.find(agent => agent.name === VOICE_AGENT_NAME)
+        const hapiAgent = agents.find((agent) => agent.name === VOICE_AGENT_NAME)
 
         if (hapiAgent) {
             return { success: true, agentId: hapiAgent.agent_id }
@@ -123,9 +117,9 @@ export async function createOrUpdateHapiAgent(apiKey: string): Promise<CreateAge
                 headers: {
                     'xi-api-key': apiKey,
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    Accept: 'application/json',
                 },
-                body: JSON.stringify(agentConfig)
+                body: JSON.stringify(agentConfig),
             })
         } else {
             response = await fetch(`${ELEVENLABS_API_BASE}/convai/agents/create`, {
@@ -133,22 +127,23 @@ export async function createOrUpdateHapiAgent(apiKey: string): Promise<CreateAge
                 headers: {
                     'xi-api-key': apiKey,
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json'
+                    Accept: 'application/json',
                 },
-                body: JSON.stringify(agentConfig)
+                body: JSON.stringify(agentConfig),
             })
             created = true
         }
 
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({})) as { detail?: { message?: string } | string }
-            const errorMessage = typeof errorData.detail === 'string'
-                ? errorData.detail
-                : errorData.detail?.message || `API error: ${response.status}`
+            const errorData = (await response.json().catch(() => ({}))) as { detail?: { message?: string } | string }
+            const errorMessage =
+                typeof errorData.detail === 'string'
+                    ? errorData.detail
+                    : errorData.detail?.message || `API error: ${response.status}`
             return { success: false, error: errorMessage }
         }
 
-        const data = await response.json() as { agent_id?: string }
+        const data = (await response.json()) as { agent_id?: string }
         const agentId = existingAgentId || data.agent_id
 
         if (!agentId) {

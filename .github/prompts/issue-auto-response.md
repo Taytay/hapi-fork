@@ -19,6 +19,7 @@ gh issue view "$issue_number" -R "$repo" --json number,title,body,labels,author,
 ## Skip Conditions
 
 **Exit immediately if any:**
+
 - Issue body is empty/whitespace only
 - Has label: `duplicate`, `spam`, or `bot-skip`
 - Already has a comment containing `*HAPI Bot*`
@@ -43,14 +44,17 @@ gh issue view "$issue_number" -R "$repo" --json number,title,body,labels,author,
 [Direct answer to the issue]
 
 **Relevant code:** (if applicable)
+
 - `path/to/file.ts:42` - brief description
 
 **Need more info:** (if applicable)
+
 - What version are you using?
 - ...
 
 ---
-*HAPI Bot*
+
+_HAPI Bot_
 ```
 
 ## Post to GitHub (MANDATORY)

@@ -14,7 +14,7 @@ export function createFileAttachment(file: File): FileAttachment {
     return {
         id: crypto.randomUUID(),
         file,
-        status: 'uploading'
+        status: 'uploading',
     }
 }
 

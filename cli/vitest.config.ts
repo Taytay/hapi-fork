@@ -4,7 +4,7 @@ import { resolve } from 'node:path'
 import dotenv from 'dotenv'
 
 const testEnv = dotenv.config({
-    path: '.env.integration-test'
+    path: '.env.integration-test',
 }).parsed
 
 export default defineConfig({
@@ -15,18 +15,12 @@ export default defineConfig({
         coverage: {
             provider: 'v8',
             reporter: ['text', 'json', 'html'],
-            exclude: [
-                'node_modules/**',
-                'dist/**',
-                '**/*.d.ts',
-                '**/*.config.*',
-                '**/mockData/**',
-            ],
+            exclude: ['node_modules/**', 'dist/**', '**/*.d.ts', '**/*.config.*', '**/mockData/**'],
         },
         env: {
             ...process.env,
             ...testEnv,
-        }
+        },
     },
     resolve: {
         alias: {

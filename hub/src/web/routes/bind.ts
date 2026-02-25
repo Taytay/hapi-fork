@@ -11,7 +11,7 @@ import type { Store } from '../../store'
 
 const bindBodySchema = z.object({
     initData: z.string(),
-    accessToken: z.string()
+    accessToken: z.string(),
 })
 
 export function createBindRoutes(jwtSecret: Uint8Array, store: Store): Hono<WebAppEnv> {
@@ -60,8 +60,8 @@ export function createBindRoutes(jwtSecret: Uint8Array, store: Store): Hono<WebA
                 id: userId,
                 username: result.user.username,
                 firstName: result.user.first_name,
-                lastName: result.user.last_name
-            }
+                lastName: result.user.last_name,
+            },
         })
     })
 

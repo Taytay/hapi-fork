@@ -8,11 +8,7 @@ type LoadingStateProps = {
     spinnerSize?: 'sm' | 'md' | 'lg'
 }
 
-export function LoadingState({
-    label,
-    className,
-    spinnerSize = 'md'
-}: LoadingStateProps) {
+export function LoadingState({ label, className, spinnerSize = 'md' }: LoadingStateProps) {
     const { t } = useTranslation()
     const displayLabel = label ?? t('loading')
 

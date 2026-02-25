@@ -6,19 +6,19 @@ import TerminalPage from './terminal'
 const writeMock = vi.fn()
 
 vi.mock('@tanstack/react-router', () => ({
-    useParams: () => ({ sessionId: 'session-1' })
+    useParams: () => ({ sessionId: 'session-1' }),
 }))
 
 vi.mock('@/lib/app-context', () => ({
     useAppContext: () => ({
         api: null,
         token: 'test-token',
-        baseUrl: 'http://localhost:3000'
-    })
+        baseUrl: 'http://localhost:3000',
+    }),
 }))
 
 vi.mock('@/hooks/useAppGoBack', () => ({
-    useAppGoBack: () => vi.fn()
+    useAppGoBack: () => vi.fn(),
 }))
 
 vi.mock('@/hooks/queries/useSession', () => ({
@@ -26,9 +26,9 @@ vi.mock('@/hooks/queries/useSession', () => ({
         session: {
             id: 'session-1',
             active: true,
-            metadata: { path: '/tmp/project' }
-        }
-    })
+            metadata: { path: '/tmp/project' },
+        },
+    }),
 }))
 
 vi.mock('@/hooks/useTerminalSocket', () => ({
@@ -39,18 +39,18 @@ vi.mock('@/hooks/useTerminalSocket', () => ({
         resize: vi.fn(),
         disconnect: vi.fn(),
         onOutput: vi.fn(),
-        onExit: vi.fn()
-    })
+        onExit: vi.fn(),
+    }),
 }))
 
 vi.mock('@/hooks/useLongPress', () => ({
     useLongPress: ({ onClick }: { onClick: () => void }) => ({
-        onClick
-    })
+        onClick,
+    }),
 }))
 
 vi.mock('@/components/Terminal/TerminalView', () => ({
-    TerminalView: () => <div data-testid="terminal-view" />
+    TerminalView: () => <div data-testid="terminal-view" />,
 }))
 
 function renderWithProviders() {
@@ -70,7 +70,7 @@ describe('TerminalPage paste behavior', () => {
         const readText = vi.fn(async () => '')
         Object.defineProperty(navigator, 'clipboard', {
             configurable: true,
-            value: { readText }
+            value: { readText },
         })
 
         renderWithProviders()
@@ -89,7 +89,7 @@ describe('TerminalPage paste behavior', () => {
         })
         Object.defineProperty(navigator, 'clipboard', {
             configurable: true,
-            value: { readText }
+            value: { readText },
         })
 
         renderWithProviders()

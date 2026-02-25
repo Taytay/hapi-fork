@@ -4,7 +4,10 @@ import type { GitStatusFiles } from '@/types/api'
 import { buildGitStatusFiles } from '@/lib/gitParsers'
 import { queryKeys } from '@/lib/query-keys'
 
-export function useGitStatusFiles(api: ApiClient | null, sessionId: string | null): {
+export function useGitStatusFiles(
+    api: ApiClient | null,
+    sessionId: string | null
+): {
     status: GitStatusFiles | null
     error: string | null
     isLoading: boolean
@@ -22,13 +25,13 @@ export function useGitStatusFiles(api: ApiClient | null, sessionId: string | nul
             if (!statusResult.success) {
                 return {
                     status: null,
-                    error: statusResult.error ?? statusResult.stderr ?? 'Git status unavailable'
+                    error: statusResult.error ?? statusResult.stderr ?? 'Git status unavailable',
                 }
             }
 
             const [unstagedResult, stagedResult] = await Promise.all([
                 api.getGitDiffNumstat(sessionId, false),
-                api.getGitDiffNumstat(sessionId, true)
+                api.getGitDiffNumstat(sessionId, true),
             ])
 
             const status = buildGitStatusFiles(
@@ -39,7 +42,9 @@ export function useGitStatusFiles(api: ApiClient | null, sessionId: string | nul
 
             const errors: string[] = []
             if (!unstagedResult.success) {
-                errors.push(`Unstaged diff unavailable: ${unstagedResult.error ?? unstagedResult.stderr ?? 'unknown error'}`)
+                errors.push(
+                    `Unstaged diff unavailable: ${unstagedResult.error ?? unstagedResult.stderr ?? 'unknown error'}`
+                )
             }
             if (!stagedResult.success) {
                 errors.push(`Staged diff unavailable: ${stagedResult.error ?? stagedResult.stderr ?? 'unknown error'}`)
@@ -50,16 +55,13 @@ export function useGitStatusFiles(api: ApiClient | null, sessionId: string | nul
         enabled: Boolean(api && sessionId),
     })
 
-    const queryError = query.error instanceof Error
-        ? query.error.message
-        : query.error
-            ? 'Git status unavailable'
-            : null
+    const queryError =
+        query.error instanceof Error ? query.error.message : query.error ? 'Git status unavailable' : null
 
     return {
         status: query.data?.status ?? null,
         error: queryError ?? query.data?.error ?? null,
         isLoading: query.isLoading,
-        refetch: query.refetch
+        refetch: query.refetch,
     }
 }
