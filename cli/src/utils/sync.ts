@@ -1,4 +1,4 @@
-import { backoff } from "@/utils/time";
+import { backoff } from '@/utils/time';
 
 export class InvalidateSync {
     private _invalidated = false;
@@ -30,7 +30,7 @@ export class InvalidateSync {
         if (this._stopped) {
             return;
         }
-        await new Promise<void>(resolve => {
+        await new Promise<void>((resolve) => {
             this._pendings.push(resolve);
             this.invalidate();
         });
@@ -45,12 +45,11 @@ export class InvalidateSync {
     }
 
     private _notifyPendings = () => {
-        for (let pending of this._pendings) {
+        for (const pending of this._pendings) {
             pending();
         }
         this._pendings = [];
-    }
-
+    };
 
     private _doSync = async () => {
         await backoff(async () => {
@@ -70,5 +69,5 @@ export class InvalidateSync {
             this._invalidated = false;
             this._notifyPendings();
         }
-    }
+    };
 }

@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { getProjectPath } from './path';
 import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { getProjectPath } from './path';
 
 vi.mock('node:os', () => ({
-    homedir: vi.fn(() => '/home/user')
+    homedir: vi.fn(() => '/home/user'),
 }));
 
 // Store original env

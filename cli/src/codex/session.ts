@@ -1,9 +1,9 @@
-import { ApiClient, ApiSessionClient } from '@/lib';
-import { MessageQueue2 } from '@/utils/MessageQueue2';
+import type { LocalLaunchExitReason } from '@/agent/localLaunchPolicy';
 import { AgentSessionBase } from '@/agent/sessionBase';
+import type { ApiClient, ApiSessionClient } from '@/lib';
+import type { MessageQueue2 } from '@/utils/MessageQueue2';
 import type { EnhancedMode, PermissionMode } from './loop';
 import type { CodexCliOverrides } from './utils/codexCliOverrides';
-import type { LocalLaunchExitReason } from '@/agent/localLaunchPolicy';
 
 type LocalLaunchFailure = {
     message: string;
@@ -45,9 +45,9 @@ export class CodexSession extends AgentSessionBase<EnhancedMode> {
             sessionIdLabel: 'Codex',
             applySessionIdToMetadata: (metadata, sessionId) => ({
                 ...metadata,
-                codexSessionId: sessionId
+                codexSessionId: sessionId,
             }),
-            permissionMode: opts.permissionMode
+            permissionMode: opts.permissionMode,
         });
 
         this.codexArgs = opts.codexArgs;

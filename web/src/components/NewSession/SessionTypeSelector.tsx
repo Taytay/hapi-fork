@@ -1,22 +1,20 @@
-import type { RefObject } from 'react'
-import type { SessionType } from './types'
-import { useTranslation } from '@/lib/use-translation'
+import type { RefObject } from 'react';
+import { useTranslation } from '@/lib/use-translation';
+import type { SessionType } from './types';
 
 export function SessionTypeSelector(props: {
-    sessionType: SessionType
-    worktreeName: string
-    worktreeInputRef: RefObject<HTMLInputElement | null>
-    isDisabled: boolean
-    onSessionTypeChange: (value: SessionType) => void
-    onWorktreeNameChange: (value: string) => void
+    sessionType: SessionType;
+    worktreeName: string;
+    worktreeInputRef: RefObject<HTMLInputElement | null>;
+    isDisabled: boolean;
+    onSessionTypeChange: (value: SessionType) => void;
+    onWorktreeNameChange: (value: string) => void;
 }) {
-    const { t } = useTranslation()
+    const { t } = useTranslation();
 
     return (
         <div className="flex flex-col gap-1.5 px-3 py-3">
-            <label className="text-xs font-medium text-[var(--app-hint)]">
-                {t('newSession.type')}
-            </label>
+            <label className="text-xs font-medium text-[var(--app-hint)]">{t('newSession.type')}</label>
             <div className="flex flex-col gap-1.5">
                 {(['simple', 'worktree'] as const).map((type) => (
                     <div key={type} className="flex flex-col gap-2">
@@ -82,5 +80,5 @@ export function SessionTypeSelector(props: {
                 ))}
             </div>
         </div>
-    )
+    );
 }

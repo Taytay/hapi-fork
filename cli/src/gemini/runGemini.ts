@@ -1,26 +1,28 @@
-import { logger } from '@/ui/logger';
-import { geminiLoop } from './loop';
-import { MessageQueue2 } from '@/utils/MessageQueue2';
-import { hashObject } from '@/utils/deterministicJson';
-import { registerKillSessionHandler } from '@/claude/registerKillSessionHandler';
-import type { AgentState } from '@/api/types';
-import type { GeminiSession } from './session';
-import type { GeminiMode, PermissionMode } from './types';
-import { bootstrapSession } from '@/agent/sessionFactory';
-import { createModeChangeHandler, createRunnerLifecycle, setControlledByUser } from '@/agent/runnerLifecycle';
-import { startHookServer } from '@/claude/utils/startHookServer';
-import { cleanupHookSettingsFile, generateHookSettingsFile } from '@/modules/common/hooks/generateHookSettings';
-import { resolveGeminiRuntimeConfig } from './utils/config';
 import { isPermissionModeAllowedForFlavor } from '@hapi/protocol';
 import { PermissionModeSchema } from '@hapi/protocol/schemas';
+import { createModeChangeHandler, createRunnerLifecycle, setControlledByUser } from '@/agent/runnerLifecycle';
+import { bootstrapSession } from '@/agent/sessionFactory';
+import type { AgentState } from '@/api/types';
+import { registerKillSessionHandler } from '@/claude/registerKillSessionHandler';
+import { startHookServer } from '@/claude/utils/startHookServer';
+import { cleanupHookSettingsFile, generateHookSettingsFile } from '@/modules/common/hooks/generateHookSettings';
+import { logger } from '@/ui/logger';
 import { formatMessageWithAttachments } from '@/utils/attachmentFormatter';
+import { hashObject } from '@/utils/deterministicJson';
+import { MessageQueue2 } from '@/utils/MessageQueue2';
+import { geminiLoop } from './loop';
+import type { GeminiSession } from './session';
+import type { GeminiMode, PermissionMode } from './types';
+import { resolveGeminiRuntimeConfig } from './utils/config';
 
-export async function runGemini(opts: {
-    startedBy?: 'runner' | 'terminal';
-    startingMode?: 'local' | 'remote';
-    permissionMode?: PermissionMode;
-    model?: string;
-} = {}): Promise<void> {
+export async function runGemini(
+    opts: {
+        startedBy?: 'runner' | 'terminal';
+        startingMode?: 'local' | 'remote';
+        permissionMode?: PermissionMode;
+        model?: string;
+    } = {},
+): Promise<void> {
     const workingDirectory = process.cwd();
     const startedBy = opts.startedBy ?? 'terminal';
 
@@ -32,25 +34,26 @@ export async function runGemini(opts: {
     }
 
     const initialState: AgentState = {
-        controlledByUser: false
+        controlledByUser: false,
     };
 
     const { api, session } = await bootstrapSession({
         flavor: 'gemini',
         startedBy,
         workingDirectory,
-        agentState: initialState
+        agentState: initialState,
     });
 
-    const startingMode: 'local' | 'remote' = opts.startingMode
-        ?? (startedBy === 'runner' ? 'remote' : 'local');
+    const startingMode: 'local' | 'remote' = opts.startingMode ?? (startedBy === 'runner' ? 'remote' : 'local');
 
     setControlledByUser(session, startingMode);
 
-    const messageQueue = new MessageQueue2<GeminiMode>((mode) => hashObject({
-        permissionMode: mode.permissionMode,
-        model: mode.model
-    }));
+    const messageQueue = new MessageQueue2<GeminiMode>((mode) =>
+        hashObject({
+            permissionMode: mode.permissionMode,
+            model: mode.model,
+        }),
+    );
 
     const sessionWrapperRef: { current: GeminiSession | null } = { current: null };
     let currentPermissionMode: PermissionMode = opts.permissionMode ?? 'default';
@@ -69,13 +72,13 @@ export async function runGemini(opts: {
             if (typeof data.transcript_path === 'string') {
                 currentSession.onTranscriptPathFound(data.transcript_path);
             }
-        }
+        },
     });
 
     const hookSettingsPath = generateHookSettingsFile(hookServer.port, hookServer.token, {
         filenamePrefix: 'gemini-session-hook',
         logLabel: 'gemini-hook-settings',
-        hooksEnabled: true
+        hooksEnabled: true,
     });
 
     const lifecycle = createRunnerLifecycle({
@@ -85,7 +88,7 @@ export async function runGemini(opts: {
         onAfterClose: () => {
             hookServer.stop();
             cleanupHookSettingsFile(hookSettingsPath, 'gemini-hook-settings');
-        }
+        },
     });
 
     lifecycle.registerProcessHandlers();
@@ -104,7 +107,7 @@ export async function runGemini(opts: {
         const formattedText = formatMessageWithAttachments(message.content.text, message.content.attachments);
         const mode: GeminiMode = {
             permissionMode: currentPermissionMode,
-            model: resolvedModel
+            model: resolvedModel,
         };
         messageQueue.push(formattedText, mode);
     });
@@ -146,7 +149,7 @@ export async function runGemini(opts: {
             onSessionReady: (instance) => {
                 sessionWrapperRef.current = instance;
                 syncSessionMode();
-            }
+            },
         });
     } catch (error) {
         lifecycle.markCrash(error);

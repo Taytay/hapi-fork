@@ -2,20 +2,20 @@
  * Low-level ripgrep wrapper - just arguments in, string out
  */
 
-import { spawn } from 'child_process';
-import { join, resolve } from 'path';
-import { platform } from 'os';
+import { spawn } from 'node:child_process';
+import { platform } from 'node:os';
+import { join, resolve } from 'node:path';
 import { runtimePath } from '@/projectPath';
 import { withBunRuntimeEnv } from '@/utils/bunRuntime';
 
 export interface RipgrepResult {
-    exitCode: number
-    stdout: string
-    stderr: string
+    exitCode: number;
+    stdout: string;
+    stderr: string;
 }
 
 export interface RipgrepOptions {
-    cwd?: string
+    cwd?: string;
 }
 
 function getBinaryPath(): string {
@@ -30,7 +30,7 @@ export function run(args: string[], options?: RipgrepOptions): Promise<RipgrepRe
         const child = spawn(binaryPath, args, {
             stdio: ['pipe', 'pipe', 'pipe'],
             cwd: options?.cwd,
-            env: withBunRuntimeEnv()
+            env: withBunRuntimeEnv(),
         });
 
         let stdout = '';
@@ -48,7 +48,7 @@ export function run(args: string[], options?: RipgrepOptions): Promise<RipgrepRe
             resolve({
                 exitCode: code || 0,
                 stdout,
-                stderr
+                stderr,
             });
         });
 

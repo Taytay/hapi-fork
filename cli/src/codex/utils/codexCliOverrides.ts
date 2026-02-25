@@ -3,17 +3,13 @@ export type CodexCliOverrides = {
     approvalPolicy?: 'untrusted' | 'on-failure' | 'on-request' | 'never';
 };
 
-const SANDBOX_VALUES = new Set<CodexCliOverrides['sandbox']>([
-    'read-only',
-    'workspace-write',
-    'danger-full-access'
-]);
+const SANDBOX_VALUES = new Set<CodexCliOverrides['sandbox']>(['read-only', 'workspace-write', 'danger-full-access']);
 
 const APPROVAL_POLICY_VALUES = new Set<CodexCliOverrides['approvalPolicy']>([
     'untrusted',
     'on-failure',
     'on-request',
-    'never'
+    'never',
 ]);
 
 export function parseCodexCliOverrides(args?: string[]): CodexCliOverrides {

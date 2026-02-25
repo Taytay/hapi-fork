@@ -1,23 +1,23 @@
-import chalk from 'chalk'
-import type { CommandDefinition, CommandContext } from './types'
+import chalk from 'chalk';
+import type { CommandContext, CommandDefinition } from './types';
 
 function parseHubArgs(args: string[]): { host?: string; port?: string } {
-    const result: { host?: string; port?: string } = {}
+    const result: { host?: string; port?: string } = {};
 
     for (let i = 0; i < args.length; i++) {
-        const arg = args[i]
+        const arg = args[i];
         if (arg === '--host' && i + 1 < args.length) {
-            result.host = args[++i]
+            result.host = args[++i];
         } else if (arg === '--port' && i + 1 < args.length) {
-            result.port = args[++i]
+            result.port = args[++i];
         } else if (arg.startsWith('--host=')) {
-            result.host = arg.slice('--host='.length)
+            result.host = arg.slice('--host='.length);
         } else if (arg.startsWith('--port=')) {
-            result.port = arg.slice('--port='.length)
+            result.port = arg.slice('--port='.length);
         }
     }
 
-    return result
+    return result;
 }
 
 export const hubCommand: CommandDefinition = {
@@ -25,21 +25,21 @@ export const hubCommand: CommandDefinition = {
     requiresRuntimeAssets: true,
     run: async (context: CommandContext) => {
         try {
-            const { host, port } = parseHubArgs(context.commandArgs)
+            const { host, port } = parseHubArgs(context.commandArgs);
 
             if (host) {
-                process.env.WEBAPP_HOST = host
+                process.env.WEBAPP_HOST = host;
             }
             if (port) {
-                process.env.WEBAPP_PORT = port
+                process.env.WEBAPP_PORT = port;
             }
-            await import('../../../hub/src/index')
+            await import('../../../hub/src/index');
         } catch (error) {
-            console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error')
+            console.error(chalk.red('Error:'), error instanceof Error ? error.message : 'Unknown error');
             if (process.env.DEBUG) {
-                console.error(error)
+                console.error(error);
             }
-            process.exit(1)
+            process.exit(1);
         }
-    }
-}
+    },
+};

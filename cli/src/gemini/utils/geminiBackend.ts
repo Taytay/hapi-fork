@@ -20,7 +20,7 @@ export function createGeminiBackend(opts: {
 }): AcpSdkBackend {
     const { model, token } = resolveGeminiRuntimeConfig({
         model: opts.model,
-        token: opts.token
+        token: opts.token,
     });
 
     const args = ['--experimental-acp'];
@@ -35,12 +35,12 @@ export function createGeminiBackend(opts: {
         model,
         token,
         hookSettingsPath: opts.hookSettingsPath,
-        cwd: opts.cwd
+        cwd: opts.cwd,
     });
 
     return new AcpSdkBackend({
         command: 'gemini',
         args,
-        env: filterEnv(env)
+        env: filterEnv(env),
     });
 }

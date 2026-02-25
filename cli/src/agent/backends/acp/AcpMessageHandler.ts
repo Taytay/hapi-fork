@@ -1,5 +1,5 @@
-import type { AgentMessage, PlanItem } from '@/agent/types';
 import { asString, isObject } from '@hapi/protocol';
+import type { AgentMessage, PlanItem } from '@/agent/types';
 import { deriveToolName } from '@/agent/utils';
 import { ACP_SESSION_UPDATE_TYPES } from './constants';
 
@@ -14,7 +14,7 @@ function deriveToolNameFromUpdate(update: Record<string, unknown>): string {
     return deriveToolName({
         title: asString(update.title),
         kind: asString(update.kind),
-        rawInput: update.rawInput
+        rawInput: update.rawInput,
     });
 }
 
@@ -134,7 +134,7 @@ export class AcpMessageHandler {
             id: toolCallId,
             name,
             input,
-            status
+            status,
         });
     }
 
@@ -154,7 +154,7 @@ export class AcpMessageHandler {
                 id: toolCallId,
                 name,
                 input,
-                status
+                status,
             });
         } else if (existing && (status === 'in_progress' || status === 'pending')) {
             this.onMessage({
@@ -162,7 +162,7 @@ export class AcpMessageHandler {
                 id: toolCallId,
                 name: existing.name,
                 input: existing.input,
-                status
+                status,
             });
         }
 
@@ -173,7 +173,7 @@ export class AcpMessageHandler {
                 type: 'tool_result',
                 id: toolCallId,
                 output: result,
-                status: status === 'failed' ? 'failed' : 'completed'
+                status: status === 'failed' ? 'failed' : 'completed',
             });
         }
     }

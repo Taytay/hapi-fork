@@ -1,6 +1,6 @@
 import { chmodSync, existsSync, mkdirSync, readdirSync, statSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
 import { arch, platform } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as tar from 'tar';
 
@@ -36,10 +36,7 @@ function areToolsUnpacked(toolsDir: string): boolean {
     const difftBinary = isWin ? 'difft.exe' : 'difft';
     const rgBinary = isWin ? 'rg.exe' : 'rg';
 
-    const expectedFiles = [
-        join(unpackedPath, difftBinary),
-        join(unpackedPath, rgBinary)
-    ];
+    const expectedFiles = [join(unpackedPath, difftBinary), join(unpackedPath, rgBinary)];
 
     return expectedFiles.every((file) => existsSync(file));
 }
@@ -55,7 +52,7 @@ function unpackArchive(archivePath: string, destDir: string): void {
         sync: true,
         gzip: true,
         preserveMode: true,
-        preserveOwner: false
+        preserveOwner: false,
     });
 }
 
@@ -75,10 +72,7 @@ export function unpackTools(): { success: true; alreadyUnpacked: boolean } {
         mkdirSync(unpackedPath, { recursive: true });
     }
 
-    const archives = [
-        `difftastic-${platformDir}.tar.gz`,
-        `ripgrep-${platformDir}.tar.gz`
-    ];
+    const archives = [`difftastic-${platformDir}.tar.gz`, `ripgrep-${platformDir}.tar.gz`];
 
     for (const archiveName of archives) {
         const archivePath = join(archivesDir, archiveName);

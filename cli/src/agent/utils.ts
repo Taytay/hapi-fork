@@ -1,10 +1,6 @@
 import { isObject } from '@hapi/protocol';
 
-export function deriveToolName(input: {
-    title?: string | null;
-    kind?: string | null;
-    rawInput?: unknown;
-}): string {
+export function deriveToolName(input: { title?: string | null; kind?: string | null; rawInput?: unknown }): string {
     if (input.title && input.title.trim().length > 0) {
         return input.title.trim();
     }

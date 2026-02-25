@@ -1,15 +1,19 @@
 import React from 'react';
-import { logger } from '@/ui/logger';
-import { buildHapiMcpBridge } from '@/codex/utils/buildHapiMcpBridge';
 import { convertAgentMessage } from '@/agent/messageConverter';
 import type { AgentMessage, McpServerStdio, PromptContent } from '@/agent/types';
-import { RemoteLauncherBase, type RemoteLauncherDisplayContext, type RemoteLauncherExitReason } from '@/modules/common/remote/RemoteLauncherBase';
+import { buildHapiMcpBridge } from '@/codex/utils/buildHapiMcpBridge';
+import {
+    RemoteLauncherBase,
+    type RemoteLauncherDisplayContext,
+    type RemoteLauncherExitReason,
+} from '@/modules/common/remote/RemoteLauncherBase';
 import { GeminiDisplay } from '@/ui/ink/GeminiDisplay';
+import { logger } from '@/ui/logger';
 import type { GeminiSession } from './session';
 import type { PermissionMode } from './types';
+import { resolveGeminiRuntimeConfig } from './utils/config';
 import { createGeminiBackend } from './utils/geminiBackend';
 import { GeminiPermissionHandler } from './utils/permissionHandler';
-import { resolveGeminiRuntimeConfig } from './utils/config';
 
 class GeminiRemoteLauncher extends RemoteLauncherBase {
     private readonly session: GeminiSession;
@@ -32,7 +36,7 @@ class GeminiRemoteLauncher extends RemoteLauncherBase {
     public async launch(): Promise<RemoteLauncherExitReason> {
         return this.start({
             onExit: () => this.handleExitFromUi(),
-            onSwitchToLocal: () => this.handleSwitchFromUi()
+            onSwitchToLocal: () => this.handleSwitchFromUi(),
         });
     }
 
@@ -56,7 +60,7 @@ class GeminiRemoteLauncher extends RemoteLauncherBase {
             token: runtimeConfig.token,
             resumeSessionId: session.sessionId,
             hookSettingsPath: this.hookSettingsPath,
-            cwd: session.path
+            cwd: session.path,
         });
         this.backend = backend;
 
@@ -70,20 +74,20 @@ class GeminiRemoteLauncher extends RemoteLauncherBase {
 
         const acpSessionId = await backend.newSession({
             cwd: session.path,
-            mcpServers: toAcpMcpServers(mcpServers)
+            mcpServers: toAcpMcpServers(mcpServers),
         });
         session.onSessionFound(acpSessionId);
 
         this.permissionHandler = new GeminiPermissionHandler(
             session.client,
             backend,
-            () => session.getPermissionMode() as PermissionMode | undefined
+            () => session.getPermissionMode() as PermissionMode | undefined,
         );
         this.applyDisplayMode(session.getPermissionMode() as PermissionMode, runtimeConfig.model);
 
         this.setupAbortHandlers(session.client.rpcHandlerManager, {
             onAbort: () => this.handleAbort(),
-            onSwitch: () => this.handleSwitchRequest()
+            onSwitch: () => this.handleSwitchRequest(),
         });
 
         const sendReady = () => {
@@ -102,10 +106,12 @@ class GeminiRemoteLauncher extends RemoteLauncherBase {
             this.applyDisplayMode(batch.mode.permissionMode, batch.mode.model);
             messageBuffer.addMessage(batch.message, 'user');
 
-            const promptContent: PromptContent[] = [{
-                type: 'text',
-                text: batch.message
-            }];
+            const promptContent: PromptContent[] = [
+                {
+                    type: 'text',
+                    text: batch.message,
+                },
+            ];
 
             session.onThinkingChange(true);
 
@@ -117,7 +123,7 @@ class GeminiRemoteLauncher extends RemoteLauncherBase {
                 logger.warn('[gemini-remote] prompt failed', error);
                 session.sendSessionEvent({
                     type: 'message',
-                    message: 'Gemini prompt failed. Check logs for details.'
+                    message: 'Gemini prompt failed. Check logs for details.',
                 });
                 messageBuffer.addMessage('Gemini prompt failed', 'status');
             } finally {
@@ -223,13 +229,13 @@ function toAcpMcpServers(config: Record<string, { command: string; args: string[
         name,
         command: entry.command,
         args: entry.args,
-        env: []
+        env: [],
     }));
 }
 
 export async function geminiRemoteLauncher(
     session: GeminiSession,
-    opts: { model?: string; hookSettingsPath?: string }
+    opts: { model?: string; hookSettingsPath?: string },
 ): Promise<'switch' | 'exit'> {
     const launcher = new GeminiRemoteLauncher(session, opts);
     return launcher.launch();

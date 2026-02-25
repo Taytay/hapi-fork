@@ -1,9 +1,9 @@
-import { logger } from '@/ui/logger';
-import { readdir, readFile, stat } from 'node:fs/promises';
 import type { Dirent } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { readdir, readFile, stat } from 'node:fs/promises';
 import { homedir } from 'node:os';
+import { join, resolve } from 'node:path';
 import { isObject } from '@hapi/protocol';
+import { logger } from '@/ui/logger';
 import type { OpencodeHookEvent } from '../types';
 
 export type OpencodeStorageScannerHandle = {
@@ -33,7 +33,7 @@ const DEFAULT_SCAN_INTERVAL_MS = 2000;
 const REPLAY_CLOCK_SKEW_MS = 2000;
 
 export async function createOpencodeStorageScanner(
-    opts: OpencodeStorageScannerOptions
+    opts: OpencodeStorageScannerOptions,
 ): Promise<OpencodeStorageScannerHandle> {
     const scanner = new OpencodeStorageScanner(opts);
     await scanner.start();
@@ -44,7 +44,7 @@ export async function createOpencodeStorageScanner(
         },
         onNewSession: (sessionId: string) => {
             void scanner.onNewSession(sessionId);
-        }
+        },
     };
 }
 
@@ -262,7 +262,7 @@ class OpencodeStorageScanner {
                 this.onEvent({
                     event: 'message.updated',
                     payload: { info },
-                    sessionId: eventSessionId || undefined
+                    sessionId: eventSessionId || undefined,
                 });
             }
         }
@@ -289,7 +289,7 @@ class OpencodeStorageScanner {
                 this.onEvent({
                     event: 'message.part.updated',
                     payload: { part },
-                    sessionId: eventSessionId || undefined
+                    sessionId: eventSessionId || undefined,
                 });
             }
         }
@@ -333,7 +333,7 @@ class OpencodeStorageScanner {
             this.onEvent({
                 event: 'message.updated',
                 payload: { info },
-                sessionId: eventSessionId || undefined
+                sessionId: eventSessionId || undefined,
             });
         }
 
@@ -365,7 +365,7 @@ class OpencodeStorageScanner {
                 this.onEvent({
                     event: 'message.part.updated',
                     payload: { part },
-                    sessionId: eventSessionId || undefined
+                    sessionId: eventSessionId || undefined,
                 });
             }
         }
@@ -389,7 +389,7 @@ class OpencodeStorageScanner {
             if (part.synthetic === true) {
                 return true;
             }
-            const time = isObject(part.time) ? part.time as Record<string, unknown> : null;
+            const time = isObject(part.time) ? (part.time as Record<string, unknown>) : null;
             const end = time ? getNumber(time.end) : null;
             return end !== null;
         }
@@ -413,12 +413,12 @@ async function readSessionInfo(filePath: string): Promise<ParsedSessionInfo | nu
     if (!record) {
         return null;
     }
-    const time = isObject(record.time) ? record.time as Record<string, unknown> : null;
+    const time = isObject(record.time) ? (record.time as Record<string, unknown>) : null;
 
     return {
         id: getString(record.id),
         directory: getString(record.directory),
-        timeCreated: time ? getNumber(time.created) : null
+        timeCreated: time ? getNumber(time.created) : null,
     };
 }
 
@@ -512,7 +512,7 @@ function getNumber(value: unknown): number | null {
 
 function getMessageTimestamp(info: Record<string, unknown> | null, mtime: number | null): number | null {
     if (info) {
-        const time = isObject(info.time) ? info.time as Record<string, unknown> : null;
+        const time = isObject(info.time) ? (info.time as Record<string, unknown>) : null;
         const createdAt = time ? getNumber(time.created) : null;
         if (createdAt !== null) {
             return createdAt;

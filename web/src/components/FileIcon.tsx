@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo } from 'react';
 
 const EXTENSION_COLORS: Record<string, string> = {
     ts: '#3178c6',
@@ -18,24 +18,24 @@ const EXTENSION_COLORS: Record<string, string> = {
     py: '#3776ab',
     go: '#0ea5e9',
     rs: '#f97316',
-}
+};
 
 function getFileExtension(fileName: string): string {
-    const trimmed = fileName.trim()
+    const trimmed = fileName.trim();
     if (trimmed.startsWith('.') && trimmed.indexOf('.', 1) === -1) {
-        return trimmed.slice(1).toLowerCase()
+        return trimmed.slice(1).toLowerCase();
     }
-    const parts = trimmed.split('.')
-    if (parts.length <= 1) return ''
-    return parts[parts.length - 1]?.toLowerCase() ?? ''
+    const parts = trimmed.split('.');
+    if (parts.length <= 1) return '';
+    return parts[parts.length - 1]?.toLowerCase() ?? '';
 }
 
 export function FileIcon(props: { fileName: string; size?: number }) {
-    const size = props.size ?? 20
+    const size = props.size ?? 20;
     const color = useMemo(() => {
-        const ext = getFileExtension(props.fileName)
-        return EXTENSION_COLORS[ext] ?? 'var(--app-hint)'
-    }, [props.fileName])
+        const ext = getFileExtension(props.fileName);
+        return EXTENSION_COLORS[ext] ?? 'var(--app-hint)';
+    }, [props.fileName]);
 
     return (
         <svg
@@ -53,5 +53,5 @@ export function FileIcon(props: { fileName: string; size?: number }) {
             <path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
             <path d="M14 2v6h6" />
         </svg>
-    )
+    );
 }

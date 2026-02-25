@@ -1,14 +1,14 @@
-import { readdir, readFile } from 'fs/promises';
-import { join } from 'path';
-import { homedir } from 'os';
+import { readdir, readFile } from 'node:fs/promises';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 
 export interface SlashCommand {
     name: string;
     description?: string;
     source: 'builtin' | 'user' | 'plugin';
-    content?: string;  // Expanded content for Codex user prompts
-    pluginName?: string;  // Name of the plugin that provides this command
+    content?: string; // Expanded content for Codex user prompts
+    pluginName?: string; // Name of the plugin that provides this command
 }
 
 export interface ListSlashCommandsRequest {
@@ -46,14 +46,17 @@ const BUILTIN_COMMANDS: Record<string, SlashCommand[]> = {
  */
 interface InstalledPluginsFile {
     version: number;
-    plugins: Record<string, Array<{
-        scope: string;
-        installPath: string;
-        version: string;
-        installedAt: string;
-        lastUpdated: string;
-        gitCommitSha?: string;
-    }>>;
+    plugins: Record<
+        string,
+        Array<{
+            scope: string;
+            installPath: string;
+            version: string;
+            installedAt: string;
+            lastUpdated: string;
+            gitCommitSha?: string;
+        }>
+    >;
 }
 
 /**
@@ -103,14 +106,10 @@ function getUserCommandsDir(agent: string): string | null {
  * Scan a directory for commands (*.md files).
  * Returns commands with parsed frontmatter.
  */
-async function scanCommandsDir(
-    dir: string,
-    source: 'user' | 'plugin',
-    pluginName?: string
-): Promise<SlashCommand[]> {
+async function scanCommandsDir(dir: string, source: 'user' | 'plugin', pluginName?: string): Promise<SlashCommand[]> {
     try {
         const entries = await readdir(dir, { withFileTypes: true });
-        const mdFiles = entries.filter(e => e.isFile() && e.name.endsWith('.md'));
+        const mdFiles = entries.filter((e) => e.isFile() && e.name.endsWith('.md'));
 
         // Read all files in parallel
         const commands = await Promise.all(
@@ -128,7 +127,8 @@ async function scanCommandsDir(
 
                     return {
                         name,
-                        description: parsed.description ?? (source === 'plugin' ? `${pluginName} command` : 'Custom command'),
+                        description:
+                            parsed.description ?? (source === 'plugin' ? `${pluginName} command` : 'Custom command'),
                         source,
                         content: parsed.content,
                         pluginName,
@@ -142,13 +142,11 @@ async function scanCommandsDir(
                         pluginName,
                     };
                 }
-            })
+            }),
         );
 
         // Filter nulls and sort alphabetically
-        return commands
-            .filter((cmd): cmd is SlashCommand => cmd !== null)
-            .sort((a, b) => a.name.localeCompare(b.name));
+        return commands.filter((cmd): cmd is SlashCommand => cmd !== null).sort((a, b) => a.name.localeCompare(b.name));
     } catch {
         // Directory doesn't exist or not accessible - return empty array
         return [];
@@ -227,10 +225,7 @@ export async function listSlashCommands(agent: string): Promise<SlashCommand[]> 
     const builtin = BUILTIN_COMMANDS[agent] ?? [];
 
     // Scan user commands and plugin commands in parallel
-    const [user, plugin] = await Promise.all([
-        scanUserCommands(agent),
-        scanPluginCommands(agent),
-    ]);
+    const [user, plugin] = await Promise.all([scanUserCommands(agent), scanPluginCommands(agent)]);
 
     // Combine: built-in first, then user commands, then plugin commands
     return [...builtin, ...user, ...plugin];

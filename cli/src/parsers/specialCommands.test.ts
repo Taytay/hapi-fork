@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { parseCompact, parseClear, parseSpecialCommand } from './specialCommands';
+import { describe, expect, it } from 'vitest';
+import { parseClear, parseCompact, parseSpecialCommand } from './specialCommands';
 
 describe('parseCompact', () => {
     it('should parse /compact command with argument', () => {
@@ -72,7 +72,7 @@ describe('parseSpecialCommand', () => {
         // Test with extra whitespace
         expect(parseSpecialCommand('  /compact test  ').type).toBe('compact');
         expect(parseSpecialCommand('  /clear  ').type).toBe('clear');
-        
+
         // Test partial matches should not trigger
         expect(parseSpecialCommand('some /compact text').type).toBeNull();
         expect(parseSpecialCommand('/compactor').type).toBeNull();

@@ -61,38 +61,38 @@ export interface ThreadResumeResponse {
 
 export type UserInput =
     | {
-        type: 'text';
-        text: string;
-        textElements?: Array<{
-            byteRange: { start: number; end: number };
-            placeholder?: string;
-        }>;
-    }
+          type: 'text';
+          text: string;
+          textElements?: Array<{
+              byteRange: { start: number; end: number };
+              placeholder?: string;
+          }>;
+      }
     | {
-        type: 'image';
-        url: string;
-    }
+          type: 'image';
+          url: string;
+      }
     | {
-        type: 'localImage';
-        path: string;
-    }
+          type: 'localImage';
+          path: string;
+      }
     | {
-        type: 'skill';
-        name: string;
-        path: string;
-    };
+          type: 'skill';
+          name: string;
+          path: string;
+      };
 
 export type SandboxPolicy =
     | { type: 'dangerFullAccess' }
     | { type: 'readOnly' }
     | { type: 'externalSandbox'; networkAccess?: 'restricted' | 'enabled' }
     | {
-        type: 'workspaceWrite';
-        writableRoots?: string[];
-        networkAccess?: boolean;
-        excludeTmpdirEnvVar?: boolean;
-        excludeSlashTmp?: boolean;
-    };
+          type: 'workspaceWrite';
+          writableRoots?: string[];
+          networkAccess?: boolean;
+          excludeTmpdirEnvVar?: boolean;
+          excludeSlashTmp?: boolean;
+      };
 
 export type ReasoningEffort = 'low' | 'medium' | 'high' | 'auto';
 export type ReasoningSummary = 'auto' | 'none' | 'brief' | 'detailed';

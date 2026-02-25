@@ -1,21 +1,21 @@
-import { useAssistantState } from '@assistant-ui/react'
-import { getEventPresentation } from '@/chat/presentation'
-import type { HappyChatMessageMetadata } from '@/lib/assistant-runtime'
+import { useAssistantState } from '@assistant-ui/react';
+import { getEventPresentation } from '@/chat/presentation';
+import type { HappyChatMessageMetadata } from '@/lib/assistant-runtime';
 
 export function HappySystemMessage() {
-    const role = useAssistantState(({ message }) => message.role)
+    const role = useAssistantState(({ message }) => message.role);
     const text = useAssistantState(({ message }) => {
-        if (message.role !== 'system') return ''
-        return message.content[0]?.type === 'text' ? message.content[0].text : ''
-    })
+        if (message.role !== 'system') return '';
+        return message.content[0]?.type === 'text' ? message.content[0].text : '';
+    });
     const icon = useAssistantState(({ message }) => {
-        if (message.role !== 'system') return null
-        const custom = message.metadata.custom as Partial<HappyChatMessageMetadata> | undefined
-        const event = custom?.kind === 'event' ? custom.event : undefined
-        return event ? getEventPresentation(event).icon : null
-    })
+        if (message.role !== 'system') return null;
+        const custom = message.metadata.custom as Partial<HappyChatMessageMetadata> | undefined;
+        const event = custom?.kind === 'event' ? custom.event : undefined;
+        return event ? getEventPresentation(event).icon : null;
+    });
 
-    if (role !== 'system') return null
+    if (role !== 'system') return null;
 
     return (
         <div className="py-1">
@@ -26,5 +26,5 @@ export function HappySystemMessage() {
                 </span>
             </div>
         </div>
-    )
+    );
 }

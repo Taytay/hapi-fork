@@ -1,16 +1,16 @@
-import type { AgentState } from '@/api/types';
-import { logger } from '@/ui/logger';
-import { MessageQueue2 } from '@/utils/MessageQueue2';
-import { hashObject } from '@/utils/deterministicJson';
 import { AgentRegistry } from '@/agent/AgentRegistry';
 import { convertAgentMessage } from '@/agent/messageConverter';
 import { PermissionAdapter } from '@/agent/permissionAdapter';
-import type { AgentBackend, PromptContent } from '@/agent/types';
-import { startHappyServer } from '@/claude/utils/startHappyServer';
-import { getHappyCliCommand } from '@/utils/spawnHappyCLI';
-import { registerKillSessionHandler } from '@/claude/registerKillSessionHandler';
 import { bootstrapSession } from '@/agent/sessionFactory';
+import type { AgentBackend, PromptContent } from '@/agent/types';
+import type { AgentState } from '@/api/types';
+import { registerKillSessionHandler } from '@/claude/registerKillSessionHandler';
+import { startHappyServer } from '@/claude/utils/startHappyServer';
+import { logger } from '@/ui/logger';
 import { formatMessageWithAttachments } from '@/utils/attachmentFormatter';
+import { hashObject } from '@/utils/deterministicJson';
+import { MessageQueue2 } from '@/utils/MessageQueue2';
+import { getHappyCliCommand } from '@/utils/spawnHappyCLI';
 
 function emitReadyIfIdle(props: {
     queueSize: () => number;
@@ -24,23 +24,20 @@ function emitReadyIfIdle(props: {
     props.sendReady();
 }
 
-export async function runAgentSession(opts: {
-    agentType: string;
-    startedBy?: 'runner' | 'terminal';
-}): Promise<void> {
+export async function runAgentSession(opts: { agentType: string; startedBy?: 'runner' | 'terminal' }): Promise<void> {
     const initialState: AgentState = {
-        controlledByUser: false
+        controlledByUser: false,
     };
     const { session } = await bootstrapSession({
         flavor: opts.agentType,
         startedBy: opts.startedBy ?? 'terminal',
         workingDirectory: process.cwd(),
-        agentState: initialState
+        agentState: initialState,
     });
 
     session.updateAgentState((currentState) => ({
         ...currentState,
-        controlledByUser: false
+        controlledByUser: false,
     }));
 
     const messageQueue = new MessageQueue2<Record<string, never>>(() => hashObject({}));
@@ -62,13 +59,13 @@ export async function runAgentSession(opts: {
             name: 'happy',
             command: bridgeCommand.command,
             args: bridgeCommand.args,
-            env: []
-        }
+            env: [],
+        },
     ];
 
     const agentSessionId = await backend.newSession({
         cwd: process.cwd(),
-        mcpServers
+        mcpServers,
     });
 
     let thinking = false;
@@ -123,10 +120,12 @@ export async function runAgentSession(opts: {
                 continue;
             }
 
-            const promptContent: PromptContent[] = [{
-                type: 'text',
-                text: batch.message
-            }];
+            const promptContent: PromptContent[] = [
+                {
+                    type: 'text',
+                    text: batch.message,
+                },
+            ];
 
             thinking = true;
             session.keepAlive(thinking, 'remote');
@@ -142,7 +141,7 @@ export async function runAgentSession(opts: {
                 logger.warn('[ACP] Prompt failed', error);
                 session.sendSessionEvent({
                     type: 'message',
-                    message: 'Agent prompt failed. Check logs for details.'
+                    message: 'Agent prompt failed. Check logs for details.',
                 });
             } finally {
                 thinking = false;
@@ -152,7 +151,7 @@ export async function runAgentSession(opts: {
                     queueSize: () => messageQueue.size(),
                     shouldExit,
                     thinking,
-                    sendReady
+                    sendReady,
                 });
             }
         }

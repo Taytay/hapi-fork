@@ -1,6 +1,6 @@
 /**
  * Diff Processor - Handles turn_diff messages and tracks unified_diff changes
- * 
+ *
  * This processor tracks changes to the unified_diff field in turn_diff messages
  * and sends CodexDiff tool calls when the diff changes from its previous value.
  */
@@ -42,36 +42,36 @@ export class DiffProcessor {
         // Check if the diff has changed from the previous value
         if (this.previousDiff !== unifiedDiff) {
             logger.debug('[DiffProcessor] Unified diff changed, sending CodexDiff tool call');
-            
+
             // Generate a unique call ID for this diff
             const callId = randomUUID();
-            
+
             // Send tool call for the diff change
             const toolCall: DiffToolCall = {
                 type: 'tool-call',
                 name: 'CodexDiff',
                 callId: callId,
                 input: {
-                    unified_diff: unifiedDiff
+                    unified_diff: unifiedDiff,
                 },
-                id: randomUUID()
+                id: randomUUID(),
             };
-            
+
             this.onMessage?.(toolCall);
-            
+
             // Immediately send the tool result to mark it as completed
             const toolResult: DiffToolResult = {
                 type: 'tool-call-result',
                 callId: callId,
                 output: {
-                    status: 'completed'
+                    status: 'completed',
                 },
-                id: randomUUID()
+                id: randomUUID(),
             };
-            
+
             this.onMessage?.(toolResult);
         }
-        
+
         // Update the stored diff value
         this.previousDiff = unifiedDiff;
         logger.debug('[DiffProcessor] Updated stored diff');

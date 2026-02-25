@@ -7,9 +7,7 @@
  * @template TRequest - The request data type
  * @template TResponse - The response data type
  */
-export type RpcHandler<TRequest = any, TResponse = any> = (
-    data: TRequest
-) => TResponse | Promise<TResponse>;
+export type RpcHandler<TRequest = any, TResponse = any> = (data: TRequest) => TResponse | Promise<TResponse>;
 
 /**
  * Map of method names to their handlers
@@ -40,6 +38,4 @@ export interface RpcHandlerConfig {
 /**
  * Result of RPC handler execution
  */
-export type RpcHandlerResult<T = any> =
-    | { success: true; data: T }
-    | { success: false; error: string };
+export type RpcHandlerResult<T = any> = { success: true; data: T } | { success: false; error: string };

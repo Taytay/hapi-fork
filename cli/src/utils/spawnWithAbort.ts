@@ -1,4 +1,4 @@
-import { spawn, type SpawnOptions, type StdioOptions } from 'node:child_process';
+import { type SpawnOptions, type StdioOptions, spawn } from 'node:child_process';
 import { logger } from '@/ui/logger';
 import { killProcessByChildProcess } from '@/utils/process';
 
@@ -51,7 +51,7 @@ export async function spawnWithAbort(options: SpawnWithAbortOptions): Promise<vo
             stdio,
             cwd: options.cwd,
             env: options.env,
-            shell: options.shell
+            shell: options.shell,
         });
 
         let abortKillTimeout: NodeJS.Timeout | null = null;
@@ -108,7 +108,8 @@ export async function spawnWithAbort(options: SpawnWithAbortOptions): Promise<vo
                 return;
             }
             const message = error instanceof Error ? error.message : String(error);
-            const errorMessage = `Failed to spawn ${options.spawnName}: ${message}. ` +
+            const errorMessage =
+                `Failed to spawn ${options.spawnName}: ${message}. ` +
                 `Is ${options.installHint} installed and on PATH?`;
             if (options.includeCause) {
                 reject(new Error(errorMessage, { cause: error }));
@@ -120,7 +121,9 @@ export async function spawnWithAbort(options: SpawnWithAbortOptions): Promise<vo
         child.on('exit', (code, signal) => {
             cleanupAbortHandler();
             if (options.logExit) {
-                logDebug(`Child exited (code=${code ?? 'null'}, signal=${signal ?? 'null'}, aborted=${options.signal.aborted})`);
+                logDebug(
+                    `Child exited (code=${code ?? 'null'}, signal=${signal ?? 'null'}, aborted=${options.signal.aborted})`,
+                );
             }
             if (options.signal.aborted && signal && abortSignals.includes(signal)) {
                 resolve();

@@ -1,7 +1,7 @@
 import { logger } from '@/ui/logger';
 import { restoreTerminalState } from '@/ui/terminalState';
 import { spawnWithAbort } from '@/utils/spawnWithAbort';
-import { buildMcpServerConfigArgs, buildDeveloperInstructionsArg } from './utils/codexMcpConfig';
+import { buildDeveloperInstructionsArg, buildMcpServerConfigArgs } from './utils/codexMcpConfig';
 import { codexSystemPrompt } from './utils/systemPrompt';
 
 /**
@@ -81,7 +81,7 @@ export async function codexLocal(opts: {
             installHint: 'Codex CLI',
             includeCause: true,
             logExit: true,
-            shell: process.platform === 'win32'
+            shell: process.platform === 'win32',
         });
     } finally {
         process.stdin.resume();

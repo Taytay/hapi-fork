@@ -1,58 +1,58 @@
-import { useMemo, useState } from 'react'
-import type { ApiClient } from '@/api/client'
-import type { Machine } from '@/types/api'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { usePlatform } from '@/hooks/usePlatform'
-import { useSpawnSession } from '@/hooks/mutations/useSpawnSession'
+import { useMemo, useState } from 'react';
+import type { ApiClient } from '@/api/client';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useSpawnSession } from '@/hooks/mutations/useSpawnSession';
+import { usePlatform } from '@/hooks/usePlatform';
+import type { Machine } from '@/types/api';
 
-type SessionType = 'simple' | 'worktree'
+type SessionType = 'simple' | 'worktree';
 
 function getMachineTitle(machine: Machine | null): string {
-    if (!machine) return 'Machine'
-    if (machine.metadata?.displayName) return machine.metadata.displayName
-    if (machine.metadata?.host) return machine.metadata.host
-    return machine.id.slice(0, 8)
+    if (!machine) return 'Machine';
+    if (machine.metadata?.displayName) return machine.metadata.displayName;
+    if (machine.metadata?.host) return machine.metadata.host;
+    return machine.id.slice(0, 8);
 }
 
 export function SpawnSession(props: {
-    api: ApiClient
-    machineId: string
-    machine: Machine | null
-    onSuccess: (sessionId: string) => void
-    onCancel: () => void
+    api: ApiClient;
+    machineId: string;
+    machine: Machine | null;
+    onSuccess: (sessionId: string) => void;
+    onCancel: () => void;
 }) {
-    const { haptic } = usePlatform()
-    const [directory, setDirectory] = useState('')
-    const [sessionType, setSessionType] = useState<SessionType>('simple')
-    const [worktreeName, setWorktreeName] = useState('')
-    const [error, setError] = useState<string | null>(null)
-    const { spawnSession, isPending, error: spawnError } = useSpawnSession(props.api)
+    const { haptic } = usePlatform();
+    const [directory, setDirectory] = useState('');
+    const [sessionType, setSessionType] = useState<SessionType>('simple');
+    const [worktreeName, setWorktreeName] = useState('');
+    const [error, setError] = useState<string | null>(null);
+    const { spawnSession, isPending, error: spawnError } = useSpawnSession(props.api);
 
-    const machineTitle = useMemo(() => getMachineTitle(props.machine), [props.machine])
+    const machineTitle = useMemo(() => getMachineTitle(props.machine), [props.machine]);
 
     async function spawn() {
-        const trimmed = directory.trim()
-        if (!trimmed) return
+        const trimmed = directory.trim();
+        if (!trimmed) return;
 
-        setError(null)
+        setError(null);
         try {
             const result = await spawnSession({
                 machineId: props.machineId,
                 directory: trimmed,
                 sessionType,
-                worktreeName: sessionType === 'worktree' ? (worktreeName.trim() || undefined) : undefined
-            })
+                worktreeName: sessionType === 'worktree' ? worktreeName.trim() || undefined : undefined,
+            });
             if (result.type === 'success') {
-                haptic.notification('success')
-                props.onSuccess(result.sessionId)
-                return
+                haptic.notification('success');
+                props.onSuccess(result.sessionId);
+                return;
             }
-            haptic.notification('error')
-            setError(result.message)
+            haptic.notification('error');
+            setError(result.message);
         } catch (e) {
-            haptic.notification('error')
-            setError(e instanceof Error ? e.message : 'Failed to spawn session')
+            haptic.notification('error');
+            setError(e instanceof Error ? e.message : 'Failed to spawn session');
         }
     }
 
@@ -61,9 +61,7 @@ export function SpawnSession(props: {
             <Card>
                 <CardHeader className="pb-2">
                     <CardTitle>Create Session</CardTitle>
-                    <CardDescription className="truncate">
-                        {machineTitle}
-                    </CardDescription>
+                    <CardDescription className="truncate">{machineTitle}</CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0">
                     <div className="flex flex-col gap-3">
@@ -76,9 +74,7 @@ export function SpawnSession(props: {
                         />
 
                         <div className="flex flex-col gap-2">
-                            <label className="text-xs font-medium text-[var(--app-hint)]">
-                                Session type
-                            </label>
+                            <label className="text-xs font-medium text-[var(--app-hint)]">Session type</label>
                             <div className="flex flex-col gap-3 text-sm">
                                 {(['simple', 'worktree'] as const).map((type) => (
                                     <div key={type} className="flex flex-col gap-2">
@@ -114,7 +110,9 @@ export function SpawnSession(props: {
                                                             </label>
                                                         )}
                                                     </div>
-                                                    <span className={`block text-xs text-[var(--app-hint)] ${sessionType === 'worktree' ? 'invisible' : ''}`}>
+                                                    <span
+                                                        className={`block text-xs text-[var(--app-hint)] ${sessionType === 'worktree' ? 'invisible' : ''}`}
+                                                    >
                                                         Create a new worktree next to the repo
                                                     </span>
                                                 </div>
@@ -143,23 +141,14 @@ export function SpawnSession(props: {
                         </div>
 
                         {(error ?? spawnError) ? (
-                            <div className="text-sm text-red-600">
-                                {error ?? spawnError}
-                            </div>
+                            <div className="text-sm text-red-600">{error ?? spawnError}</div>
                         ) : null}
 
                         <div className="flex gap-2">
-                            <Button
-                                variant="secondary"
-                                onClick={props.onCancel}
-                                disabled={isPending}
-                            >
+                            <Button variant="secondary" onClick={props.onCancel} disabled={isPending}>
                                 Cancel
                             </Button>
-                            <Button
-                                onClick={spawn}
-                                disabled={isPending || !directory.trim()}
-                            >
+                            <Button onClick={spawn} disabled={isPending || !directory.trim()}>
                                 {isPending ? 'Creating…' : 'Create Session'}
                             </Button>
                         </div>
@@ -167,5 +156,5 @@ export function SpawnSession(props: {
                 </CardContent>
             </Card>
         </div>
-    )
+    );
 }

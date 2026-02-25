@@ -1,116 +1,129 @@
-import { useCallback, useEffect, useState } from 'react'
-import { ApiClient } from '@/api/client'
-import { LanguageSwitcher } from '@/components/LanguageSwitcher'
-import { Spinner } from '@/components/Spinner'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { useTranslation } from '@/lib/use-translation'
-import type { ServerUrlResult } from '@/hooks/useServerUrl'
+import { useCallback, useEffect, useState } from 'react';
+import { ApiClient } from '@/api/client';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { Spinner } from '@/components/Spinner';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import type { ServerUrlResult } from '@/hooks/useServerUrl';
+import { useTranslation } from '@/lib/use-translation';
 
 type LoginPromptProps = {
-    mode?: 'login' | 'bind'
-    onLogin?: (token: string) => void
-    onBind?: (token: string) => Promise<void>
-    baseUrl: string
-    serverUrl: string | null
-    setServerUrl: (input: string) => ServerUrlResult
-    clearServerUrl: () => void
-    requireServerUrl?: boolean
-    error?: string | null
-}
+    mode?: 'login' | 'bind';
+    onLogin?: (token: string) => void;
+    onBind?: (token: string) => Promise<void>;
+    baseUrl: string;
+    serverUrl: string | null;
+    setServerUrl: (input: string) => ServerUrlResult;
+    clearServerUrl: () => void;
+    requireServerUrl?: boolean;
+    error?: string | null;
+};
 
 export function LoginPrompt(props: LoginPromptProps) {
-    const { t } = useTranslation()
-    const isBindMode = props.mode === 'bind'
-    const [accessToken, setAccessToken] = useState('')
-    const [isLoading, setIsLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
-    const [isServerDialogOpen, setIsServerDialogOpen] = useState(false)
-    const [serverInput, setServerInput] = useState(props.serverUrl ?? '')
-    const [serverError, setServerError] = useState<string | null>(null)
+    const { t } = useTranslation();
+    const isBindMode = props.mode === 'bind';
+    const [accessToken, setAccessToken] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [isServerDialogOpen, setIsServerDialogOpen] = useState(false);
+    const [serverInput, setServerInput] = useState(props.serverUrl ?? '');
+    const [serverError, setServerError] = useState<string | null>(null);
 
-    const handleSubmit = useCallback(async (e: React.FormEvent) => {
-        e.preventDefault()
+    const handleSubmit = useCallback(
+        async (e: React.FormEvent) => {
+            e.preventDefault();
 
-        const trimmedToken = accessToken.trim()
-        if (!trimmedToken) {
-            setError(t('login.error.enterToken'))
-            return
-        }
-
-        if (!isBindMode && props.requireServerUrl && !props.serverUrl) {
-            setServerError(t('login.server.required'))
-            setIsServerDialogOpen(true)
-            return
-        }
-
-        setIsLoading(true)
-        setError(null)
-
-        try {
-            if (isBindMode) {
-                if (!props.onBind) {
-                    setError(t('login.error.bindingUnavailable'))
-                    return
-                }
-                await props.onBind(trimmedToken)
-            } else {
-                // Validate token by attempting to authenticate
-                const client = new ApiClient('', { baseUrl: props.baseUrl })
-                await client.authenticate({ accessToken: trimmedToken })
-                // If successful, pass token to parent
-                if (!props.onLogin) {
-                    setError(t('login.error.loginUnavailable'))
-                    return
-                }
-                props.onLogin(trimmedToken)
+            const trimmedToken = accessToken.trim();
+            if (!trimmedToken) {
+                setError(t('login.error.enterToken'));
+                return;
             }
-        } catch (e) {
-            const fallbackMessage = isBindMode ? t('login.error.bindFailed') : t('login.error.authFailed')
-            setError(e instanceof Error ? e.message : fallbackMessage)
-        } finally {
-            setIsLoading(false)
-        }
-    }, [accessToken, props, t, isBindMode])
+
+            if (!isBindMode && props.requireServerUrl && !props.serverUrl) {
+                setServerError(t('login.server.required'));
+                setIsServerDialogOpen(true);
+                return;
+            }
+
+            setIsLoading(true);
+            setError(null);
+
+            try {
+                if (isBindMode) {
+                    if (!props.onBind) {
+                        setError(t('login.error.bindingUnavailable'));
+                        return;
+                    }
+                    await props.onBind(trimmedToken);
+                } else {
+                    // Validate token by attempting to authenticate
+                    const client = new ApiClient('', { baseUrl: props.baseUrl });
+                    await client.authenticate({ accessToken: trimmedToken });
+                    // If successful, pass token to parent
+                    if (!props.onLogin) {
+                        setError(t('login.error.loginUnavailable'));
+                        return;
+                    }
+                    props.onLogin(trimmedToken);
+                }
+            } catch (e) {
+                const fallbackMessage = isBindMode ? t('login.error.bindFailed') : t('login.error.authFailed');
+                setError(e instanceof Error ? e.message : fallbackMessage);
+            } finally {
+                setIsLoading(false);
+            }
+        },
+        [accessToken, props, t, isBindMode],
+    );
 
     useEffect(() => {
         if (!isServerDialogOpen) {
-            return
+            return;
         }
-        setServerInput(props.serverUrl ?? '')
-    }, [isServerDialogOpen, props.serverUrl])
+        setServerInput(props.serverUrl ?? '');
+    }, [isServerDialogOpen, props.serverUrl]);
 
-    const handleSaveServer = useCallback((e: React.FormEvent) => {
-        e.preventDefault()
-        const result = props.setServerUrl(serverInput)
-        if (!result.ok) {
-            setServerError(result.error)
-            return
-        }
-        setServerError(null)
-        setServerInput(result.value)
-        setIsServerDialogOpen(false)
-    }, [props, serverInput])
+    const handleSaveServer = useCallback(
+        (e: React.FormEvent) => {
+            e.preventDefault();
+            const result = props.setServerUrl(serverInput);
+            if (!result.ok) {
+                setServerError(result.error);
+                return;
+            }
+            setServerError(null);
+            setServerInput(result.value);
+            setIsServerDialogOpen(false);
+        },
+        [props, serverInput],
+    );
 
     const handleClearServer = useCallback(() => {
-        props.clearServerUrl()
-        setServerInput('')
-        setServerError(null)
-        setIsServerDialogOpen(false)
-    }, [props])
+        props.clearServerUrl();
+        setServerInput('');
+        setServerError(null);
+        setIsServerDialogOpen(false);
+    }, [props]);
 
     const handleServerDialogOpenChange = useCallback((open: boolean) => {
-        setIsServerDialogOpen(open)
+        setIsServerDialogOpen(open);
         if (!open) {
-            setServerError(null)
+            setServerError(null);
         }
-    }, [])
+    }, []);
 
-    const displayError = error || props.error
-    const serverSummary = props.serverUrl ?? `${props.baseUrl} ${t('login.server.default')}`
-    const title = isBindMode ? t('login.bind.title') : t('login.title')
-    const subtitle = t('login.subtitle')
-    const submitLabel = isBindMode ? t('login.bind.submit') : t('login.submit')
+    const displayError = error || props.error;
+    const serverSummary = props.serverUrl ?? `${props.baseUrl} ${t('login.server.default')}`;
+    const title = isBindMode ? t('login.bind.title') : t('login.title');
+    const subtitle = t('login.subtitle');
+    const submitLabel = isBindMode ? t('login.bind.submit') : t('login.submit');
 
     return (
         <div className="relative h-full flex items-center justify-center p-4">
@@ -123,9 +136,7 @@ export function LoginPrompt(props: LoginPromptProps) {
                 {/* Header */}
                 <div className="text-center space-y-2">
                     <div className="text-2xl font-semibold">{title}</div>
-                    <div className="text-sm text-[var(--app-hint)]">
-                        {subtitle}
-                    </div>
+                    <div className="text-sm text-[var(--app-hint)]">{subtitle}</div>
                 </div>
 
                 {/* Form */}
@@ -142,11 +153,7 @@ export function LoginPrompt(props: LoginPromptProps) {
                         />
                     </div>
 
-                    {displayError && (
-                        <div className="text-sm text-red-500 text-center">
-                            {displayError}
-                        </div>
-                    )}
+                    {displayError && <div className="text-sm text-red-500 text-center">{displayError}</div>}
 
                     <button
                         type="submit"
@@ -168,21 +175,25 @@ export function LoginPrompt(props: LoginPromptProps) {
                 {/* Help links */}
                 {!isBindMode && (
                     <div className="flex items-center justify-between text-xs text-[var(--app-hint)]">
-                        <a href="https://hapi.run/docs" target="_blank" rel="noopener noreferrer" className="underline hover:text-[var(--app-fg)]">
+                        <a
+                            href="https://hapi.run/docs"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline hover:text-[var(--app-fg)]"
+                        >
                             {t('login.help')}
                         </a>
                         <Dialog open={isServerDialogOpen} onOpenChange={handleServerDialogOpenChange}>
                             <DialogTrigger asChild>
                                 <button type="button" className="underline hover:text-[var(--app-fg)]">
-                                    Hub {props.serverUrl ? `${t('login.server.custom')}` : `${t('login.server.default')}`}
+                                    Hub{' '}
+                                    {props.serverUrl ? `${t('login.server.custom')}` : `${t('login.server.default')}`}
                                 </button>
                             </DialogTrigger>
                             <DialogContent className="max-w-md">
                                 <DialogHeader>
                                     <DialogTitle>{t('login.server.title')}</DialogTitle>
-                                    <DialogDescription>
-                                        {t('login.server.description')}
-                                    </DialogDescription>
+                                    <DialogDescription>{t('login.server.description')}</DialogDescription>
                                 </DialogHeader>
                                 <form onSubmit={handleSaveServer} className="space-y-4">
                                     <div className="text-xs text-[var(--app-hint)]">
@@ -194,8 +205,8 @@ export function LoginPrompt(props: LoginPromptProps) {
                                             type="url"
                                             value={serverInput}
                                             onChange={(e) => {
-                                                setServerInput(e.target.value)
-                                                setServerError(null)
+                                                setServerInput(e.target.value);
+                                                setServerError(null);
                                             }}
                                             placeholder={t('login.server.placeholder')}
                                             className="w-full px-3 py-2.5 rounded-lg border border-[var(--app-border)] bg-[var(--app-bg)] text-[var(--app-fg)] placeholder:text-[var(--app-hint)] focus:outline-none focus:ring-2 focus:ring-[var(--app-button)] focus:border-transparent"
@@ -205,11 +216,7 @@ export function LoginPrompt(props: LoginPromptProps) {
                                         </div>
                                     </div>
 
-                                    {serverError && (
-                                        <div className="text-sm text-red-500">
-                                            {serverError}
-                                        </div>
-                                    )}
+                                    {serverError && <div className="text-sm text-red-500">{serverError}</div>}
 
                                     <div className="flex items-center justify-end gap-2">
                                         {props.serverUrl && (
@@ -217,9 +224,7 @@ export function LoginPrompt(props: LoginPromptProps) {
                                                 {t('login.server.useSameOrigin')}
                                             </Button>
                                         )}
-                                        <Button type="submit">
-                                            {t('login.server.save')}
-                                        </Button>
+                                        <Button type="submit">{t('login.server.save')}</Button>
                                     </div>
                                 </form>
                             </DialogContent>
@@ -230,9 +235,13 @@ export function LoginPrompt(props: LoginPromptProps) {
 
             {/* Footer */}
             <div className="absolute bottom-4 left-0 right-0 text-center text-xs text-[var(--app-hint)] space-y-1">
-                <div>{t('login.footer')} <span className="text-red-500">♥</span> {t('login.footer.for')}</div>
-                <div>{t('login.footer.copyright')} {new Date().getFullYear()} HAPI</div>
+                <div>
+                    {t('login.footer')} <span className="text-red-500">♥</span> {t('login.footer.for')}
+                </div>
+                <div>
+                    {t('login.footer.copyright')} {new Date().getFullYear()} HAPI
+                </div>
             </div>
         </div>
-    )
+    );
 }

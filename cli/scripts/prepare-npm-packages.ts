@@ -26,36 +26,36 @@ const PLATFORMS = [
         os: 'darwin',
         cpu: 'arm64',
         buildTarget: 'bun-darwin-arm64',
-        binName: 'hapi'
+        binName: 'hapi',
     },
     {
         name: 'darwin-x64',
         os: 'darwin',
         cpu: 'x64',
         buildTarget: 'bun-darwin-x64',
-        binName: 'hapi'
+        binName: 'hapi',
     },
     {
         name: 'linux-arm64',
         os: 'linux',
         cpu: 'arm64',
         buildTarget: 'bun-linux-arm64',
-        binName: 'hapi'
+        binName: 'hapi',
     },
     {
         name: 'linux-x64',
         os: 'linux',
         cpu: 'x64',
         buildTarget: 'bun-linux-x64',
-        binName: 'hapi'
+        binName: 'hapi',
     },
     {
         name: 'win32-x64',
         os: 'win32',
         cpu: 'x64',
         buildTarget: 'bun-windows-x64',
-        binName: 'hapi.exe'
-    }
+        binName: 'hapi.exe',
+    },
 ] as const;
 
 interface MainPackageJson {
@@ -81,10 +81,7 @@ async function readMainPackageJson(): Promise<MainPackageJson> {
     return JSON.parse(content);
 }
 
-function generatePlatformPackageJson(
-    platform: typeof PLATFORMS[number],
-    mainPkg: MainPackageJson
-): object {
+function generatePlatformPackageJson(platform: (typeof PLATFORMS)[number], mainPkg: MainPackageJson): object {
     return {
         name: `@twsxtd/hapi-${platform.name}`,
         version: mainPkg.version,
@@ -92,11 +89,11 @@ function generatePlatformPackageJson(
         os: [platform.os],
         cpu: [platform.cpu],
         bin: {
-            hapi: `bin/${platform.binName}`
+            hapi: `bin/${platform.binName}`,
         },
         files: [`bin/${platform.binName}`],
         license: mainPkg.license ?? 'MIT',
-        repository: mainPkg.repository
+        repository: mainPkg.repository,
     };
 }
 
@@ -110,10 +107,7 @@ function buildOptionalDependencies(version: string): Record<string, string> {
     return optionalDependencies;
 }
 
-function generateMainPackageJson(
-    mainPkg: MainPackageJson,
-    optionalDependencies: Record<string, string>
-): object {
+function generateMainPackageJson(mainPkg: MainPackageJson, optionalDependencies: Record<string, string>): object {
     return {
         name: mainPkg.name,
         version: mainPkg.version,
@@ -126,15 +120,11 @@ function generateMainPackageJson(
         repository: mainPkg.repository,
         bin: mainPkg.bin ?? { hapi: 'bin/hapi.cjs' },
         files: ['bin/hapi.cjs', 'NOTICE'],
-        optionalDependencies
+        optionalDependencies,
     };
 }
 
-function prepareMainPackage(
-    mainPkg: MainPackageJson,
-    projectRoot: string,
-    npmDir: string
-): void {
+function prepareMainPackage(mainPkg: MainPackageJson, projectRoot: string, npmDir: string): void {
     const mainDir = join(npmDir, 'main');
     const binDir = join(mainDir, 'bin');
     const optionalDependencies = buildOptionalDependencies(mainPkg.version);
@@ -152,15 +142,15 @@ function prepareMainPackage(
 
     const pkgJson = generateMainPackageJson(mainPkg, optionalDependencies);
     const pkgJsonPath = join(mainDir, 'package.json');
-    writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4) + '\n');
+    writeFileSync(pkgJsonPath, `${JSON.stringify(pkgJson, null, 4)}\n`);
     console.log(`Generated: ${pkgJsonPath}`);
 }
 
 async function preparePlatform(
-    platform: typeof PLATFORMS[number],
+    platform: (typeof PLATFORMS)[number],
     mainPkg: MainPackageJson,
     distExeDir: string,
-    npmDir: string
+    npmDir: string,
 ): Promise<void> {
     const platformDir = join(npmDir, platform.name);
     const binDir = join(platformDir, 'bin');
@@ -171,7 +161,7 @@ async function preparePlatform(
     // Generate package.json
     const pkgJson = generatePlatformPackageJson(platform, mainPkg);
     const pkgJsonPath = join(platformDir, 'package.json');
-    writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4) + '\n');
+    writeFileSync(pkgJsonPath, `${JSON.stringify(pkgJson, null, 4)}\n`);
     console.log(`Generated: ${pkgJsonPath}`);
 
     // Copy binary
@@ -200,7 +190,7 @@ function updateMainPackageOptionalDeps(version: string): void {
 
     pkg.optionalDependencies = buildOptionalDependencies(version);
 
-    writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+    writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
     console.log(`Updated optionalDependencies in package.json to version ${version}`);
 }
 

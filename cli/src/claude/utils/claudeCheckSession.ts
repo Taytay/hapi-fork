@@ -1,7 +1,7 @@
-import { logger } from "@/ui/logger";
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import { getProjectPath } from "./path";
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { logger } from '@/ui/logger';
+import { getProjectPath } from './path';
 
 export function claudeCheckSession(sessionId: string, path: string) {
     const projectDir = getProjectPath(path);
@@ -18,8 +18,8 @@ export function claudeCheckSession(sessionId: string, path: string) {
     const sessionData = readFileSync(sessionFile, 'utf-8').split('\n');
     const hasGoodMessage = !!sessionData.find((v) => {
         try {
-            return typeof JSON.parse(v).uuid === 'string'
-        } catch (e) {
+            return typeof JSON.parse(v).uuid === 'string';
+        } catch (_e) {
             return false;
         }
     });

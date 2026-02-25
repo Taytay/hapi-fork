@@ -7,5 +7,5 @@ import "./i18n";
 createRoot(document.getElementById("root")!).render(
   <HelmetProvider>
     <App />
-  </HelmetProvider>
+  </HelmetProvider>,
 );

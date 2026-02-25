@@ -1,4 +1,4 @@
-import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
+import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import { logger } from '@/ui/logger';
 import { killProcessByChildProcess } from '@/utils/process';
 
@@ -38,10 +38,13 @@ export type AcpStderrError = {
 
 export class AcpStdioTransport {
     private readonly process: ChildProcessWithoutNullStreams;
-    private readonly pending = new Map<string | number, {
-        resolve: (value: unknown) => void;
-        reject: (error: Error) => void;
-    }>();
+    private readonly pending = new Map<
+        string | number,
+        {
+            resolve: (value: unknown) => void;
+            reject: (error: Error) => void;
+        }
+    >();
     private readonly requestHandlers = new Map<string, RequestHandler>();
     private notificationHandler: ((method: string, params: unknown) => void) | null = null;
     private stderrErrorHandler: ((error: AcpStderrError) => void) | null = null;
@@ -57,7 +60,7 @@ export class AcpStdioTransport {
         this.process = spawn(options.command, options.args ?? [], {
             env: options.env,
             stdio: ['pipe', 'pipe', 'pipe'],
-            shell: process.platform === 'win32'
+            shell: process.platform === 'win32',
         });
 
         this.process.stdout.setEncoding('utf8');
@@ -79,10 +82,11 @@ export class AcpStdioTransport {
         this.process.on('error', (error) => {
             logger.debug('[ACP] Process error', error);
             const message = error instanceof Error ? error.message : String(error);
-            this.rejectAllPending(new Error(
-                `Failed to spawn ${options.command}: ${message}. Is it installed and on PATH?`,
-                { cause: error }
-            ));
+            this.rejectAllPending(
+                new Error(`Failed to spawn ${options.command}: ${message}. Is it installed and on PATH?`, {
+                    cause: error,
+                }),
+            );
         });
     }
 
@@ -107,7 +111,7 @@ export class AcpStdioTransport {
             jsonrpc: '2.0',
             id,
             method,
-            params
+            params,
         };
 
         const timeoutMs = options?.timeoutMs ?? AcpStdioTransport.DEFAULT_TIMEOUT_MS;
@@ -138,7 +142,7 @@ export class AcpStdioTransport {
                 reject: (error) => {
                     clearTimeout(timer);
                     reject(error);
-                }
+                },
             });
             this.writePayload(payload);
         });
@@ -148,7 +152,7 @@ export class AcpStdioTransport {
         const payload: JsonRpcNotification = {
             jsonrpc: '2.0',
             method,
-            params
+            params,
         };
         this.writePayload(payload);
     }
@@ -223,8 +227,8 @@ export class AcpStdioTransport {
                 id: request.id,
                 error: {
                     code: -32601,
-                    message: `Method not found: ${request.method}`
-                }
+                    message: `Method not found: ${request.method}`,
+                },
             } satisfies JsonRpcResponse);
             return;
         }
@@ -234,7 +238,7 @@ export class AcpStdioTransport {
             this.writePayload({
                 jsonrpc: '2.0',
                 id: request.id,
-                result
+                result,
             } satisfies JsonRpcResponse);
         } catch (error) {
             this.writePayload({
@@ -242,8 +246,8 @@ export class AcpStdioTransport {
                 id: request.id,
                 error: {
                     code: -32603,
-                    message: error instanceof Error ? error.message : 'Internal error'
-                }
+                    message: error instanceof Error ? error.message : 'Internal error',
+                },
             } satisfies JsonRpcResponse);
         }
     }
@@ -290,43 +294,59 @@ export class AcpStdioTransport {
         const lowerText = text.toLowerCase();
 
         // Rate limit errors (429)
-        if (lowerText.includes('status 429') || lowerText.includes('ratelimitexceeded') || lowerText.includes('rate limit')) {
+        if (
+            lowerText.includes('status 429') ||
+            lowerText.includes('ratelimitexceeded') ||
+            lowerText.includes('rate limit')
+        ) {
             this.stderrErrorHandler({
                 type: 'rate_limit',
                 message: 'Rate limit exceeded. Please wait before sending more requests.',
-                raw: text
+                raw: text,
             });
             return;
         }
 
         // Model not found errors (404)
-        if (lowerText.includes('status 404') || lowerText.includes('model not found') || lowerText.includes('not_found')) {
+        if (
+            lowerText.includes('status 404') ||
+            lowerText.includes('model not found') ||
+            lowerText.includes('not_found')
+        ) {
             this.stderrErrorHandler({
                 type: 'model_not_found',
                 message: 'Model not found. Available models: gemini-2.5-pro, gemini-2.5-flash, gemini-2.0-flash',
-                raw: text
+                raw: text,
             });
             return;
         }
 
         // Authentication errors (401/403)
-        if (lowerText.includes('status 401') || lowerText.includes('status 403') ||
-            lowerText.includes('unauthenticated') || lowerText.includes('permission denied') ||
-            lowerText.includes('authentication')) {
+        if (
+            lowerText.includes('status 401') ||
+            lowerText.includes('status 403') ||
+            lowerText.includes('unauthenticated') ||
+            lowerText.includes('permission denied') ||
+            lowerText.includes('authentication')
+        ) {
             this.stderrErrorHandler({
                 type: 'authentication',
                 message: 'Authentication failed. Please check your credentials or run "gemini auth login".',
-                raw: text
+                raw: text,
             });
             return;
         }
 
         // Quota exceeded
-        if (lowerText.includes('quota') || lowerText.includes('resource exhausted') || lowerText.includes('resourceexhausted')) {
+        if (
+            lowerText.includes('quota') ||
+            lowerText.includes('resource exhausted') ||
+            lowerText.includes('resourceexhausted')
+        ) {
             this.stderrErrorHandler({
                 type: 'quota_exceeded',
                 message: 'API quota exceeded. Please check your billing or wait for quota reset.',
-                raw: text
+                raw: text,
             });
             return;
         }
@@ -336,7 +356,7 @@ export class AcpStdioTransport {
             this.stderrErrorHandler({
                 type: 'unknown',
                 message: text,
-                raw: text
+                raw: text,
             });
         }
     }

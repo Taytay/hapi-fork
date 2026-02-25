@@ -2,17 +2,17 @@
  * Codex MCP Client - Simple wrapper for Codex tools
  */
 
+import { execSync } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
+import { isObject } from '@hapi/protocol';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import { isObject } from '@hapi/protocol';
+import { ElicitRequestSchema } from '@modelcontextprotocol/sdk/types.js';
+import { z } from 'zod';
 import { logger } from '@/ui/logger';
 import { isProcessAlive, killProcess } from '@/utils/process';
 import type { CodexSessionConfig, CodexToolResponse } from './types';
-import { z } from 'zod';
-import { ElicitRequestSchema } from '@modelcontextprotocol/sdk/types.js';
-import { CodexPermissionHandler } from './utils/permissionHandler';
-import { execSync } from 'child_process';
-import { randomUUID } from 'node:crypto';
+import type { CodexPermissionHandler } from './utils/permissionHandler';
 
 type ElicitResponseValue = string | number | boolean | string[];
 type ElicitRequestedSchema = {
@@ -40,7 +40,7 @@ function extractToolCallId(params: Record<string, unknown>): string | null {
         'toolCallId',
         'mcp_tool_call_id',
         'mcpToolCallId',
-        'id'
+        'id',
     ];
 
     for (const key of candidateKeys) {
@@ -72,7 +72,7 @@ function extractCwd(params: Record<string, unknown>): string | null {
 function buildElicitationResult(
     decision: 'approved' | 'approved_for_session' | 'denied' | 'abort',
     requestedSchema: ElicitRequestedSchema | null,
-    reason?: string
+    reason?: string,
 ): {
     action: 'accept' | 'decline' | 'cancel';
     content?: Record<string, ElicitResponseValue>;
@@ -83,8 +83,8 @@ function buildElicitationResult(
         decision === 'approved' || decision === 'approved_for_session'
             ? 'accept'
             : decision === 'abort'
-                ? 'cancel'
-                : 'decline';
+              ? 'cancel'
+              : 'decline';
 
     if (!requestedSchema?.properties || Object.keys(requestedSchema.properties).length === 0) {
         return reason ? { action, decision, reason } : { action, decision };
@@ -100,16 +100,16 @@ function buildElicitationResult(
     if (properties && Object.keys(properties).length > 0) {
         const approved = decision === 'approved' || decision === 'approved_for_session';
 
-        if (Object.prototype.hasOwnProperty.call(properties, 'decision')) {
+        if (Object.hasOwn(properties, 'decision')) {
             content.decision = decision;
         }
-        if (Object.prototype.hasOwnProperty.call(properties, 'approved')) {
+        if (Object.hasOwn(properties, 'approved')) {
             content.approved = approved;
         }
-        if (Object.prototype.hasOwnProperty.call(properties, 'allow')) {
+        if (Object.hasOwn(properties, 'allow')) {
             content.allow = approved;
         }
-        if (reason && Object.prototype.hasOwnProperty.call(properties, 'reason')) {
+        if (reason && Object.hasOwn(properties, 'reason')) {
             content.reason = reason;
         }
 
@@ -149,7 +149,7 @@ function getCodexMcpCommand(): string {
         if (minor === 43 && patch === 0) {
             // Check for alpha version
             if (versionStr.includes('-alpha.')) {
-                const alphaNum = parseInt(versionStr.split('-alpha.')[1]);
+                const alphaNum = parseInt(versionStr.split('-alpha.')[1], 10);
                 return alphaNum >= 5 ? 'mcp-server' : 'mcp';
             }
             return 'mcp-server'; // 0.43.0 stable has mcp-server
@@ -173,22 +173,21 @@ export class CodexMcpClient {
     constructor() {
         this.client = new Client(
             { name: 'hapi-codex-client', version: '1.0.0' },
-            { capabilities: { elicitation: {} } }
+            { capabilities: { elicitation: {} } },
         );
 
         // Avoid TS instantiation depth issues by widening the schema type.
         const codexNotificationSchema: z.ZodTypeAny = z.object({
             method: z.literal('codex/event'),
             params: z.object({
-                msg: z.any()
-            })
+                msg: z.any(),
+            }),
         });
 
-        const setNotificationHandler =
-            this.client.setNotificationHandler.bind(this.client) as (
-                schema: unknown,
-                handler: (notification: { params: { msg: any } }) => void
-            ) => void;
+        const setNotificationHandler = this.client.setNotificationHandler.bind(this.client) as (
+            schema: unknown,
+            handler: (notification: { params: { msg: any } }) => void,
+        ) => void;
 
         setNotificationHandler(codexNotificationSchema, (data) => {
             const msg = data.params.msg;
@@ -217,11 +216,14 @@ export class CodexMcpClient {
         this.transport = new StdioClientTransport({
             command: 'codex',
             args: [mcpCommand],
-            env: Object.keys(process.env).reduce((acc, key) => {
-                const value = process.env[key];
-                if (typeof value === 'string') acc[key] = value;
-                return acc;
-            }, {} as Record<string, string>)
+            env: Object.keys(process.env).reduce(
+                (acc, key) => {
+                    const value = process.env[key];
+                    if (typeof value === 'string') acc[key] = value;
+                    return acc;
+                },
+                {} as Record<string, string>,
+            ),
         });
 
         // Register request handlers for Codex permission methods
@@ -235,45 +237,38 @@ export class CodexMcpClient {
 
     private registerPermissionHandlers(): void {
         // Register handler for exec command approval requests
-        this.client.setRequestHandler(
-            ElicitRequestSchema,
-            async (request) => {
-                const params = request.params as Record<string, unknown>;
-                const requestedSchema = extractRequestedSchema(params);
+        this.client.setRequestHandler(ElicitRequestSchema, async (request) => {
+            const params = request.params as Record<string, unknown>;
+            const requestedSchema = extractRequestedSchema(params);
 
-                // Load params
-                const toolCallId = extractToolCallId(params) ?? randomUUID();
-                const command = extractCommand(params);
-                const cwd = extractCwd(params);
-                const toolName = 'CodexPermission';
+            // Load params
+            const toolCallId = extractToolCallId(params) ?? randomUUID();
+            const command = extractCommand(params);
+            const cwd = extractCwd(params);
+            const toolName = 'CodexPermission';
 
-                // If no permission handler set, deny by default
-                if (!this.permissionHandler) {
-                    logger.debug('[CodexMCP] No permission handler set, denying by default');
-                    return buildElicitationResult('denied', requestedSchema, 'Permission handler not configured');
-                }
-
-                try {
-                    // Request permission through the handler
-                    const result = await this.permissionHandler.handleToolCall(
-                        toolCallId,
-                        toolName,
-                        {
-                            message: typeof params.message === 'string' ? params.message : undefined,
-                            command: command ?? undefined,
-                            cwd: cwd ?? undefined
-                        }
-                    );
-
-                    logger.debug('[CodexMCP] Permission result:', result);
-                    return buildElicitationResult(result.decision, requestedSchema, result.reason);
-                } catch (error) {
-                    logger.debug('[CodexMCP] Error handling permission request:', error);
-                    const reason = error instanceof Error ? error.message : 'Permission request failed';
-                    return buildElicitationResult('denied', requestedSchema, reason);
-                }
+            // If no permission handler set, deny by default
+            if (!this.permissionHandler) {
+                logger.debug('[CodexMCP] No permission handler set, denying by default');
+                return buildElicitationResult('denied', requestedSchema, 'Permission handler not configured');
             }
-        );
+
+            try {
+                // Request permission through the handler
+                const result = await this.permissionHandler.handleToolCall(toolCallId, toolName, {
+                    message: typeof params.message === 'string' ? params.message : undefined,
+                    command: command ?? undefined,
+                    cwd: cwd ?? undefined,
+                });
+
+                logger.debug('[CodexMCP] Permission result:', result);
+                return buildElicitationResult(result.decision, requestedSchema, result.reason);
+            } catch (error) {
+                logger.debug('[CodexMCP] Error handling permission request:', error);
+                const reason = error instanceof Error ? error.message : 'Permission request failed';
+                return buildElicitationResult('denied', requestedSchema, reason);
+            }
+        });
 
         logger.debug('[CodexMCP] Permission handlers registered');
     }
@@ -283,14 +278,18 @@ export class CodexMcpClient {
 
         logger.debug('[CodexMCP] Starting Codex session:', config);
 
-        const response = await this.client.callTool({
-            name: 'codex',
-            arguments: config as any
-        }, undefined, {
-            signal: options?.signal,
-            timeout: DEFAULT_TIMEOUT,
-            // maxTotalTimeout: 10000000000 
-        });
+        const response = await this.client.callTool(
+            {
+                name: 'codex',
+                arguments: config as any,
+            },
+            undefined,
+            {
+                signal: options?.signal,
+                timeout: DEFAULT_TIMEOUT,
+                // maxTotalTimeout: 10000000000
+            },
+        );
 
         logger.debug('[CodexMCP] startSession response:', response);
 
@@ -316,20 +315,23 @@ export class CodexMcpClient {
         const args = { sessionId: this.sessionId, conversationId: this.conversationId, prompt };
         logger.debug('[CodexMCP] Continuing Codex session:', args);
 
-        const response = await this.client.callTool({
-            name: 'codex-reply',
-            arguments: args
-        }, undefined, {
-            signal: options?.signal,
-            timeout: DEFAULT_TIMEOUT
-        });
+        const response = await this.client.callTool(
+            {
+                name: 'codex-reply',
+                arguments: args,
+            },
+            undefined,
+            {
+                signal: options?.signal,
+                timeout: DEFAULT_TIMEOUT,
+            },
+        );
 
         logger.debug('[CodexMCP] continueSession response:', response);
         this.extractIdentifiers(response);
 
         return response as CodexToolResponse;
     }
-
 
     private updateIdentifiersFromEvent(event: any): void {
         if (!event || typeof event !== 'object') {
@@ -380,7 +382,13 @@ export class CodexMcpClient {
                     this.sessionId = item.sessionId;
                     logger.debug('[CodexMCP] Session ID extracted from content:', this.sessionId);
                 }
-                if (!this.conversationId && item && typeof item === 'object' && 'conversationId' in item && item.conversationId) {
+                if (
+                    !this.conversationId &&
+                    item &&
+                    typeof item === 'object' &&
+                    'conversationId' in item &&
+                    item.conversationId
+                ) {
                     this.conversationId = item.conversationId;
                     logger.debug('[CodexMCP] Conversation ID extracted from content:', this.conversationId);
                 }
@@ -426,9 +434,9 @@ export class CodexMcpClient {
             logger.debug('[CodexMCP] client.close done');
         } catch (e) {
             logger.debug('[CodexMCP] Error closing client, attempting transport close directly', e);
-            try { 
+            try {
                 logger.debug('[CodexMCP] transport.close begin');
-                await this.transport?.close?.(); 
+                await this.transport?.close?.();
                 logger.debug('[CodexMCP] transport.close done');
             } catch {}
         }

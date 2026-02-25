@@ -28,7 +28,7 @@ export async function geminiLocal(opts: {
 
     const env: NodeJS.ProcessEnv = {
         ...process.env,
-        GEMINI_PROJECT_DIR: opts.path
+        GEMINI_PROJECT_DIR: opts.path,
     };
     if (opts.hookSettingsPath) {
         env.GEMINI_CLI_SYSTEM_SETTINGS_PATH = opts.hookSettingsPath;
@@ -49,7 +49,7 @@ export async function geminiLocal(opts: {
             spawnName: 'gemini',
             installHint: 'Gemini CLI',
             includeCause: true,
-            logExit: true
+            logExit: true,
         });
     } finally {
         process.stdin.resume();

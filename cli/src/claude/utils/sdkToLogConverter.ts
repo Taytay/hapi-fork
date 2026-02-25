@@ -3,34 +3,28 @@
  * Transforms Claude SDK messages into the format expected by session logs
  */
 
-import { randomUUID } from 'node:crypto'
-import { execSync } from 'node:child_process'
-import type {
-    SDKMessage,
-    SDKUserMessage,
-    SDKAssistantMessage,
-    SDKSystemMessage,
-    SDKResultMessage
-} from '@/claude/sdk'
-import type { RawJSONLines } from '@/claude/types'
-import type { ClaudePermissionMode } from '@hapi/protocol/types'
+import { execSync } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
+import type { ClaudePermissionMode } from '@hapi/protocol/types';
+import type { SDKAssistantMessage, SDKMessage, SDKSystemMessage, SDKUserMessage } from '@/claude/sdk';
+import type { RawJSONLines } from '@/claude/types';
 
 /**
  * Context for converting SDK messages to log format
  */
 export interface ConversionContext {
-    sessionId: string
-    cwd: string
-    version?: string
-    gitBranch?: string
-    parentUuid?: string | null
+    sessionId: string;
+    cwd: string;
+    version?: string;
+    gitBranch?: string;
+    parentUuid?: string | null;
 }
 
 type PermissionResponse = {
-    approved: boolean
-    mode?: ClaudePermissionMode
-    reason?: string
-}
+    approved: boolean;
+    mode?: ClaudePermissionMode;
+    reason?: string;
+};
 
 /**
  * Get current git branch for the working directory
@@ -40,11 +34,11 @@ function getGitBranch(cwd: string): string | undefined {
         const branch = execSync('git rev-parse --abbrev-ref HEAD', {
             cwd,
             encoding: 'utf8',
-            stdio: ['ignore', 'pipe', 'ignore']
-        }).trim()
-        return branch || undefined
+            stdio: ['ignore', 'pipe', 'ignore'],
+        }).trim();
+        return branch || undefined;
     } catch {
-        return undefined
+        return undefined;
     }
 }
 
@@ -53,45 +47,42 @@ function getGitBranch(cwd: string): string | undefined {
  * Maintains state for parent-child relationships between messages
  */
 export class SDKToLogConverter {
-    private lastUuid: string | null = null
-    private context: ConversionContext
-    private responses?: Map<string, PermissionResponse>
+    private lastUuid: string | null = null;
+    private context: ConversionContext;
+    private responses?: Map<string, PermissionResponse>;
     private sidechainLastUUID = new Map<string, string>();
 
-    constructor(
-        context: Omit<ConversionContext, 'parentUuid'>,
-        responses?: Map<string, PermissionResponse>
-    ) {
+    constructor(context: Omit<ConversionContext, 'parentUuid'>, responses?: Map<string, PermissionResponse>) {
         this.context = {
             ...context,
             gitBranch: context.gitBranch ?? getGitBranch(context.cwd),
             version: context.version ?? process.env.npm_package_version ?? '0.0.0',
-            parentUuid: null
-        }
-        this.responses = responses
+            parentUuid: null,
+        };
+        this.responses = responses;
     }
 
     /**
      * Update session ID (for when session changes during resume)
      */
     updateSessionId(sessionId: string): void {
-        this.context.sessionId = sessionId
+        this.context.sessionId = sessionId;
     }
 
     /**
      * Reset parent chain (useful when starting new conversation)
      */
     resetParentChain(): void {
-        this.lastUuid = null
-        this.context.parentUuid = null
+        this.lastUuid = null;
+        this.context.parentUuid = null;
     }
 
     /**
      * Convert SDK message to log format
      */
     convert(sdkMessage: SDKMessage): RawJSONLines | null {
-        const uuid = randomUUID()
-        const timestamp = new Date().toISOString()
+        const uuid = randomUUID();
+        const timestamp = new Date().toISOString();
         let parentUuid = this.lastUuid;
         let isSidechain = false;
         if (sdkMessage.parent_tool_use_id) {
@@ -108,45 +99,49 @@ export class SDKToLogConverter {
             version: this.context.version,
             gitBranch: this.context.gitBranch,
             uuid,
-            timestamp
-        }
+            timestamp,
+        };
 
-        let logMessage: RawJSONLines | null = null
+        let logMessage: RawJSONLines | null = null;
 
         switch (sdkMessage.type) {
             case 'user': {
-                const userMsg = sdkMessage as SDKUserMessage
+                const userMsg = sdkMessage as SDKUserMessage;
                 logMessage = {
                     ...baseFields,
                     type: 'user',
-                    message: userMsg.message
-                }
+                    message: userMsg.message,
+                };
 
                 // Check if this is a tool result and add mode if available
                 if (Array.isArray(userMsg.message.content)) {
                     for (const content of userMsg.message.content) {
-                        if (content.type === 'tool_result' && content.tool_use_id && this.responses?.has(content.tool_use_id)) {
-                            const response = this.responses.get(content.tool_use_id)
+                        if (
+                            content.type === 'tool_result' &&
+                            content.tool_use_id &&
+                            this.responses?.has(content.tool_use_id)
+                        ) {
+                            const response = this.responses.get(content.tool_use_id);
                             if (response?.mode) {
-                                (logMessage as any).mode = response.mode
+                                (logMessage as any).mode = response.mode;
                             }
                         }
                     }
                 } else if (typeof userMsg.message.content === 'string') {
                     // Simple string content, no tool result
                 }
-                break
+                break;
             }
 
             case 'assistant': {
-                const assistantMsg = sdkMessage as SDKAssistantMessage
+                const assistantMsg = sdkMessage as SDKAssistantMessage;
                 logMessage = {
                     ...baseFields,
                     type: 'assistant',
                     message: assistantMsg.message,
                     // Assistant messages often have additional fields
-                    requestId: (assistantMsg as any).requestId
-                }
+                    requestId: (assistantMsg as any).requestId,
+                };
                 // if (assistantMsg.message.content && Array.isArray(assistantMsg.message.content)) {
                 //     for (const content of assistantMsg.message.content) {
                 //         if (content.type === 'tool_use' && content.id) {
@@ -154,15 +149,15 @@ export class SDKToLogConverter {
                 //         }
                 //     }
                 // }
-                break
+                break;
             }
 
             case 'system': {
-                const systemMsg = sdkMessage as SDKSystemMessage
+                const systemMsg = sdkMessage as SDKSystemMessage;
 
                 // System messages with subtype 'init' might update session ID
                 if (systemMsg.subtype === 'init' && systemMsg.session_id) {
-                    this.updateSessionId(systemMsg.session_id)
+                    this.updateSessionId(systemMsg.session_id);
                 }
 
                 // System messages are typically not sent to logs
@@ -174,45 +169,47 @@ export class SDKToLogConverter {
                     model: systemMsg.model,
                     tools: systemMsg.tools,
                     // Include all other fields
-                    ...(systemMsg as any)
-                }
-                break
+                    ...(systemMsg as any),
+                };
+                break;
             }
 
             case 'result': {
                 // Result messages are not converted to log messages
                 // They're SDK-specific messages that indicate session completion
                 // Not part of the actual conversation log
-                break
+                break;
             }
 
             // Handle tool use results (often comes as user messages)
             case 'tool_result': {
-                const toolMsg = sdkMessage as any
+                const toolMsg = sdkMessage as any;
                 const baseLogMessage: any = {
                     ...baseFields,
                     type: 'user',
                     message: {
                         role: 'user',
-                        content: [{
-                            type: 'tool_result',
-                            tool_use_id: toolMsg.tool_use_id,
-                            content: toolMsg.content
-                        }]
+                        content: [
+                            {
+                                type: 'tool_result',
+                                tool_use_id: toolMsg.tool_use_id,
+                                content: toolMsg.content,
+                            },
+                        ],
                     },
-                    toolUseResult: toolMsg.content
-                }
+                    toolUseResult: toolMsg.content,
+                };
 
                 // Add mode if available from responses
                 if (toolMsg.tool_use_id && this.responses?.has(toolMsg.tool_use_id)) {
-                    const response = this.responses.get(toolMsg.tool_use_id)
+                    const response = this.responses.get(toolMsg.tool_use_id);
                     if (response?.mode) {
-                        baseLogMessage.mode = response.mode
+                        baseLogMessage.mode = response.mode;
                     }
                 }
 
-                logMessage = baseLogMessage
-                break
+                logMessage = baseLogMessage;
+                break;
             }
 
             default:
@@ -220,25 +217,23 @@ export class SDKToLogConverter {
                 logMessage = {
                     ...baseFields,
                     ...sdkMessage,
-                    type: (sdkMessage as any).type // Override type last to ensure it's set
-                } as any
+                    type: (sdkMessage as any).type, // Override type last to ensure it's set
+                } as any;
         }
 
         // Update last UUID for parent tracking
         if (logMessage && logMessage.type !== 'summary') {
-            this.lastUuid = uuid
+            this.lastUuid = uuid;
         }
 
-        return logMessage
+        return logMessage;
     }
 
     /**
      * Convert multiple SDK messages to log format
      */
     convertMany(sdkMessages: SDKMessage[]): RawJSONLines[] {
-        return sdkMessages
-            .map(msg => this.convert(msg))
-            .filter((msg): msg is RawJSONLines => msg !== null)
+        return sdkMessages.map((msg) => this.convert(msg)).filter((msg): msg is RawJSONLines => msg !== null);
     }
 
     /**
@@ -246,8 +241,8 @@ export class SDKToLogConverter {
      * Used for Task tool sub-agent prompts
      */
     convertSidechainUserMessage(toolUseId: string, content: string): RawJSONLines {
-        const uuid = randomUUID()
-        const timestamp = new Date().toISOString()
+        const uuid = randomUUID();
+        const timestamp = new Date().toISOString();
         this.sidechainLastUUID.set(toolUseId, uuid);
         return {
             parentUuid: null,
@@ -260,11 +255,11 @@ export class SDKToLogConverter {
             type: 'user',
             message: {
                 role: 'user',
-                content: content
+                content: content,
             },
             uuid,
-            timestamp
-        }
+            timestamp,
+        };
     }
 
     /**
@@ -274,22 +269,22 @@ export class SDKToLogConverter {
      * @param parentToolUseId - Optional parent tool ID if this is a sidechain tool
      */
     generateInterruptedToolResult(toolUseId: string, parentToolUseId?: string | null): RawJSONLines {
-        const uuid = randomUUID()
-        const timestamp = new Date().toISOString()
-        const errorMessage = "[Request interrupted by user for tool use]"
-        
+        const uuid = randomUUID();
+        const timestamp = new Date().toISOString();
+        const errorMessage = '[Request interrupted by user for tool use]';
+
         // Determine if this is a sidechain and get parent UUID
-        let isSidechain = false
-        let parentUuid: string | null = this.lastUuid
-        
+        let isSidechain = false;
+        let parentUuid: string | null = this.lastUuid;
+
         if (parentToolUseId) {
-            isSidechain = true
+            isSidechain = true;
             // Look up the parent tool's UUID
-            parentUuid = this.sidechainLastUUID.get(parentToolUseId) ?? null
+            parentUuid = this.sidechainLastUUID.get(parentToolUseId) ?? null;
             // Track this tool in the sidechain map
-            this.sidechainLastUUID.set(parentToolUseId, uuid)
+            this.sidechainLastUUID.set(parentToolUseId, uuid);
         }
-        
+
         const logMessage: RawJSONLines = {
             type: 'user',
             isSidechain: isSidechain,
@@ -301,9 +296,9 @@ export class SDKToLogConverter {
                         type: 'tool_result',
                         content: errorMessage,
                         is_error: true,
-                        tool_use_id: toolUseId
-                    }
-                ]
+                        tool_use_id: toolUseId,
+                    },
+                ],
             },
             parentUuid: parentUuid,
             userType: 'external' as const,
@@ -312,13 +307,13 @@ export class SDKToLogConverter {
             version: this.context.version,
             gitBranch: this.context.gitBranch,
             timestamp,
-            toolUseResult: `Error: ${errorMessage}`
-        } as any
-        
+            toolUseResult: `Error: ${errorMessage}`,
+        } as any;
+
         // Update last UUID for tracking
-        this.lastUuid = uuid
-        
-        return logMessage
+        this.lastUuid = uuid;
+
+        return logMessage;
     }
 }
 
@@ -328,8 +323,8 @@ export class SDKToLogConverter {
 export function convertSDKToLog(
     sdkMessage: SDKMessage,
     context: Omit<ConversionContext, 'parentUuid'>,
-    responses?: Map<string, PermissionResponse>
+    responses?: Map<string, PermissionResponse>,
 ): RawJSONLines | null {
-    const converter = new SDKToLogConverter(context, responses)
-    return converter.convert(sdkMessage)
+    const converter = new SDKToLogConverter(context, responses);
+    return converter.convert(sdkMessage);
 }

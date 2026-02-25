@@ -1,64 +1,63 @@
-import type { ToolViewProps } from '@/components/ToolCard/views/_all'
-import { isObject } from '@hapi/protocol'
-import { DiffView } from '@/components/DiffView'
+import { isObject } from '@hapi/protocol';
+import { DiffView } from '@/components/DiffView';
+import type { ToolViewProps } from '@/components/ToolCard/views/_all';
 
 function parseUnifiedDiff(unifiedDiff: string): { oldText: string; newText: string; fileName?: string } {
-    const lines = unifiedDiff.split('\n')
-    const oldLines: string[] = []
-    const newLines: string[] = []
-    let fileName: string | undefined
-    let inHunk = false
+    const lines = unifiedDiff.split('\n');
+    const oldLines: string[] = [];
+    const newLines: string[] = [];
+    let fileName: string | undefined;
+    let inHunk = false;
 
     for (const line of lines) {
         if (line.startsWith('+++ b/') || line.startsWith('+++ ')) {
-            fileName = line.replace(/^\+\+\+ (b\/)?/, '')
-            continue
+            fileName = line.replace(/^\+\+\+ (b\/)?/, '');
+            continue;
         }
 
         if (
-            line.startsWith('diff --git')
-            || line.startsWith('index ')
-            || line.startsWith('---')
-            || line.startsWith('new file mode')
-            || line.startsWith('deleted file mode')
+            line.startsWith('diff --git') ||
+            line.startsWith('index ') ||
+            line.startsWith('---') ||
+            line.startsWith('new file mode') ||
+            line.startsWith('deleted file mode')
         ) {
-            continue
+            continue;
         }
 
         if (line.startsWith('@@')) {
-            inHunk = true
-            continue
+            inHunk = true;
+            continue;
         }
 
-        if (!inHunk) continue
+        if (!inHunk) continue;
 
         if (line.startsWith('+')) {
-            newLines.push(line.substring(1))
+            newLines.push(line.substring(1));
         } else if (line.startsWith('-')) {
-            oldLines.push(line.substring(1))
+            oldLines.push(line.substring(1));
         } else if (line.startsWith(' ')) {
-            oldLines.push(line.substring(1))
-            newLines.push(line.substring(1))
+            oldLines.push(line.substring(1));
+            newLines.push(line.substring(1));
         } else if (line === '\\ No newline at end of file') {
-            continue
         } else if (line === '') {
-            oldLines.push('')
-            newLines.push('')
+            oldLines.push('');
+            newLines.push('');
         }
     }
 
     return {
         oldText: oldLines.join('\n'),
         newText: newLines.join('\n'),
-        fileName
-    }
+        fileName,
+    };
 }
 
 function renderDiff(block: ToolViewProps['block'], showFileHeader: boolean) {
-    const input = block.tool.input
-    if (!isObject(input) || typeof input.unified_diff !== 'string') return null
+    const input = block.tool.input;
+    if (!isObject(input) || typeof input.unified_diff !== 'string') return null;
 
-    const parsed = parseUnifiedDiff(input.unified_diff)
+    const parsed = parseUnifiedDiff(input.unified_diff);
     return (
         <DiffView
             oldString={parsed.oldText}
@@ -66,13 +65,13 @@ function renderDiff(block: ToolViewProps['block'], showFileHeader: boolean) {
             filePath={showFileHeader ? parsed.fileName : undefined}
             variant={showFileHeader ? 'inline' : undefined}
         />
-    )
+    );
 }
 
 export function CodexDiffCompactView(props: ToolViewProps) {
-    return renderDiff(props.block, false)
+    return renderDiff(props.block, false);
 }
 
 export function CodexDiffFullView(props: ToolViewProps) {
-    return renderDiff(props.block, true)
+    return renderDiff(props.block, true);
 }

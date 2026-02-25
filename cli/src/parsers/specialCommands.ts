@@ -22,24 +22,24 @@ export interface SpecialCommandResult {
  */
 export function parseCompact(message: string): CompactCommandResult {
     const trimmed = message.trim();
-    
+
     if (trimmed === '/compact') {
         return {
             isCompact: true,
-            originalMessage: trimmed
+            originalMessage: trimmed,
         };
     }
-    
+
     if (trimmed.startsWith('/compact ')) {
         return {
             isCompact: true,
-            originalMessage: trimmed
+            originalMessage: trimmed,
         };
     }
-    
+
     return {
         isCompact: false,
-        originalMessage: message
+        originalMessage: message,
     };
 }
 
@@ -49,9 +49,9 @@ export function parseCompact(message: string): CompactCommandResult {
  */
 export function parseClear(message: string): ClearCommandResult {
     const trimmed = message.trim();
-    
+
     return {
-        isClear: trimmed === '/clear'
+        isClear: trimmed === '/clear',
     };
 }
 
@@ -64,18 +64,18 @@ export function parseSpecialCommand(message: string): SpecialCommandResult {
     if (compactResult.isCompact) {
         return {
             type: 'compact',
-            originalMessage: compactResult.originalMessage
+            originalMessage: compactResult.originalMessage,
         };
     }
-    
+
     const clearResult = parseClear(message);
     if (clearResult.isClear) {
         return {
-            type: 'clear'
+            type: 'clear',
         };
     }
-    
+
     return {
-        type: null
+        type: null,
     };
 }

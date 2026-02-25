@@ -1,16 +1,16 @@
-import { useCallback, useMemo, useState } from 'react'
-import { useNavigate, useParams, useSearch } from '@tanstack/react-router'
-import type { FileSearchItem, GitFileStatus } from '@/types/api'
-import { FileIcon } from '@/components/FileIcon'
-import { DirectoryTree } from '@/components/SessionFiles/DirectoryTree'
-import { useAppContext } from '@/lib/app-context'
-import { useAppGoBack } from '@/hooks/useAppGoBack'
-import { useGitStatusFiles } from '@/hooks/queries/useGitStatusFiles'
-import { useSession } from '@/hooks/queries/useSession'
-import { useSessionFileSearch } from '@/hooks/queries/useSessionFileSearch'
-import { encodeBase64 } from '@/lib/utils'
-import { queryKeys } from '@/lib/query-keys'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query';
+import { useNavigate, useParams, useSearch } from '@tanstack/react-router';
+import { useCallback, useMemo, useState } from 'react';
+import { FileIcon } from '@/components/FileIcon';
+import { DirectoryTree } from '@/components/SessionFiles/DirectoryTree';
+import { useGitStatusFiles } from '@/hooks/queries/useGitStatusFiles';
+import { useSession } from '@/hooks/queries/useSession';
+import { useSessionFileSearch } from '@/hooks/queries/useSessionFileSearch';
+import { useAppGoBack } from '@/hooks/useAppGoBack';
+import { useAppContext } from '@/lib/app-context';
+import { queryKeys } from '@/lib/query-keys';
+import { encodeBase64 } from '@/lib/utils';
+import type { FileSearchItem, GitFileStatus } from '@/types/api';
 
 function BackIcon(props: { className?: string }) {
     return (
@@ -28,7 +28,7 @@ function BackIcon(props: { className?: string }) {
         >
             <polyline points="15 18 9 12 15 6" />
         </svg>
-    )
+    );
 }
 
 function RefreshIcon(props: { className?: string }) {
@@ -48,7 +48,7 @@ function RefreshIcon(props: { className?: string }) {
             <path d="M21 12a9 9 0 1 1-3-6.7" />
             <polyline points="21 3 21 9 15 9" />
         </svg>
-    )
+    );
 }
 
 function SearchIcon(props: { className?: string }) {
@@ -68,7 +68,7 @@ function SearchIcon(props: { className?: string }) {
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
-    )
+    );
 }
 
 function GitBranchIcon(props: { className?: string }) {
@@ -90,7 +90,7 @@ function GitBranchIcon(props: { className?: string }) {
             <circle cx="18" cy="6" r="3" />
             <path d="M18 9a9 9 0 0 1-9 9" />
         </svg>
-    )
+    );
 }
 
 function FolderIcon(props: { className?: string }) {
@@ -109,26 +109,26 @@ function FolderIcon(props: { className?: string }) {
         >
             <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
         </svg>
-    )
+    );
 }
 
 function StatusBadge(props: { status: GitFileStatus['status'] }) {
     const { label, color } = useMemo(() => {
         switch (props.status) {
             case 'added':
-                return { label: 'A', color: 'var(--app-git-staged-color)' }
+                return { label: 'A', color: 'var(--app-git-staged-color)' };
             case 'deleted':
-                return { label: 'D', color: 'var(--app-git-deleted-color)' }
+                return { label: 'D', color: 'var(--app-git-deleted-color)' };
             case 'renamed':
-                return { label: 'R', color: 'var(--app-git-renamed-color)' }
+                return { label: 'R', color: 'var(--app-git-renamed-color)' };
             case 'untracked':
-                return { label: '?', color: 'var(--app-git-untracked-color)' }
+                return { label: '?', color: 'var(--app-git-untracked-color)' };
             case 'conflicted':
-                return { label: 'U', color: 'var(--app-git-deleted-color)' }
+                return { label: 'U', color: 'var(--app-git-deleted-color)' };
             default:
-                return { label: 'M', color: 'var(--app-git-unstaged-color)' }
+                return { label: 'M', color: 'var(--app-git-unstaged-color)' };
         }
-    }, [props.status])
+    }, [props.status]);
 
     return (
         <span
@@ -137,30 +137,22 @@ function StatusBadge(props: { status: GitFileStatus['status'] }) {
         >
             {label}
         </span>
-    )
+    );
 }
 
 function LineChanges(props: { added: number; removed: number }) {
-    if (!props.added && !props.removed) return null
+    if (!props.added && !props.removed) return null;
 
     return (
         <span className="flex items-center gap-1 text-[11px] font-mono">
-            {props.added ? (
-                <span className="text-[var(--app-diff-added-text)]">+{props.added}</span>
-            ) : null}
-            {props.removed ? (
-                <span className="text-[var(--app-diff-removed-text)]">-{props.removed}</span>
-            ) : null}
+            {props.added ? <span className="text-[var(--app-diff-added-text)]">+{props.added}</span> : null}
+            {props.removed ? <span className="text-[var(--app-diff-removed-text)]">-{props.removed}</span> : null}
         </span>
-    )
+    );
 }
 
-function GitFileRow(props: {
-    file: GitFileStatus
-    onOpen: () => void
-    showDivider: boolean
-}) {
-    const subtitle = props.file.filePath || 'project root'
+function GitFileRow(props: { file: GitFileStatus; onOpen: () => void; showDivider: boolean }) {
+    const subtitle = props.file.filePath || 'project root';
 
     return (
         <button
@@ -178,18 +170,17 @@ function GitFileRow(props: {
                 <StatusBadge status={props.file.status} />
             </div>
         </button>
-    )
+    );
 }
 
-function SearchResultRow(props: {
-    file: FileSearchItem
-    onOpen: () => void
-    showDivider: boolean
-}) {
-    const subtitle = props.file.filePath || 'project root'
-    const icon = props.file.fileType === 'file'
-        ? <FileIcon fileName={props.file.fileName} size={22} />
-        : <FolderIcon className="text-[var(--app-link)]" />
+function SearchResultRow(props: { file: FileSearchItem; onOpen: () => void; showDivider: boolean }) {
+    const subtitle = props.file.filePath || 'project root';
+    const icon =
+        props.file.fileType === 'file' ? (
+            <FileIcon fileName={props.file.fileName} size={22} />
+        ) : (
+            <FolderIcon className="text-[var(--app-link)]" />
+        );
 
     return (
         <button
@@ -203,13 +194,13 @@ function SearchResultRow(props: {
                 <div className="truncate text-xs text-[var(--app-hint)]">{subtitle}</div>
             </div>
         </button>
-    )
+    );
 }
 
 function FileListSkeleton(props: { label: string; rows?: number }) {
-    const titleWidths = ['w-1/3', 'w-1/2', 'w-2/3', 'w-2/5', 'w-3/5']
-    const subtitleWidths = ['w-1/2', 'w-2/3', 'w-3/4', 'w-1/3']
-    const rows = props.rows ?? 6
+    const titleWidths = ['w-1/3', 'w-1/2', 'w-2/3', 'w-2/5', 'w-3/5'];
+    const subtitleWidths = ['w-1/2', 'w-2/3', 'w-3/4', 'w-1/3'];
+    const rows = props.rows ?? 6;
 
     return (
         <div className="p-3 animate-pulse space-y-3" role="status" aria-live="polite">
@@ -218,92 +209,103 @@ function FileListSkeleton(props: { label: string; rows?: number }) {
                 <div key={`skeleton-row-${index}`} className="flex items-center gap-3">
                     <div className="h-6 w-6 rounded bg-[var(--app-subtle-bg)]" />
                     <div className="flex-1 space-y-2">
-                        <div className={`h-3 ${titleWidths[index % titleWidths.length]} rounded bg-[var(--app-subtle-bg)]`} />
-                        <div className={`h-2 ${subtitleWidths[index % subtitleWidths.length]} rounded bg-[var(--app-subtle-bg)]`} />
+                        <div
+                            className={`h-3 ${titleWidths[index % titleWidths.length]} rounded bg-[var(--app-subtle-bg)]`}
+                        />
+                        <div
+                            className={`h-2 ${subtitleWidths[index % subtitleWidths.length]} rounded bg-[var(--app-subtle-bg)]`}
+                        />
                     </div>
                 </div>
             ))}
         </div>
-    )
+    );
 }
 
 export default function FilesPage() {
-    const { api } = useAppContext()
-    const navigate = useNavigate()
-    const queryClient = useQueryClient()
-    const goBack = useAppGoBack()
-    const { sessionId } = useParams({ from: '/sessions/$sessionId/files' })
-    const search = useSearch({ from: '/sessions/$sessionId/files' })
-    const { session } = useSession(api, sessionId)
-    const [searchQuery, setSearchQuery] = useState('')
+    const { api } = useAppContext();
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
+    const goBack = useAppGoBack();
+    const { sessionId } = useParams({ from: '/sessions/$sessionId/files' });
+    const search = useSearch({ from: '/sessions/$sessionId/files' });
+    const { session } = useSession(api, sessionId);
+    const [searchQuery, setSearchQuery] = useState('');
 
-    const initialTab = search.tab === 'directories' ? 'directories' : 'changes'
-    const [activeTab, setActiveTab] = useState<'changes' | 'directories'>(initialTab)
+    const initialTab = search.tab === 'directories' ? 'directories' : 'changes';
+    const [activeTab, setActiveTab] = useState<'changes' | 'directories'>(initialTab);
 
     const {
         status: gitStatus,
         error: gitError,
         isLoading: gitLoading,
-        refetch: refetchGit
-    } = useGitStatusFiles(api, sessionId)
+        refetch: refetchGit,
+    } = useGitStatusFiles(api, sessionId);
 
-    const shouldSearch = Boolean(searchQuery)
+    const shouldSearch = Boolean(searchQuery);
 
     const searchResults = useSessionFileSearch(api, sessionId, searchQuery, {
-        enabled: shouldSearch
-    })
+        enabled: shouldSearch,
+    });
 
-    const handleOpenFile = useCallback((path: string, staged?: boolean) => {
-        const fileSearch = staged === undefined
-            ? (activeTab === 'directories'
-                ? { path: encodeBase64(path), tab: 'directories' as const }
-                : { path: encodeBase64(path) })
-            : (activeTab === 'directories'
-                ? { path: encodeBase64(path), staged, tab: 'directories' as const }
-                : { path: encodeBase64(path), staged })
-        navigate({
-            to: '/sessions/$sessionId/file',
-            params: { sessionId },
-            search: fileSearch
-        })
-    }, [activeTab, navigate, sessionId])
+    const handleOpenFile = useCallback(
+        (path: string, staged?: boolean) => {
+            const fileSearch =
+                staged === undefined
+                    ? activeTab === 'directories'
+                        ? { path: encodeBase64(path), tab: 'directories' as const }
+                        : { path: encodeBase64(path) }
+                    : activeTab === 'directories'
+                      ? { path: encodeBase64(path), staged, tab: 'directories' as const }
+                      : { path: encodeBase64(path), staged };
+            navigate({
+                to: '/sessions/$sessionId/file',
+                params: { sessionId },
+                search: fileSearch,
+            });
+        },
+        [activeTab, navigate, sessionId],
+    );
 
-    const branchLabel = gitStatus?.branch ?? 'detached'
-    const subtitle = session?.metadata?.path ?? sessionId
-    const showGitErrorBanner = Boolean(gitError)
+    const branchLabel = gitStatus?.branch ?? 'detached';
+    const subtitle = session?.metadata?.path ?? sessionId;
+    const showGitErrorBanner = Boolean(gitError);
     const rootLabel = useMemo(() => {
-        const base = session?.metadata?.path ?? sessionId
-        const parts = base.split(/[/\\]/).filter(Boolean)
-        return parts.length ? parts[parts.length - 1] : base
-    }, [session?.metadata?.path, sessionId])
+        const base = session?.metadata?.path ?? sessionId;
+        const parts = base.split(/[/\\]/).filter(Boolean);
+        return parts.length ? parts[parts.length - 1] : base;
+    }, [session?.metadata?.path, sessionId]);
 
     const handleRefresh = useCallback(() => {
         if (searchQuery) {
             void queryClient.invalidateQueries({
-                queryKey: queryKeys.sessionFiles(sessionId, searchQuery)
-            })
-            return
+                queryKey: queryKeys.sessionFiles(sessionId, searchQuery),
+            });
+            return;
         }
 
         if (activeTab === 'directories') {
             void queryClient.invalidateQueries({
-                queryKey: ['session-directory', sessionId]
-            })
-            return
+                queryKey: ['session-directory', sessionId],
+            });
+            return;
         }
 
-        void refetchGit()
-    }, [activeTab, queryClient, refetchGit, searchQuery, sessionId])
+        void refetchGit();
+    }, [activeTab, queryClient, refetchGit, searchQuery, sessionId]);
 
-    const handleTabChange = useCallback((nextTab: 'changes' | 'directories') => {
-        setActiveTab(nextTab)
-        navigate({
-            to: '/sessions/$sessionId/files',
-            params: { sessionId },
-            search: nextTab === 'changes' ? {} : { tab: nextTab },
-            replace: true,
-        })
-    }, [navigate, sessionId])
+    const handleTabChange = useCallback(
+        (nextTab: 'changes' | 'directories') => {
+            setActiveTab(nextTab);
+            navigate({
+                to: '/sessions/$sessionId/files',
+                params: { sessionId },
+                search: nextTab === 'changes' ? {} : { tab: nextTab },
+                replace: true,
+            });
+        },
+        [navigate, sessionId],
+    );
 
     return (
         <div className="flex h-full flex-col">
@@ -439,7 +441,10 @@ export default function FilesPage() {
                                             key={`staged-${file.fullPath}-${index}`}
                                             file={file}
                                             onOpen={() => handleOpenFile(file.fullPath, file.isStaged)}
-                                            showDivider={index < gitStatus.stagedFiles.length - 1 || gitStatus.unstagedFiles.length > 0}
+                                            showDivider={
+                                                index < gitStatus.stagedFiles.length - 1 ||
+                                                gitStatus.unstagedFiles.length > 0
+                                            }
                                         />
                                     ))}
                                 </div>
@@ -477,5 +482,5 @@ export default function FilesPage() {
                 </div>
             </div>
         </div>
-    )
+    );
 }

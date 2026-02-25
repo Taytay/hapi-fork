@@ -1,239 +1,239 @@
-import type { ToolViewComponent, ToolViewProps } from '@/components/ToolCard/views/_all'
-import { isObject, safeStringify } from '@hapi/protocol'
-import { CodeBlock } from '@/components/CodeBlock'
-import { MarkdownRenderer } from '@/components/MarkdownRenderer'
-import { basename, resolveDisplayPath } from '@/utils/path'
+import { isObject, safeStringify } from '@hapi/protocol';
+import { CodeBlock } from '@/components/CodeBlock';
+import { MarkdownRenderer } from '@/components/MarkdownRenderer';
+import type { ToolViewComponent, ToolViewProps } from '@/components/ToolCard/views/_all';
+import { basename, resolveDisplayPath } from '@/utils/path';
 
 function parseToolUseError(message: string): { isToolUseError: boolean; errorMessage: string | null } {
-    const regex = /<tool_use_error>(.*?)<\/tool_use_error>/s
-    const match = message.match(regex)
+    const regex = /<tool_use_error>(.*?)<\/tool_use_error>/s;
+    const match = message.match(regex);
 
     if (match) {
         return {
             isToolUseError: true,
-            errorMessage: typeof match[1] === 'string' ? match[1].trim() : ''
-        }
+            errorMessage: typeof match[1] === 'string' ? match[1].trim() : '',
+        };
     }
 
-    return { isToolUseError: false, errorMessage: null }
+    return { isToolUseError: false, errorMessage: null };
 }
 
 function extractTextFromContentBlock(block: unknown): string | null {
-    if (typeof block === 'string') return block
-    if (!isObject(block)) return null
-    if (block.type === 'text' && typeof block.text === 'string') return block.text
-    if (typeof block.text === 'string') return block.text
-    return null
+    if (typeof block === 'string') return block;
+    if (!isObject(block)) return null;
+    if (block.type === 'text' && typeof block.text === 'string') return block.text;
+    if (typeof block.text === 'string') return block.text;
+    return null;
 }
 
 function extractTextFromResult(result: unknown, depth: number = 0): string | null {
-    if (depth > 2) return null
-    if (result === null || result === undefined) return null
+    if (depth > 2) return null;
+    if (result === null || result === undefined) return null;
     if (typeof result === 'string') {
-        const toolUseError = parseToolUseError(result)
-        return toolUseError.isToolUseError ? (toolUseError.errorMessage ?? '') : result
+        const toolUseError = parseToolUseError(result);
+        return toolUseError.isToolUseError ? (toolUseError.errorMessage ?? '') : result;
     }
 
     if (Array.isArray(result)) {
         const parts = result
             .map(extractTextFromContentBlock)
-            .filter((part): part is string => typeof part === 'string' && part.length > 0)
-        return parts.length > 0 ? parts.join('\n') : null
+            .filter((part): part is string => typeof part === 'string' && part.length > 0);
+        return parts.length > 0 ? parts.join('\n') : null;
     }
 
-    if (!isObject(result)) return null
+    if (!isObject(result)) return null;
 
-    if (typeof result.content === 'string') return result.content
-    if (typeof result.text === 'string') return result.text
-    if (typeof result.output === 'string') return result.output
-    if (typeof result.error === 'string') return result.error
-    if (typeof result.message === 'string') return result.message
+    if (typeof result.content === 'string') return result.content;
+    if (typeof result.text === 'string') return result.text;
+    if (typeof result.output === 'string') return result.output;
+    if (typeof result.error === 'string') return result.error;
+    if (typeof result.message === 'string') return result.message;
 
-    const contentArray = Array.isArray(result.content) ? result.content : null
+    const contentArray = Array.isArray(result.content) ? result.content : null;
     if (contentArray) {
         const parts = contentArray
             .map(extractTextFromContentBlock)
-            .filter((part): part is string => typeof part === 'string' && part.length > 0)
-        return parts.length > 0 ? parts.join('\n') : null
+            .filter((part): part is string => typeof part === 'string' && part.length > 0);
+        return parts.length > 0 ? parts.join('\n') : null;
     }
 
-    const nestedOutput = isObject(result.output) ? result.output : null
+    const nestedOutput = isObject(result.output) ? result.output : null;
     if (nestedOutput) {
-        if (typeof nestedOutput.content === 'string') return nestedOutput.content
-        if (typeof nestedOutput.text === 'string') return nestedOutput.text
+        if (typeof nestedOutput.content === 'string') return nestedOutput.content;
+        if (typeof nestedOutput.text === 'string') return nestedOutput.text;
     }
 
-    const nestedError = isObject(result.error) ? result.error : null
+    const nestedError = isObject(result.error) ? result.error : null;
     if (nestedError) {
-        if (typeof nestedError.message === 'string') return nestedError.message
-        if (typeof nestedError.error === 'string') return nestedError.error
+        if (typeof nestedError.message === 'string') return nestedError.message;
+        if (typeof nestedError.error === 'string') return nestedError.error;
     }
 
-    const nestedResult = isObject(result.result) ? result.result : null
+    const nestedResult = isObject(result.result) ? result.result : null;
     if (nestedResult) {
-        const nestedText = extractTextFromResult(nestedResult, depth + 1)
-        if (nestedText) return nestedText
+        const nestedText = extractTextFromResult(nestedResult, depth + 1);
+        if (nestedText) return nestedText;
     }
 
-    const nestedData = isObject(result.data) ? result.data : null
+    const nestedData = isObject(result.data) ? result.data : null;
     if (nestedData) {
-        const nestedText = extractTextFromResult(nestedData, depth + 1)
-        if (nestedText) return nestedText
+        const nestedText = extractTextFromResult(nestedData, depth + 1);
+        if (nestedText) return nestedText;
     }
 
-    return null
+    return null;
 }
 
 interface CodexBashOutput {
-    exitCode: number | null
-    wallTime: string | null
-    output: string
+    exitCode: number | null;
+    wallTime: string | null;
+    output: string;
 }
 
 function parseCodexBashOutput(text: string): CodexBashOutput | null {
-    const exitMatch = text.match(/^Exit code:\s*(\d+)/m)
-    const wallMatch = text.match(/^Wall time:\s*(.+)$/m)
-    const outputMatch = text.match(/^Output:\n([\s\S]*)$/m)
+    const exitMatch = text.match(/^Exit code:\s*(\d+)/m);
+    const wallMatch = text.match(/^Wall time:\s*(.+)$/m);
+    const outputMatch = text.match(/^Output:\n([\s\S]*)$/m);
 
-    if (!exitMatch && !wallMatch && !outputMatch) return null
+    if (!exitMatch && !wallMatch && !outputMatch) return null;
 
     return {
         exitCode: exitMatch ? parseInt(exitMatch[1], 10) : null,
         wallTime: wallMatch ? wallMatch[1].trim() : null,
-        output: outputMatch ? outputMatch[1] : text
-    }
+        output: outputMatch ? outputMatch[1] : text,
+    };
 }
 
 function looksLikeHtml(text: string): boolean {
-    const trimmed = text.trimStart()
-    return trimmed.startsWith('<!DOCTYPE') || trimmed.startsWith('<html') || trimmed.startsWith('<div') || trimmed.startsWith('<span')
+    const trimmed = text.trimStart();
+    return (
+        trimmed.startsWith('<!DOCTYPE') ||
+        trimmed.startsWith('<html') ||
+        trimmed.startsWith('<div') ||
+        trimmed.startsWith('<span')
+    );
 }
 
 function looksLikeJson(text: string): boolean {
-    const trimmed = text.trim()
-    return (trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))
+    const trimmed = text.trim();
+    return (trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'));
 }
 
 function renderText(text: string, opts: { mode: 'markdown' | 'code' | 'auto'; language?: string } = { mode: 'auto' }) {
     if (opts.mode === 'code') {
-        return <CodeBlock code={text} language={opts.language ?? 'text'} />
+        return <CodeBlock code={text} language={opts.language ?? 'text'} />;
     }
 
     if (opts.mode === 'markdown') {
-        return <MarkdownRenderer content={text} />
+        return <MarkdownRenderer content={text} />;
     }
 
     if (looksLikeHtml(text) || looksLikeJson(text)) {
-        return <CodeBlock code={text} language={looksLikeJson(text) ? 'json' : 'html'} />
+        return <CodeBlock code={text} language={looksLikeJson(text) ? 'json' : 'html'} />;
     }
 
-    return <MarkdownRenderer content={text} />
+    return <MarkdownRenderer content={text} />;
 }
 
 function placeholderForState(state: ToolViewProps['block']['tool']['state']): string {
-    if (state === 'pending') return 'Waiting for permission…'
-    if (state === 'running') return 'Running…'
-    return '(no output)'
+    if (state === 'pending') return 'Waiting for permission…';
+    if (state === 'running') return 'Running…';
+    return '(no output)';
 }
 
 function RawJsonDevOnly(props: { value: unknown }) {
-    if (!import.meta.env.DEV) return null
-    if (props.value === null || props.value === undefined) return null
+    if (!import.meta.env.DEV) return null;
+    if (props.value === null || props.value === undefined) return null;
 
     return (
         <details className="mt-3">
-            <summary className="cursor-pointer text-xs font-medium text-[var(--app-hint)]">
-                Raw JSON
-            </summary>
+            <summary className="cursor-pointer text-xs font-medium text-[var(--app-hint)]">Raw JSON</summary>
             <div className="mt-2">
                 <CodeBlock code={safeStringify(props.value)} language="json" />
             </div>
         </details>
-    )
+    );
 }
 
 function extractStdoutStderr(result: unknown): { stdout: string | null; stderr: string | null } | null {
-    if (!isObject(result)) return null
+    if (!isObject(result)) return null;
 
-    const stdout = typeof result.stdout === 'string' ? result.stdout : null
-    const stderr = typeof result.stderr === 'string' ? result.stderr : null
+    const stdout = typeof result.stdout === 'string' ? result.stdout : null;
+    const stderr = typeof result.stderr === 'string' ? result.stderr : null;
     if (stdout !== null || stderr !== null) {
-        return { stdout, stderr }
+        return { stdout, stderr };
     }
 
-    const nested = isObject(result.output) ? result.output : null
+    const nested = isObject(result.output) ? result.output : null;
     if (nested) {
-        const nestedStdout = typeof nested.stdout === 'string' ? nested.stdout : null
-        const nestedStderr = typeof nested.stderr === 'string' ? nested.stderr : null
+        const nestedStdout = typeof nested.stdout === 'string' ? nested.stdout : null;
+        const nestedStderr = typeof nested.stderr === 'string' ? nested.stderr : null;
         if (nestedStdout !== null || nestedStderr !== null) {
-            return { stdout: nestedStdout, stderr: nestedStderr }
+            return { stdout: nestedStdout, stderr: nestedStderr };
         }
     }
 
-    return null
+    return null;
 }
 
 function extractReadFileContent(result: unknown): { filePath: string | null; content: string } | null {
-    if (!isObject(result)) return null
-    const file = isObject(result.file) ? result.file : null
-    if (!file) return null
+    if (!isObject(result)) return null;
+    const file = isObject(result.file) ? result.file : null;
+    if (!file) return null;
 
-    const content = typeof file.content === 'string' ? file.content : null
-    if (content === null) return null
+    const content = typeof file.content === 'string' ? file.content : null;
+    if (content === null) return null;
 
-    const filePath = typeof file.filePath === 'string'
-        ? file.filePath
-        : typeof file.file_path === 'string'
-            ? file.file_path
-            : null
+    const filePath =
+        typeof file.filePath === 'string' ? file.filePath : typeof file.file_path === 'string' ? file.file_path : null;
 
-    return { filePath, content }
+    return { filePath, content };
 }
 
 function extractLineList(text: string): string[] {
     return text
         .split('\n')
         .map((line) => line.trim())
-        .filter((line) => line.length > 0)
+        .filter((line) => line.length > 0);
 }
 
 function isProbablyMarkdownList(text: string): boolean {
-    const trimmed = text.trimStart()
-    return trimmed.startsWith('- ') || trimmed.startsWith('* ') || trimmed.startsWith('1. ')
+    const trimmed = text.trimStart();
+    return trimmed.startsWith('- ') || trimmed.startsWith('* ') || trimmed.startsWith('1. ');
 }
 
 const AskUserQuestionResultView: ToolViewComponent = (props: ToolViewProps) => {
-    const answers = props.block.tool.permission?.answers ?? null
+    const answers = props.block.tool.permission?.answers ?? null;
 
     // If answers exist, AskUserQuestionView already shows them with highlighting
     // Return null to avoid duplicate display
     if (answers && Object.keys(answers).length > 0) {
-        return null
+        return null;
     }
 
     // Fallback for tools without structured answers
-    return <MarkdownResultView {...props} />
-}
+    return <MarkdownResultView {...props} />;
+};
 
 const BashResultView: ToolViewComponent = (props: ToolViewProps) => {
-    const result = props.block.tool.result
+    const result = props.block.tool.result;
 
     if (result === undefined || result === null) {
-        return <div className="text-sm text-[var(--app-hint)]">{placeholderForState(props.block.tool.state)}</div>
+        return <div className="text-sm text-[var(--app-hint)]">{placeholderForState(props.block.tool.state)}</div>;
     }
 
     if (typeof result === 'string') {
-        const toolUseError = parseToolUseError(result)
-        const display = toolUseError.isToolUseError ? (toolUseError.errorMessage ?? '') : result
+        const toolUseError = parseToolUseError(result);
+        const display = toolUseError.isToolUseError ? (toolUseError.errorMessage ?? '') : result;
         return (
             <>
                 <CodeBlock code={display} language="text" />
                 <RawJsonDevOnly value={result} />
             </>
-        )
+        );
     }
 
-    const stdio = extractStdoutStderr(result)
+    const stdio = extractStdoutStderr(result);
     if (stdio) {
         return (
             <>
@@ -243,17 +243,17 @@ const BashResultView: ToolViewComponent = (props: ToolViewProps) => {
                 </div>
                 <RawJsonDevOnly value={result} />
             </>
-        )
+        );
     }
 
-    const text = extractTextFromResult(result)
+    const text = extractTextFromResult(result);
     if (text) {
         return (
             <>
                 {renderText(text, { mode: 'code', language: 'text' })}
                 <RawJsonDevOnly value={result} />
             </>
-        )
+        );
     }
 
     return (
@@ -261,24 +261,24 @@ const BashResultView: ToolViewComponent = (props: ToolViewProps) => {
             <div className="text-sm text-[var(--app-hint)]">(no output)</div>
             <RawJsonDevOnly value={result} />
         </>
-    )
-}
+    );
+};
 
 const MarkdownResultView: ToolViewComponent = (props: ToolViewProps) => {
-    const result = props.block.tool.result
+    const result = props.block.tool.result;
 
     if (result === undefined || result === null) {
-        return <div className="text-sm text-[var(--app-hint)]">{placeholderForState(props.block.tool.state)}</div>
+        return <div className="text-sm text-[var(--app-hint)]">{placeholderForState(props.block.tool.state)}</div>;
     }
 
-    const text = extractTextFromResult(result)
+    const text = extractTextFromResult(result);
     if (text) {
         return (
             <>
                 {renderText(text, { mode: 'auto' })}
                 <RawJsonDevOnly value={result} />
             </>
-        )
+        );
     }
 
     return (
@@ -286,24 +286,24 @@ const MarkdownResultView: ToolViewComponent = (props: ToolViewProps) => {
             <div className="text-sm text-[var(--app-hint)]">(no output)</div>
             <RawJsonDevOnly value={result} />
         </>
-    )
-}
+    );
+};
 
 const LineListResultView: ToolViewComponent = (props: ToolViewProps) => {
-    const result = props.block.tool.result
+    const result = props.block.tool.result;
 
     if (result === undefined || result === null) {
-        return <div className="text-sm text-[var(--app-hint)]">{placeholderForState(props.block.tool.state)}</div>
+        return <div className="text-sm text-[var(--app-hint)]">{placeholderForState(props.block.tool.state)}</div>;
     }
 
-    const text = extractTextFromResult(result)
+    const text = extractTextFromResult(result);
     if (!text) {
         return (
             <>
                 <div className="text-sm text-[var(--app-hint)]">(no output)</div>
                 <RawJsonDevOnly value={result} />
             </>
-        )
+        );
     }
 
     if (isProbablyMarkdownList(text)) {
@@ -312,17 +312,17 @@ const LineListResultView: ToolViewComponent = (props: ToolViewProps) => {
                 <MarkdownRenderer content={text} />
                 <RawJsonDevOnly value={result} />
             </>
-        )
+        );
     }
 
-    const lines = extractLineList(text)
+    const lines = extractLineList(text);
     if (lines.length === 0) {
         return (
             <>
                 <div className="text-sm text-[var(--app-hint)]">(no output)</div>
                 <RawJsonDevOnly value={result} />
             </>
-        )
+        );
     }
 
     return (
@@ -336,40 +336,38 @@ const LineListResultView: ToolViewComponent = (props: ToolViewProps) => {
             </div>
             <RawJsonDevOnly value={result} />
         </>
-    )
-}
+    );
+};
 
 const ReadResultView: ToolViewComponent = (props: ToolViewProps) => {
-    const result = props.block.tool.result
+    const result = props.block.tool.result;
 
     if (result === undefined || result === null) {
-        return <div className="text-sm text-[var(--app-hint)]">{placeholderForState(props.block.tool.state)}</div>
+        return <div className="text-sm text-[var(--app-hint)]">{placeholderForState(props.block.tool.state)}</div>;
     }
 
-    const file = extractReadFileContent(result)
+    const file = extractReadFileContent(result);
     if (file) {
-        const path = file.filePath ? resolveDisplayPath(file.filePath, props.metadata) : null
+        const path = file.filePath ? resolveDisplayPath(file.filePath, props.metadata) : null;
         return (
             <>
                 {path ? (
-                    <div className="mb-2 text-xs text-[var(--app-hint)] font-mono break-all">
-                        {basename(path)}
-                    </div>
+                    <div className="mb-2 text-xs text-[var(--app-hint)] font-mono break-all">{basename(path)}</div>
                 ) : null}
                 <CodeBlock code={file.content} language="text" />
                 <RawJsonDevOnly value={result} />
             </>
-        )
+        );
     }
 
-    const text = extractTextFromResult(result)
+    const text = extractTextFromResult(result);
     if (text) {
         return (
             <>
                 {renderText(text, { mode: 'code', language: 'text' })}
                 <RawJsonDevOnly value={result} />
             </>
-        )
+        );
     }
 
     return (
@@ -377,22 +375,22 @@ const ReadResultView: ToolViewComponent = (props: ToolViewProps) => {
             <div className="text-sm text-[var(--app-hint)]">(no output)</div>
             <RawJsonDevOnly value={result} />
         </>
-    )
-}
+    );
+};
 
 const MutationResultView: ToolViewComponent = (props: ToolViewProps) => {
-    const { state, result } = props.block.tool
+    const { state, result } = props.block.tool;
 
     if (result === undefined || result === null) {
         if (state === 'completed') {
-            return <div className="text-sm text-[var(--app-hint)]">Done</div>
+            return <div className="text-sm text-[var(--app-hint)]">Done</div>;
         }
-        return <div className="text-sm text-[var(--app-hint)]">{placeholderForState(state)}</div>
+        return <div className="text-sm text-[var(--app-hint)]">{placeholderForState(state)}</div>;
     }
 
-    const text = extractTextFromResult(result)
+    const text = extractTextFromResult(result);
     if (typeof text === 'string' && text.trim().length > 0) {
-        const className = state === 'error' ? 'text-red-600' : 'text-[var(--app-fg)]'
+        const className = state === 'error' ? 'text-red-600' : 'text-[var(--app-fg)]';
         return (
             <>
                 <div className={`text-sm ${className}`}>
@@ -400,35 +398,35 @@ const MutationResultView: ToolViewComponent = (props: ToolViewProps) => {
                 </div>
                 <RawJsonDevOnly value={result} />
             </>
-        )
+        );
     }
 
     return (
         <>
-            <div className="text-sm text-[var(--app-hint)]">
-                {state === 'completed' ? 'Done' : '(no output)'}
-            </div>
+            <div className="text-sm text-[var(--app-hint)]">{state === 'completed' ? 'Done' : '(no output)'}</div>
             <RawJsonDevOnly value={result} />
         </>
-    )
-}
+    );
+};
 
 const CodexPatchResultView: ToolViewComponent = (props: ToolViewProps) => {
-    const result = props.block.tool.result
-    const text = extractTextFromResult(result)
+    const result = props.block.tool.result;
+    const text = extractTextFromResult(result);
     if (text) {
         return (
             <>
                 {renderText(text, { mode: 'auto' })}
                 <RawJsonDevOnly value={result} />
             </>
-        )
+        );
     }
 
     if (result === undefined || result === null) {
-        return props.block.tool.state === 'completed'
-            ? <div className="text-sm text-[var(--app-hint)]">Done</div>
-            : <div className="text-sm text-[var(--app-hint)]">{placeholderForState(props.block.tool.state)}</div>
+        return props.block.tool.state === 'completed' ? (
+            <div className="text-sm text-[var(--app-hint)]">Done</div>
+        ) : (
+            <div className="text-sm text-[var(--app-hint)]">{placeholderForState(props.block.tool.state)}</div>
+        );
     }
 
     return (
@@ -436,23 +434,23 @@ const CodexPatchResultView: ToolViewComponent = (props: ToolViewProps) => {
             <div className="text-sm text-[var(--app-hint)]">(no output)</div>
             <RawJsonDevOnly value={result} />
         </>
-    )
-}
+    );
+};
 
 const CodexReasoningResultView: ToolViewComponent = (props: ToolViewProps) => {
-    const result = props.block.tool.result
+    const result = props.block.tool.result;
     if (result === undefined || result === null) {
-        return <div className="text-sm text-[var(--app-hint)]">{placeholderForState(props.block.tool.state)}</div>
+        return <div className="text-sm text-[var(--app-hint)]">{placeholderForState(props.block.tool.state)}</div>;
     }
 
-    const text = extractTextFromResult(result)
+    const text = extractTextFromResult(result);
     if (text) {
         return (
             <>
                 {renderText(text, { mode: 'auto' })}
                 <RawJsonDevOnly value={result} />
             </>
-        )
+        );
     }
 
     return (
@@ -460,25 +458,27 @@ const CodexReasoningResultView: ToolViewComponent = (props: ToolViewProps) => {
             <div className="text-sm text-[var(--app-hint)]">(no output)</div>
             <RawJsonDevOnly value={result} />
         </>
-    )
-}
+    );
+};
 
 const CodexDiffResultView: ToolViewComponent = (props: ToolViewProps) => {
-    const result = props.block.tool.result
+    const result = props.block.tool.result;
     if (result === undefined || result === null) {
-        return props.block.tool.state === 'completed'
-            ? <div className="text-sm text-[var(--app-hint)]">Done</div>
-            : <div className="text-sm text-[var(--app-hint)]">{placeholderForState(props.block.tool.state)}</div>
+        return props.block.tool.state === 'completed' ? (
+            <div className="text-sm text-[var(--app-hint)]">Done</div>
+        ) : (
+            <div className="text-sm text-[var(--app-hint)]">{placeholderForState(props.block.tool.state)}</div>
+        );
     }
 
-    const text = extractTextFromResult(result)
+    const text = extractTextFromResult(result);
     if (text) {
         return (
             <>
                 {renderText(text, { mode: 'code', language: 'diff' })}
                 <RawJsonDevOnly value={result} />
             </>
-        )
+        );
     }
 
     return (
@@ -486,81 +486,78 @@ const CodexDiffResultView: ToolViewComponent = (props: ToolViewProps) => {
             <div className="text-sm text-[var(--app-hint)]">Done</div>
             <RawJsonDevOnly value={result} />
         </>
-    )
-}
+    );
+};
 
 type TodoItem = {
-    id?: string
-    content?: string
-    status?: 'pending' | 'in_progress' | 'completed'
-    priority?: 'high' | 'medium' | 'low'
-}
+    id?: string;
+    content?: string;
+    status?: 'pending' | 'in_progress' | 'completed';
+    priority?: 'high' | 'medium' | 'low';
+};
 
 function extractTodos(input: unknown, result: unknown): TodoItem[] {
-    const todosFromInput = isObject(input) && Array.isArray(input.todos)
-        ? input.todos.filter(isObject)
-        : []
+    const todosFromInput = isObject(input) && Array.isArray(input.todos) ? input.todos.filter(isObject) : [];
     if (todosFromInput.length > 0) {
         return todosFromInput.map((t) => ({
             id: typeof t.id === 'string' ? t.id : undefined,
             content: typeof t.content === 'string' ? t.content : undefined,
-            status: t.status === 'pending' || t.status === 'in_progress' || t.status === 'completed' ? t.status : undefined,
-            priority: t.priority === 'high' || t.priority === 'medium' || t.priority === 'low' ? t.priority : undefined
-        }))
+            status:
+                t.status === 'pending' || t.status === 'in_progress' || t.status === 'completed' ? t.status : undefined,
+            priority: t.priority === 'high' || t.priority === 'medium' || t.priority === 'low' ? t.priority : undefined,
+        }));
     }
 
-    const newTodos = isObject(result) && Array.isArray(result.newTodos)
-        ? result.newTodos.filter(isObject)
-        : []
+    const newTodos = isObject(result) && Array.isArray(result.newTodos) ? result.newTodos.filter(isObject) : [];
     return newTodos.map((t) => ({
         id: typeof t.id === 'string' ? t.id : undefined,
         content: typeof t.content === 'string' ? t.content : undefined,
         status: t.status === 'pending' || t.status === 'in_progress' || t.status === 'completed' ? t.status : undefined,
-        priority: t.priority === 'high' || t.priority === 'medium' || t.priority === 'low' ? t.priority : undefined
-    }))
+        priority: t.priority === 'high' || t.priority === 'medium' || t.priority === 'low' ? t.priority : undefined,
+    }));
 }
 
 function todoTone(todo: TodoItem): string {
-    if (todo.status === 'completed') return 'text-emerald-600 line-through'
-    if (todo.status === 'in_progress') return 'text-[var(--app-link)]'
-    return 'text-[var(--app-hint)]'
+    if (todo.status === 'completed') return 'text-emerald-600 line-through';
+    if (todo.status === 'in_progress') return 'text-[var(--app-link)]';
+    return 'text-[var(--app-hint)]';
 }
 
 function todoIcon(todo: TodoItem): string {
-    if (todo.status === 'completed') return '☑'
-    return '☐'
+    if (todo.status === 'completed') return '☑';
+    return '☐';
 }
 
 const TodoWriteResultView: ToolViewComponent = (props: ToolViewProps) => {
-    const todos = extractTodos(props.block.tool.input, props.block.tool.result)
+    const todos = extractTodos(props.block.tool.input, props.block.tool.result);
     if (todos.length === 0) {
-        return <div className="text-sm text-[var(--app-hint)]">{placeholderForState(props.block.tool.state)}</div>
+        return <div className="text-sm text-[var(--app-hint)]">{placeholderForState(props.block.tool.state)}</div>;
     }
 
     return (
         <div className="flex flex-col gap-1">
             {todos.map((todo, idx) => {
-                const text = todo.content?.trim() ? todo.content.trim() : '(empty)'
+                const text = todo.content?.trim() ? todo.content.trim() : '(empty)';
                 return (
                     <div key={todo.id ?? String(idx)} className={`text-sm ${todoTone(todo)}`}>
                         {todoIcon(todo)} {text}
                     </div>
-                )
+                );
             })}
         </div>
-    )
-}
+    );
+};
 
 const GenericResultView: ToolViewComponent = (props: ToolViewProps) => {
-    const result = props.block.tool.result
+    const result = props.block.tool.result;
 
     if (result === undefined || result === null) {
-        return <div className="text-sm text-[var(--app-hint)]">{placeholderForState(props.block.tool.state)}</div>
+        return <div className="text-sm text-[var(--app-hint)]">{placeholderForState(props.block.tool.state)}</div>;
     }
 
     // Detect codex bash output format and render accordingly
     if (typeof result === 'string') {
-        const parsed = parseCodexBashOutput(result)
+        const parsed = parseCodexBashOutput(result);
         if (parsed) {
             return (
                 <>
@@ -572,26 +569,26 @@ const GenericResultView: ToolViewComponent = (props: ToolViewProps) => {
                     {renderText(parsed.output.trim(), { mode: 'code' })}
                     <RawJsonDevOnly value={result} />
                 </>
-            )
+            );
         }
     }
 
-    const text = extractTextFromResult(result)
+    const text = extractTextFromResult(result);
     if (text) {
         return (
             <>
                 {renderText(text, { mode: 'auto' })}
                 {typeof result === 'object' ? <RawJsonDevOnly value={result} /> : null}
             </>
-        )
+        );
     }
 
     if (typeof result === 'string') {
-        return renderText(result, { mode: 'auto' })
+        return renderText(result, { mode: 'auto' });
     }
 
-    return <CodeBlock code={safeStringify(result)} language="json" />
-}
+    return <CodeBlock code={safeStringify(result)} language="json" />;
+};
 
 export const toolResultViewRegistry: Record<string, ToolViewComponent> = {
     Task: MarkdownResultView,
@@ -614,12 +611,12 @@ export const toolResultViewRegistry: Record<string, ToolViewComponent> = {
     AskUserQuestion: AskUserQuestionResultView,
     ExitPlanMode: MarkdownResultView,
     ask_user_question: AskUserQuestionResultView,
-    exit_plan_mode: MarkdownResultView
-}
+    exit_plan_mode: MarkdownResultView,
+};
 
 export function getToolResultViewComponent(toolName: string): ToolViewComponent {
     if (toolName.startsWith('mcp__')) {
-        return GenericResultView
+        return GenericResultView;
     }
-    return toolResultViewRegistry[toolName] ?? GenericResultView
+    return toolResultViewRegistry[toolName] ?? GenericResultView;
 }

@@ -1,7 +1,7 @@
 import { request } from 'node:http';
 
 function logError(message: string, error?: unknown): void {
-    const detail = error instanceof Error ? error.message : (error ? String(error) : '');
+    const detail = error instanceof Error ? error.message : error ? String(error) : '';
     const suffix = detail ? `: ${detail}` : '';
     process.stderr.write(`[hook-forwarder] ${message}${suffix}\n`);
 }
@@ -93,29 +93,32 @@ export async function runSessionHookForwarder(args: string[]): Promise<void> {
 
         let hadError = false;
         await new Promise<void>((resolve) => {
-            const req = request({
-                host: '127.0.0.1',
-                port,
-                method: 'POST',
-                path: '/hook/session-start',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Content-Length': body.length,
-                    'x-hapi-hook-token': token
-                }
-            }, (res) => {
-                if (res.statusCode && res.statusCode >= 400) {
-                    hadError = true;
-                    logError(`Hook server responded with status ${res.statusCode}`);
-                }
-                res.on('error', (error) => {
-                    hadError = true;
-                    logError('Error reading hook server response', error);
-                    resolve();
-                });
-                res.on('end', () => resolve());
-                res.resume();
-            });
+            const req = request(
+                {
+                    host: '127.0.0.1',
+                    port,
+                    method: 'POST',
+                    path: '/hook/session-start',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Content-Length': body.length,
+                        'x-hapi-hook-token': token,
+                    },
+                },
+                (res) => {
+                    if (res.statusCode && res.statusCode >= 400) {
+                        hadError = true;
+                        logError(`Hook server responded with status ${res.statusCode}`);
+                    }
+                    res.on('error', (error) => {
+                        hadError = true;
+                        logError('Error reading hook server response', error);
+                        resolve();
+                    });
+                    res.on('end', () => resolve());
+                    res.resume();
+                },
+            );
 
             req.on('error', (error) => {
                 hadError = true;

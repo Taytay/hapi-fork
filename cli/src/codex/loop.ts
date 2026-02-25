@@ -1,13 +1,13 @@
-import { MessageQueue2 } from '@/utils/MessageQueue2';
-import { logger } from '@/ui/logger';
+import type { CodexPermissionMode } from '@hapi/protocol/types';
 import { runLocalRemoteSession } from '@/agent/loopBase';
-import { CodexSession } from './session';
+import type { ApiClient, ApiSessionClient } from '@/lib';
+import { logger } from '@/ui/logger';
+import type { MessageQueue2 } from '@/utils/MessageQueue2';
+import type { CollaborationMode } from './appServerTypes';
 import { codexLocalLauncher } from './codexLocalLauncher';
 import { codexRemoteLauncher } from './codexRemoteLauncher';
-import { ApiClient, ApiSessionClient } from '@/lib';
+import { CodexSession } from './session';
 import type { CodexCliOverrides } from './utils/codexCliOverrides';
-import type { CodexPermissionMode } from '@hapi/protocol/types';
-import type { CollaborationMode } from './appServerTypes';
 
 export type PermissionMode = CodexPermissionMode;
 
@@ -49,7 +49,7 @@ export async function loop(opts: LoopOptions): Promise<void> {
         startingMode,
         codexArgs: opts.codexArgs,
         codexCliOverrides: opts.codexCliOverrides,
-        permissionMode: opts.permissionMode ?? 'default'
+        permissionMode: opts.permissionMode ?? 'default',
     });
 
     await runLocalRemoteSession({
@@ -58,6 +58,6 @@ export async function loop(opts: LoopOptions): Promise<void> {
         logTag: 'codex-loop',
         runLocal: codexLocalLauncher,
         runRemote: codexRemoteLauncher,
-        onSessionReady: opts.onSessionReady
+        onSessionReady: opts.onSessionReady,
     });
 }

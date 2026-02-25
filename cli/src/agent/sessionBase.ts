@@ -1,7 +1,7 @@
-import { ApiClient, ApiSessionClient } from '@/lib';
-import { MessageQueue2 } from '@/utils/MessageQueue2';
 import type { Metadata, SessionModelMode, SessionPermissionMode } from '@/api/types';
+import type { ApiClient, ApiSessionClient } from '@/lib';
 import { logger } from '@/ui/logger';
+import type { MessageQueue2 } from '@/utils/MessageQueue2';
 
 export type AgentSessionBaseOptions<Mode> = {
     api: ApiClient;
@@ -58,7 +58,6 @@ export class AgentSessionBase<Mode> {
         this.keepAliveInterval = setInterval(() => {
             this.client.keepAlive(this.thinking, this.mode, this.getKeepAliveRuntime());
         }, 2000);
-
     }
 
     onThinkingChange = (thinking: boolean) => {
@@ -71,7 +70,9 @@ export class AgentSessionBase<Mode> {
         this.client.keepAlive(this.thinking, mode, this.getKeepAliveRuntime());
         const permissionLabel = this.permissionMode ?? 'unset';
         const modelLabel = this.modelMode ?? 'unset';
-        logger.debug(`[${this.sessionLabel}] Mode switched to ${mode} (permissionMode=${permissionLabel}, modelMode=${modelLabel})`);
+        logger.debug(
+            `[${this.sessionLabel}] Mode switched to ${mode} (permissionMode=${permissionLabel}, modelMode=${modelLabel})`,
+        );
         this._onModeChange(mode);
     };
 
@@ -103,13 +104,15 @@ export class AgentSessionBase<Mode> {
         }
     };
 
-    protected getKeepAliveRuntime(): { permissionMode?: SessionPermissionMode; modelMode?: SessionModelMode } | undefined {
+    protected getKeepAliveRuntime():
+        | { permissionMode?: SessionPermissionMode; modelMode?: SessionModelMode }
+        | undefined {
         if (this.permissionMode === undefined && this.modelMode === undefined) {
             return undefined;
         }
         return {
             permissionMode: this.permissionMode,
-            modelMode: this.modelMode
+            modelMode: this.modelMode,
         };
     }
 

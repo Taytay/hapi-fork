@@ -1,16 +1,16 @@
-import { logger } from '@/ui/logger';
-import { loop, type EnhancedMode, type PermissionMode } from './loop';
-import { MessageQueue2 } from '@/utils/MessageQueue2';
-import { hashObject } from '@/utils/deterministicJson';
-import { registerKillSessionHandler } from '@/claude/registerKillSessionHandler';
-import type { AgentState } from '@/api/types';
-import type { CodexSession } from './session';
-import { parseCodexCliOverrides } from './utils/codexCliOverrides';
-import { bootstrapSession } from '@/agent/sessionFactory';
-import { createModeChangeHandler, createRunnerLifecycle, setControlledByUser } from '@/agent/runnerLifecycle';
 import { isPermissionModeAllowedForFlavor } from '@hapi/protocol';
 import { PermissionModeSchema } from '@hapi/protocol/schemas';
+import { createModeChangeHandler, createRunnerLifecycle, setControlledByUser } from '@/agent/runnerLifecycle';
+import { bootstrapSession } from '@/agent/sessionFactory';
+import type { AgentState } from '@/api/types';
+import { registerKillSessionHandler } from '@/claude/registerKillSessionHandler';
+import { logger } from '@/ui/logger';
 import { formatMessageWithAttachments } from '@/utils/attachmentFormatter';
+import { hashObject } from '@/utils/deterministicJson';
+import { MessageQueue2 } from '@/utils/MessageQueue2';
+import { type EnhancedMode, loop, type PermissionMode } from './loop';
+import type { CodexSession } from './session';
+import { parseCodexCliOverrides } from './utils/codexCliOverrides';
 
 export { emitReadyIfIdle } from './utils/emitReadyIfIdle';
 
@@ -26,25 +26,27 @@ export async function runCodex(opts: {
 
     logger.debug(`[codex] Starting with options: startedBy=${startedBy}`);
 
-    let state: AgentState = {
-        controlledByUser: false
+    const state: AgentState = {
+        controlledByUser: false,
     };
     const { api, session } = await bootstrapSession({
         flavor: 'codex',
         startedBy,
         workingDirectory,
-        agentState: state
+        agentState: state,
     });
 
     const startingMode: 'local' | 'remote' = startedBy === 'runner' ? 'remote' : 'local';
 
     setControlledByUser(session, startingMode);
 
-    const messageQueue = new MessageQueue2<EnhancedMode>((mode) => hashObject({
-        permissionMode: mode.permissionMode,
-        model: mode.model,
-        collaborationMode: mode.collaborationMode
-    }));
+    const messageQueue = new MessageQueue2<EnhancedMode>((mode) =>
+        hashObject({
+            permissionMode: mode.permissionMode,
+            model: mode.model,
+            collaborationMode: mode.collaborationMode,
+        }),
+    );
 
     const codexCliOverrides = parseCodexCliOverrides(opts.codexArgs);
     const sessionWrapperRef: { current: CodexSession | null } = { current: null };
@@ -56,7 +58,7 @@ export async function runCodex(opts: {
     const lifecycle = createRunnerLifecycle({
         session,
         logTag: 'codex',
-        stopKeepAlive: () => sessionWrapperRef.current?.stopKeepAlive()
+        stopKeepAlive: () => sessionWrapperRef.current?.stopKeepAlive(),
     });
 
     lifecycle.registerProcessHandlers();
@@ -78,7 +80,7 @@ export async function runCodex(opts: {
         const enhancedMode: EnhancedMode = {
             permissionMode: messagePermissionMode ?? 'default',
             model: currentModel,
-            collaborationMode: currentCollaborationMode
+            collaborationMode: currentCollaborationMode,
         };
         const formattedText = formatMessageWithAttachments(message.content.text, message.content.attachments);
         messageQueue.push(formattedText, enhancedMode);
@@ -148,7 +150,7 @@ export async function runCodex(opts: {
             onSessionReady: (instance) => {
                 sessionWrapperRef.current = instance;
                 syncSessionMode();
-            }
+            },
         });
     } catch (error) {
         lifecycle.markCrash(error);

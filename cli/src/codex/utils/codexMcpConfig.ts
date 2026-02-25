@@ -43,9 +43,7 @@ function buildTomlLiteralArray(values: string[]): string {
  * @param mcpServers - Map of server name to server config
  * @returns Array of CLI arguments to pass to codex
  */
-export function buildMcpServerConfigArgs(
-    mcpServers: Record<string, { command: string; args: string[] }>
-): string[] {
+export function buildMcpServerConfigArgs(mcpServers: Record<string, { command: string; args: string[] }>): string[] {
     const configArgs: string[] = [];
 
     for (const [name, server] of Object.entries(mcpServers)) {

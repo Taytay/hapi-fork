@@ -1,5 +1,5 @@
+import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { writeFileSync, mkdirSync, unlinkSync, existsSync } from 'node:fs';
 import { configuration } from '@/configuration';
 import { logger } from '@/ui/logger';
 import { getHappyCliCommand } from '@/utils/spawnHappyCLI';
@@ -32,11 +32,11 @@ function shellQuote(value: string): string {
         return '""';
     }
 
-    if (/^[A-Za-z0-9_\/:=-]+$/.test(value)) {
+    if (/^[A-Za-z0-9_/:=-]+$/.test(value)) {
         return value;
     }
 
-    return '"' + value.replace(/(["\\$`])/g, '\\$1') + '"';
+    return `"${value.replace(/(["\\$`])/g, '\\$1')}"`;
 }
 
 function shellJoin(parts: string[]): string {
@@ -51,41 +51,31 @@ function buildHookSettings(command: string, hooksEnabled?: boolean): HookSetting
                 hooks: [
                     {
                         type: 'command',
-                        command
-                    }
-                ]
-            }
-        ]
+                        command,
+                    },
+                ],
+            },
+        ],
     };
 
     const settings: HookSettings = { hooks };
     if (hooksEnabled !== undefined) {
         settings.hooksConfig = {
-            enabled: hooksEnabled
+            enabled: hooksEnabled,
         };
     }
 
     return settings;
 }
 
-export function generateHookSettingsFile(
-    port: number,
-    token: string,
-    options: HookSettingsOptions
-): string {
+export function generateHookSettingsFile(port: number, token: string, options: HookSettingsOptions): string {
     const hooksDir = join(configuration.happyHomeDir, 'tmp', 'hooks');
     mkdirSync(hooksDir, { recursive: true });
 
     const filename = `${options.filenamePrefix}-${process.pid}.json`;
     const filepath = join(hooksDir, filename);
 
-    const { command, args } = getHappyCliCommand([
-        'hook-forwarder',
-        '--port',
-        String(port),
-        '--token',
-        token
-    ]);
+    const { command, args } = getHappyCliCommand(['hook-forwarder', '--port', String(port), '--token', token]);
     const hookCommand = shellJoin([command, ...args]);
 
     const settings = buildHookSettings(hookCommand, options.hooksEnabled);

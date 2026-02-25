@@ -19,9 +19,9 @@
 
 import { execSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { tmpdir } from 'node:os';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, '..');
@@ -203,7 +203,10 @@ async function main(): Promise<void> {
         // Configure git user for CI
         if (githubToken) {
             execSync('git config user.name "github-actions[bot]"', { cwd: tempDir, stdio: 'pipe' });
-            execSync('git config user.email "github-actions[bot]@users.noreply.github.com"', { cwd: tempDir, stdio: 'pipe' });
+            execSync('git config user.email "github-actions[bot]@users.noreply.github.com"', {
+                cwd: tempDir,
+                stdio: 'pipe',
+            });
         }
 
         // Commit and push

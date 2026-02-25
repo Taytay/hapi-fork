@@ -5,15 +5,15 @@
  * Output directory: hub/tools/tunwg/
  */
 
-import { existsSync, mkdirSync, writeFileSync, chmodSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { chmodSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 
 const TUNWG_RELEASES: Record<string, string> = {
     'x64-linux': 'https://github.com/tiann/tunwg/releases/latest/download/tunwg',
     'arm64-linux': 'https://github.com/tiann/tunwg/releases/latest/download/tunwg-arm64',
     'x64-darwin': 'https://github.com/tiann/tunwg/releases/latest/download/tunwg-darwin',
     'arm64-darwin': 'https://github.com/tiann/tunwg/releases/latest/download/tunwg-darwin-arm64',
-    'x64-win32': 'https://github.com/tiann/tunwg/releases/latest/download/tunwg.exe'
+    'x64-win32': 'https://github.com/tiann/tunwg/releases/latest/download/tunwg.exe',
 };
 
 const LICENSE_URL = 'https://raw.githubusercontent.com/tiann/tunwg/refs/heads/main/LICENSE';

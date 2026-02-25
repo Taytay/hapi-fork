@@ -65,7 +65,9 @@ function extractChanges(value: unknown): Record<string, unknown> | null {
         for (const entry of value) {
             const entryRecord = asRecord(entry);
             if (!entryRecord) continue;
-            const path = asString(entryRecord.path ?? entryRecord.file ?? entryRecord.filePath ?? entryRecord.file_path);
+            const path = asString(
+                entryRecord.path ?? entryRecord.file ?? entryRecord.filePath ?? entryRecord.file_path,
+            );
             if (path) {
                 changes[path] = entryRecord;
             }
@@ -116,7 +118,11 @@ export class AppServerEventConverter {
             }
 
             if (status === 'failed' || status === 'error') {
-                events.push({ type: 'task_failed', ...(turnId ? { turn_id: turnId } : {}), ...(errorMessage ? { error: errorMessage } : {}) });
+                events.push({
+                    type: 'task_failed',
+                    ...(turnId ? { turn_id: turnId } : {}),
+                    ...(errorMessage ? { error: errorMessage } : {}),
+                });
                 return events;
             }
 
@@ -176,7 +182,9 @@ export class AppServerEventConverter {
 
         if (method === 'item/commandExecution/outputDelta') {
             const itemId = extractItemId(paramsRecord);
-            const delta = asString(paramsRecord.delta ?? paramsRecord.text ?? paramsRecord.output ?? paramsRecord.stdout);
+            const delta = asString(
+                paramsRecord.delta ?? paramsRecord.text ?? paramsRecord.output ?? paramsRecord.stdout,
+            );
             if (itemId && delta) {
                 const prev = this.commandOutputBuffers.get(itemId) ?? '';
                 this.commandOutputBuffers.set(itemId, prev + delta);
@@ -197,7 +205,8 @@ export class AppServerEventConverter {
 
             if (itemType === 'agentmessage') {
                 if (method === 'item/completed') {
-                    const text = asString(item.text ?? item.message ?? item.content) ?? this.agentMessageBuffers.get(itemId);
+                    const text =
+                        asString(item.text ?? item.message ?? item.content) ?? this.agentMessageBuffers.get(itemId);
                     if (text) {
                         events.push({ type: 'agent_message', message: text });
                     }
@@ -208,7 +217,8 @@ export class AppServerEventConverter {
 
             if (itemType === 'reasoning') {
                 if (method === 'item/completed') {
-                    const text = asString(item.text ?? item.message ?? item.content) ?? this.reasoningBuffers.get(itemId);
+                    const text =
+                        asString(item.text ?? item.message ?? item.content) ?? this.reasoningBuffers.get(itemId);
                     if (text) {
                         events.push({ type: 'agent_reasoning', text });
                     }
@@ -231,13 +241,14 @@ export class AppServerEventConverter {
                     events.push({
                         type: 'exec_command_begin',
                         call_id: itemId,
-                        ...meta
+                        ...meta,
                     });
                 }
 
                 if (method === 'item/completed') {
                     const meta = this.commandMeta.get(itemId) ?? {};
-                    const output = asString(item.output ?? item.result ?? item.stdout) ?? this.commandOutputBuffers.get(itemId);
+                    const output =
+                        asString(item.output ?? item.result ?? item.stdout) ?? this.commandOutputBuffers.get(itemId);
                     const stderr = asString(item.stderr);
                     const error = asString(item.error);
                     const exitCode = asNumber(item.exitCode ?? item.exit_code ?? item.exitcode);
@@ -251,7 +262,7 @@ export class AppServerEventConverter {
                         ...(stderr ? { stderr } : {}),
                         ...(error ? { error } : {}),
                         ...(exitCode !== null ? { exit_code: exitCode } : {}),
-                        ...(status ? { status } : {})
+                        ...(status ? { status } : {}),
                     });
 
                     this.commandMeta.delete(itemId);
@@ -273,7 +284,7 @@ export class AppServerEventConverter {
                     events.push({
                         type: 'patch_apply_begin',
                         call_id: itemId,
-                        ...meta
+                        ...meta,
                     });
                 }
 
@@ -289,7 +300,7 @@ export class AppServerEventConverter {
                         ...meta,
                         ...(stdout ? { stdout } : {}),
                         ...(stderr ? { stderr } : {}),
-                        success: success ?? false
+                        success: success ?? false,
                     });
 
                     this.fileChangeMeta.delete(itemId);

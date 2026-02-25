@@ -2,11 +2,11 @@
  * Tests for difftastic module
  */
 
-import { describe, it, expect, beforeAll } from 'vitest';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { run } from './index';
-import { writeFileSync, mkdirSync, rmSync } from 'fs';
-import { join } from 'path';
-import { tmpdir } from 'os';
 
 describe('difftastic', () => {
     let testDir: string;
@@ -17,13 +17,13 @@ describe('difftastic', () => {
         // Create test directory and files
         testDir = join(tmpdir(), `difftastic-test-${Date.now()}`);
         mkdirSync(testDir, { recursive: true });
-        
+
         file1Path = join(testDir, 'file1.txt');
         file2Path = join(testDir, 'file2.txt');
-        
+
         writeFileSync(file1Path, 'Hello\nWorld\nTest\n');
         writeFileSync(file2Path, 'Hello\nModified\nTest\n');
-        
+
         return () => {
             // Cleanup
             rmSync(testDir, { recursive: true, force: true });

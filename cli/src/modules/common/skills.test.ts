@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtemp, mkdir, writeFile, rm } from 'fs/promises';
-import { tmpdir } from 'os';
-import { join } from 'path';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { listSkills } from './skills';
 
 describe('skills', () => {
@@ -33,45 +33,49 @@ describe('skills', () => {
 
         const amisDir = join(skillsRoot, 'amis');
         await mkdir(amisDir, { recursive: true });
-        await writeFile(join(amisDir, 'SKILL.md'), [
-            '---',
-            'name: amis',
-            'description: AMIS guide',
-            '---',
-            '',
-            '# AMIS',
-        ].join('\n'));
+        await writeFile(
+            join(amisDir, 'SKILL.md'),
+            `---
+name: amis
+description: AMIS guide
+---
+
+# AMIS`,
+        );
 
         const helloAgentsDir = join(skillsRoot, 'hello-agents');
         await mkdir(join(helloAgentsDir, 'analyze'), { recursive: true });
-        await writeFile(join(helloAgentsDir, 'SKILL.md'), [
-            '---',
-            'name: helloagents',
-            'description: Main skill',
-            '---',
-            '',
-            '# HelloAGENTS',
-        ].join('\n'));
-        await writeFile(join(helloAgentsDir, 'analyze', 'SKILL.md'), [
-            '---',
-            'name: analyze',
-            'description: Sub skill',
-            '---',
-            '',
-            '# Analyze',
-        ].join('\n'));
+        await writeFile(
+            join(helloAgentsDir, 'SKILL.md'),
+            `---
+name: helloagents
+description: Main skill
+---
+
+# HelloAGENTS`,
+        );
+        await writeFile(
+            join(helloAgentsDir, 'analyze', 'SKILL.md'),
+            `---
+name: analyze
+description: Sub skill
+---
+
+# Analyze`,
+        );
 
         const systemRoot = join(skillsRoot, '.system');
         const systemSkillDir = join(systemRoot, 'skill-creator');
         await mkdir(systemSkillDir, { recursive: true });
-        await writeFile(join(systemSkillDir, 'SKILL.md'), [
-            '---',
-            'name: skill-creator',
-            'description: Create skills',
-            '---',
-            '',
-            '# Skill Creator',
-        ].join('\n'));
+        await writeFile(
+            join(systemSkillDir, 'SKILL.md'),
+            `---
+name: skill-creator
+description: Create skills
+---
+
+# Skill Creator`,
+        );
 
         const skills = await listSkills();
         expect(skills.map((s) => s.name)).toEqual(['amis', 'helloagents', 'skill-creator']);
@@ -87,4 +91,3 @@ describe('skills', () => {
         expect(skills).toEqual([{ name: 'no-frontmatter', description: undefined }]);
     });
 });
-

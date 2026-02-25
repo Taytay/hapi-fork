@@ -1,14 +1,14 @@
-import type { ApiSessionClient } from '@/api/apiSession';
-import type { AgentBackend, PermissionRequest, PermissionResponse } from '@/agent/types';
 import type { GeminiPermissionMode } from '@hapi/protocol/types';
+import type { AgentBackend, PermissionRequest, PermissionResponse } from '@/agent/types';
 import { deriveToolName } from '@/agent/utils';
-import { logger } from '@/ui/logger';
+import type { ApiSessionClient } from '@/api/apiSession';
 import {
-    BasePermissionHandler,
     type AutoApprovalDecision,
+    BasePermissionHandler,
     type PendingPermissionRequest,
-    type PermissionCompletion
+    type PermissionCompletion,
 } from '@/modules/common/permission/BasePermissionHandler';
+import { logger } from '@/ui/logger';
 
 interface PermissionResponseMessage {
     id: string;
@@ -34,7 +34,10 @@ function pickOptionId(request: PermissionRequest, preferredKinds: string[]): str
     return request.options.length > 0 ? request.options[0].optionId : null;
 }
 
-function mapDecisionToOutcome(request: PermissionRequest, decision: PermissionResponseMessage['decision']): PermissionResponse {
+function mapDecisionToOutcome(
+    request: PermissionRequest,
+    decision: PermissionResponseMessage['decision'],
+): PermissionResponse {
     if (decision === 'abort') {
         return { outcome: 'cancelled' };
     }
@@ -59,7 +62,7 @@ export class GeminiPermissionHandler extends BasePermissionHandler<PermissionRes
     constructor(
         session: ApiSessionClient,
         private readonly backend: AgentBackend,
-        private readonly getPermissionMode: () => GeminiPermissionMode | undefined
+        private readonly getPermissionMode: () => GeminiPermissionMode | undefined,
     ) {
         super(session);
         this.backend.onPermissionRequest((request) => this.handlePermissionRequest(request));
@@ -69,7 +72,7 @@ export class GeminiPermissionHandler extends BasePermissionHandler<PermissionRes
         const toolName = deriveToolName({
             title: request.title,
             kind: request.kind,
-            rawInput: request.rawInput
+            rawInput: request.rawInput,
         });
         const toolInput = deriveToolInput(request);
         const mode = this.getPermissionMode() ?? 'default';
@@ -83,7 +86,7 @@ export class GeminiPermissionHandler extends BasePermissionHandler<PermissionRes
         this.pendingBackendRequests.set(request.id, request);
         this.addPendingRequest(request.id, toolName, toolInput, {
             resolve: () => {},
-            reject: () => {}
+            reject: () => {},
         });
 
         logger.debug(`[Gemini] Permission request queued for ${toolName} (${request.id})`);
@@ -93,7 +96,7 @@ export class GeminiPermissionHandler extends BasePermissionHandler<PermissionRes
         request: PermissionRequest,
         toolName: string,
         toolInput: unknown,
-        decision: AutoApprovalDecision
+        decision: AutoApprovalDecision,
     ): Promise<void> {
         const outcome = mapDecisionToOutcome(request, decision);
         await this.backend.respondToPermission(request.sessionId, request, outcome);
@@ -108,9 +111,9 @@ export class GeminiPermissionHandler extends BasePermissionHandler<PermissionRes
                     createdAt: Date.now(),
                     completedAt: Date.now(),
                     status: 'approved',
-                    decision
-                }
-            }
+                    decision,
+                },
+            },
         }));
 
         logger.debug(`[Gemini] Auto-approved ${toolName} (${request.id}) mode=${decision}`);
@@ -118,7 +121,7 @@ export class GeminiPermissionHandler extends BasePermissionHandler<PermissionRes
 
     protected async handlePermissionResponse(
         response: PermissionResponseMessage,
-        pending: PendingPermissionRequest<void>
+        pending: PendingPermissionRequest<void>,
     ): Promise<PermissionCompletion> {
         const pendingRequest = this.pendingBackendRequests.get(response.id);
         if (pendingRequest) {
@@ -145,7 +148,7 @@ export class GeminiPermissionHandler extends BasePermissionHandler<PermissionRes
         return {
             status: response.approved ? 'approved' : 'denied',
             decision,
-            reason: response.reason
+            reason: response.reason,
         };
     }
 
@@ -164,7 +167,7 @@ export class GeminiPermissionHandler extends BasePermissionHandler<PermissionRes
         this.cancelPendingRequests({
             completedReason: reason,
             rejectMessage: reason,
-            decision: 'abort'
+            decision: 'abort',
         });
     }
 }

@@ -11,14 +11,14 @@ describe('buildCodexStartConfig', () => {
             mode: { permissionMode: 'default' },
             first: true,
             mcpServers,
-            cliOverrides: { sandbox: 'danger-full-access', approvalPolicy: 'never' }
+            cliOverrides: { sandbox: 'danger-full-access', approvalPolicy: 'never' },
         });
 
         expect(config.sandbox).toBe('danger-full-access');
         expect(config['approval-policy']).toBe('never');
         expect(config.config).toEqual({
             mcp_servers: mcpServers,
-            developer_instructions: codexSystemPrompt
+            developer_instructions: codexSystemPrompt,
         });
     });
 
@@ -28,7 +28,7 @@ describe('buildCodexStartConfig', () => {
             mode: { permissionMode: 'yolo' },
             first: false,
             mcpServers,
-            cliOverrides: { sandbox: 'read-only', approvalPolicy: 'never' }
+            cliOverrides: { sandbox: 'read-only', approvalPolicy: 'never' },
         });
 
         expect(config.sandbox).toBe('danger-full-access');
@@ -40,7 +40,7 @@ describe('buildCodexStartConfig', () => {
             message: 'hello',
             mode: { permissionMode: 'default', model: 'o3' },
             first: false,
-            mcpServers
+            mcpServers,
         });
 
         expect(config.model).toBe('o3');

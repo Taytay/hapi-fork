@@ -18,11 +18,14 @@ interface McpServerEntry {
 
 interface OpencodeConfig {
     $schema: string;
-    mcp: Record<string, {
-        type: string;
-        command: string[];
-        enabled: boolean;
-    }>;
+    mcp: Record<
+        string,
+        {
+            type: string;
+            command: string[];
+            enabled: boolean;
+        }
+    >;
     instructions: string[];
 }
 
@@ -36,7 +39,7 @@ interface OpencodeConfig {
 export function ensureOpencodeConfig(
     rootPath: string,
     mcpServer: McpServerEntry,
-    instructions: string
+    instructions: string,
 ): { configPath: string; instructionsPath: string } {
     mkdirSync(rootPath, { recursive: true });
 
@@ -52,10 +55,10 @@ export function ensureOpencodeConfig(
             hapi: {
                 type: 'local',
                 command: [mcpServer.command, ...mcpServer.args],
-                enabled: true
-            }
+                enabled: true,
+            },
         },
-        instructions: [instructionsPath]
+        instructions: [instructionsPath],
     };
 
     const configPath = join(rootPath, CONFIG_FILENAME);

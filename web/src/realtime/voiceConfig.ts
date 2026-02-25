@@ -28,4 +28,4 @@ export const VOICE_CONFIG = {
 
     /** Enable debug logging for voice context updates */
     ENABLE_DEBUG_LOGGING: import.meta.env.DEV,
-} as const
+} as const;

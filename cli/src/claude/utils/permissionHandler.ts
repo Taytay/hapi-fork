@@ -1,26 +1,25 @@
 /**
  * Permission Handler for canCallTool integration
- * 
+ *
  * Replaces the MCP permission server with direct SDK integration.
  * Handles tool permission requests, responses, and state management.
  */
 
-import { logger } from "@/lib";
-import { SDKAssistantMessage, SDKMessage, SDKUserMessage } from "../sdk";
-import { PermissionResult } from "../sdk/types";
-import { PLAN_FAKE_REJECT, PLAN_FAKE_RESTART } from "../sdk/prompts";
-import { Session } from "../session";
-import { deepEqual } from "@/utils/deepEqual";
-import { getToolName } from "./getToolName";
-import { EnhancedMode, PermissionMode } from "../loop";
-import { getToolDescriptor } from "./getToolDescriptor";
-import { delay } from "@/utils/time";
-import { isObject } from "@hapi/protocol";
+import { isObject } from '@hapi/protocol';
+import { logger } from '@/lib';
 import {
     BasePermissionHandler,
     type PendingPermissionRequest,
-    type PermissionCompletion
-} from "@/modules/common/permission/BasePermissionHandler";
+    type PermissionCompletion,
+} from '@/modules/common/permission/BasePermissionHandler';
+import { deepEqual } from '@/utils/deepEqual';
+import { delay } from '@/utils/time';
+import type { EnhancedMode, PermissionMode } from '../loop';
+import type { SDKAssistantMessage, SDKMessage, SDKUserMessage } from '../sdk';
+import { PLAN_FAKE_REJECT, PLAN_FAKE_RESTART } from '../sdk/prompts';
+import type { PermissionResult } from '../sdk/types';
+import type { Session } from '../session';
+import { getToolDescriptor } from './getToolDescriptor';
 
 interface PermissionResponse {
     id: string;
@@ -46,7 +45,10 @@ function isQuestionToolName(toolName: string): boolean {
     return isAskUserQuestionToolName(toolName) || isRequestUserInputToolName(toolName);
 }
 
-function formatAskUserQuestionAnswers(answers: Record<string, string[]> | Record<string, { answers: string[] }>, input: unknown): string {
+function _formatAskUserQuestionAnswers(
+    answers: Record<string, string[]> | Record<string, { answers: string[] }>,
+    input: unknown,
+): string {
     // Normalize nested format to flat format for display
     const flatAnswers: Record<string, string[]> = {};
     for (const [key, value] of Object.entries(answers)) {
@@ -76,13 +78,17 @@ function formatAskUserQuestionAnswers(answers: Record<string, string[]> | Record
     const lines = keys.map((key) => {
         const idx = Number.parseInt(key, 10);
         const q = questions && Number.isFinite(idx) ? questions[idx] : null;
-        const header = q && typeof q.header === 'string' && q.header.trim().length > 0
-            ? q.header.trim()
-            : Number.isFinite(idx)
-                ? `Question ${idx + 1}`
-                : `Question ${key}`;
+        const header =
+            q && typeof q.header === 'string' && q.header.trim().length > 0
+                ? q.header.trim()
+                : Number.isFinite(idx)
+                  ? `Question ${idx + 1}`
+                  : `Question ${key}`;
         const value = flatAnswers[key] ?? [];
-        const joined = value.map((v) => String(v)).filter((v) => v.trim().length > 0).join(', ');
+        const joined = value
+            .map((v) => String(v))
+            .filter((v) => v.trim().length > 0)
+            .join(', ');
         return `${header}: ${joined || '(no answer)'}`;
     });
 
@@ -95,12 +101,13 @@ function formatAskUserQuestionAnswers(answers: Record<string, string[]> | Record
     })();
 
     const body = lines.length > 0 ? lines.join('\n') : '(no answers)';
-    return rawJson
-        ? `User answered:\n${body}\n\nRaw answers JSON:\n${rawJson}`
-        : `User answered:\n${body}`;
+    return rawJson ? `User answered:\n${body}\n\nRaw answers JSON:\n${rawJson}` : `User answered:\n${body}`;
 }
 
-function buildAskUserQuestionUpdatedInput(input: unknown, answers: Record<string, string[]> | Record<string, { answers: string[] }>): Record<string, unknown> {
+function buildAskUserQuestionUpdatedInput(
+    input: unknown,
+    answers: Record<string, string[]> | Record<string, { answers: string[] }>,
+): Record<string, unknown> {
     // Normalize to flat format for AskUserQuestion
     const flatAnswers: Record<string, string[]> = {};
     for (const [key, value] of Object.entries(answers)) {
@@ -117,7 +124,7 @@ function buildAskUserQuestionUpdatedInput(input: unknown, answers: Record<string
 
     return {
         ...input,
-        answers: flatAnswers
+        answers: flatAnswers,
     };
 }
 
@@ -132,12 +139,12 @@ function buildRequestUserInputUpdatedInput(input: unknown, answers: unknown): Re
 
     return {
         ...input,
-        answers
+        answers,
     };
 }
 
 export class PermissionHandler extends BasePermissionHandler<PermissionResponse, PermissionResult> {
-    private toolCalls: { id: string, name: string, input: any, used: boolean }[] = [];
+    private toolCalls: { id: string; name: string; input: any; used: boolean }[] = [];
     private responses = new Map<string, PermissionResponse>();
     private session: Session;
     private allowedTools = new Set<string>();
@@ -150,7 +157,7 @@ export class PermissionHandler extends BasePermissionHandler<PermissionResponse,
         super(session.client);
         this.session = session;
     }
-    
+
     /**
      * Set callback to trigger when permission request is made
      */
@@ -168,19 +175,19 @@ export class PermissionHandler extends BasePermissionHandler<PermissionResponse,
      */
     protected async handlePermissionResponse(
         response: PermissionResponse,
-        pending: PendingPermissionRequest<PermissionResult>
+        pending: PendingPermissionRequest<PermissionResult>,
     ): Promise<PermissionCompletion> {
         const completion: PermissionCompletion = {
             status: response.approved ? 'approved' : 'denied',
             reason: response.reason,
             mode: response.mode,
             allowTools: response.allowTools,
-            answers: response.answers
+            answers: response.answers,
         };
 
         // Update allowed tools
         if (response.allowTools && response.allowTools.length > 0) {
-            response.allowTools.forEach(tool => {
+            response.allowTools.forEach((tool) => {
                 if (isQuestionToolName(tool)) {
                     return;
                 }
@@ -208,7 +215,7 @@ export class PermissionHandler extends BasePermissionHandler<PermissionResponse,
             } else {
                 pending.resolve({
                     behavior: 'allow',
-                    updatedInput: buildAskUserQuestionUpdatedInput(pending.input, answers)
+                    updatedInput: buildAskUserQuestionUpdatedInput(pending.input, answers),
                 });
             }
             return completion;
@@ -224,7 +231,7 @@ export class PermissionHandler extends BasePermissionHandler<PermissionResponse,
             } else {
                 pending.resolve({
                     behavior: 'allow',
-                    updatedInput: buildRequestUserInputUpdatedInput(pending.input, answers)
+                    updatedInput: buildRequestUserInputUpdatedInput(pending.input, answers),
                 });
             }
             return completion;
@@ -251,7 +258,12 @@ export class PermissionHandler extends BasePermissionHandler<PermissionResponse,
         // Handle default case for all other tools
         const result: PermissionResult = response.approved
             ? { behavior: 'allow', updatedInput: (pending.input as Record<string, unknown>) || {} }
-            : { behavior: 'deny', message: response.reason || `The user doesn't want to proceed with this tool use. The tool use was rejected (eg. if it was a file edit, the new_string was NOT written to the file). STOP what you are doing and wait for the user to tell you how to proceed.` };
+            : {
+                  behavior: 'deny',
+                  message:
+                      response.reason ||
+                      `The user doesn't want to proceed with this tool use. The tool use was rejected (eg. if it was a file edit, the new_string was NOT written to the file). STOP what you are doing and wait for the user to tell you how to proceed.`,
+              };
 
         pending.resolve(result);
         return completion;
@@ -260,7 +272,12 @@ export class PermissionHandler extends BasePermissionHandler<PermissionResponse,
     /**
      * Creates the canCallTool callback for the SDK
      */
-    handleToolCall = async (toolName: string, input: unknown, mode: EnhancedMode, options: { signal: AbortSignal }): Promise<PermissionResult> => {
+    handleToolCall = async (
+        toolName: string,
+        input: unknown,
+        _mode: EnhancedMode,
+        options: { signal: AbortSignal },
+    ): Promise<PermissionResult> => {
         const isQuestionTool = isQuestionToolName(toolName);
 
         // Check if tool is explicitly allowed
@@ -302,7 +319,8 @@ export class PermissionHandler extends BasePermissionHandler<PermissionResponse,
         //
 
         let toolCallId = this.resolveToolCallId(toolName, input);
-        if (!toolCallId) { // What if we got permission before tool call
+        if (!toolCallId) {
+            // What if we got permission before tool call
             await delay(1000);
             toolCallId = this.resolveToolCallId(toolName, input);
             if (!toolCallId) {
@@ -310,7 +328,7 @@ export class PermissionHandler extends BasePermissionHandler<PermissionResponse,
             }
         }
         return this.handlePermissionRequest(toolCallId, toolName, input, options.signal);
-    }
+    };
 
     /**
      * Handles individual permission requests
@@ -319,7 +337,7 @@ export class PermissionHandler extends BasePermissionHandler<PermissionResponse,
         id: string,
         toolName: string,
         input: unknown,
-        signal: AbortSignal
+        signal: AbortSignal,
     ): Promise<PermissionResult> {
         return new Promise<PermissionResult>((resolve, reject) => {
             // Set up abort signal handling
@@ -338,13 +356,12 @@ export class PermissionHandler extends BasePermissionHandler<PermissionResponse,
                 reject: (error: Error) => {
                     signal.removeEventListener('abort', abortHandler);
                     reject(error);
-                }
+                },
             });
 
             logger.debug(`Permission request sent for tool call ${id}: ${toolName}`);
         });
     }
-
 
     /**
      * Parses Bash permission strings into literal and prefix sets
@@ -358,13 +375,13 @@ export class PermissionHandler extends BasePermissionHandler<PermissionResponse,
         // Match Bash(command) or Bash(command:*)
         const bashPattern = /^Bash\((.+?)\)$/;
         const match = permission.match(bashPattern);
-        
+
         if (!match) {
             return;
         }
 
         const command = match[1];
-        
+
         // Check if it's a prefix pattern (ends with :*)
         if (command.endsWith(':*')) {
             const prefix = command.slice(0, -2); // Remove :*
@@ -401,14 +418,14 @@ export class PermissionHandler extends BasePermissionHandler<PermissionResponse,
     onMessage(message: SDKMessage): void {
         if (message.type === 'assistant') {
             const assistantMsg = message as SDKAssistantMessage;
-            if (assistantMsg.message && assistantMsg.message.content) {
+            if (assistantMsg.message?.content) {
                 for (const block of assistantMsg.message.content) {
                     if (block.type === 'tool_use') {
                         this.toolCalls.push({
                             id: block.id!,
                             name: block.name!,
                             input: block.input,
-                            used: false
+                            used: false,
                         });
                     }
                 }
@@ -416,10 +433,10 @@ export class PermissionHandler extends BasePermissionHandler<PermissionResponse,
         }
         if (message.type === 'user') {
             const userMsg = message as SDKUserMessage;
-            if (userMsg.message && userMsg.message.content && Array.isArray(userMsg.message.content)) {
+            if (userMsg.message?.content && Array.isArray(userMsg.message.content)) {
                 for (const block of userMsg.message.content) {
                     if (block.type === 'tool_result' && block.tool_use_id) {
-                        const toolCall = this.toolCalls.find(tc => tc.id === block.tool_use_id);
+                        const toolCall = this.toolCalls.find((tc) => tc.id === block.tool_use_id);
                         if (toolCall && !toolCall.used) {
                             toolCall.used = true;
                         }
@@ -433,14 +450,13 @@ export class PermissionHandler extends BasePermissionHandler<PermissionResponse,
      * Checks if a tool call is rejected
      */
     isAborted(toolCallId: string): boolean {
-
         // If tool not approved, it's aborted
         if (this.responses.get(toolCallId)?.approved === false) {
             return true;
         }
 
         // Always abort exit_plan_mode
-        const toolCall = this.toolCalls.find(tc => tc.id === toolCallId);
+        const toolCall = this.toolCalls.find((tc) => tc.id === toolCallId);
         if (toolCall && (toolCall.name === 'exit_plan_mode' || toolCall.name === 'ExitPlanMode')) {
             return true;
         }
@@ -461,7 +477,7 @@ export class PermissionHandler extends BasePermissionHandler<PermissionResponse,
 
         this.cancelPendingRequests({
             completedReason: 'Session switched to local mode',
-            rejectMessage: 'Session reset'
+            rejectMessage: 'Session reset',
         });
     }
 

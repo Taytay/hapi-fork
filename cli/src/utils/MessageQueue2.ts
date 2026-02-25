@@ -1,4 +1,4 @@
-import { logger } from "@/ui/logger";
+import { logger } from '@/ui/logger';
 
 interface QueueItem<T> {
     message: string;
@@ -18,10 +18,7 @@ export class MessageQueue2<T> {
     private onMessageHandler: ((message: string, mode: T) => void) | null = null;
     modeHasher: (mode: T) => string;
 
-    constructor(
-        modeHasher: (mode: T) => string,
-        onMessageHandler: ((message: string, mode: T) => void) | null = null
-    ) {
+    constructor(modeHasher: (mode: T) => string, onMessageHandler: ((message: string, mode: T) => void) | null = null) {
         this.modeHasher = modeHasher;
         this.onMessageHandler = onMessageHandler;
         logger.debug(`[MessageQueue2] Initialized`);
@@ -49,7 +46,7 @@ export class MessageQueue2<T> {
             message,
             mode,
             modeHash,
-            isolate: false
+            isolate: false,
         });
 
         // Trigger message handler if set
@@ -84,7 +81,7 @@ export class MessageQueue2<T> {
             message,
             mode,
             modeHash,
-            isolate: false
+            isolate: false,
         });
 
         // Trigger message handler if set
@@ -114,7 +111,9 @@ export class MessageQueue2<T> {
         }
 
         const modeHash = this.modeHasher(mode);
-        logger.debug(`[MessageQueue2] pushIsolateAndClear() called with mode hash: ${modeHash} - clearing ${this.queue.length} pending messages`);
+        logger.debug(
+            `[MessageQueue2] pushIsolateAndClear() called with mode hash: ${modeHash} - clearing ${this.queue.length} pending messages`,
+        );
 
         // Clear any pending messages to ensure this message is processed in complete isolation
         this.queue = [];
@@ -123,7 +122,7 @@ export class MessageQueue2<T> {
             message,
             mode,
             modeHash,
-            isolate: true
+            isolate: true,
         });
 
         // Trigger message handler if set
@@ -157,7 +156,7 @@ export class MessageQueue2<T> {
             message,
             mode,
             modeHash,
-            isolate: false
+            isolate: false,
         });
 
         // Trigger message handler if set
@@ -221,7 +220,9 @@ export class MessageQueue2<T> {
      * Wait for messages and return all messages with the same mode as a single string
      * Returns { message: string, mode: T } or null if aborted/closed
      */
-    async waitForMessagesAndGetAsString(abortSignal?: AbortSignal): Promise<{ message: string, mode: T, isolate: boolean, hash: string } | null> {
+    async waitForMessagesAndGetAsString(
+        abortSignal?: AbortSignal,
+    ): Promise<{ message: string; mode: T; isolate: boolean; hash: string } | null> {
         // If we have messages, return them immediately
         if (this.queue.length > 0) {
             return this.collectBatch();
@@ -245,15 +246,15 @@ export class MessageQueue2<T> {
     /**
      * Collect a batch of messages with the same mode, respecting isolation requirements
      */
-    private collectBatch(): { message: string, mode: T, hash: string, isolate: boolean } | null {
+    private collectBatch(): { message: string; mode: T; hash: string; isolate: boolean } | null {
         if (this.queue.length === 0) {
             return null;
         }
 
         const firstItem = this.queue[0];
         const sameModeMessages: string[] = [];
-        let mode = firstItem.mode;
-        let isolate = firstItem.isolate ?? false;
+        const mode = firstItem.mode;
+        const isolate = firstItem.isolate ?? false;
         const targetModeHash = firstItem.modeHash;
 
         // If the first message requires isolation, only process it alone
@@ -263,13 +264,13 @@ export class MessageQueue2<T> {
             logger.debug(`[MessageQueue2] Collected isolated message with mode hash: ${targetModeHash}`);
         } else {
             // Collect all messages with the same mode until we hit an isolated message
-            while (this.queue.length > 0 &&
-                this.queue[0].modeHash === targetModeHash &&
-                !this.queue[0].isolate) {
+            while (this.queue.length > 0 && this.queue[0].modeHash === targetModeHash && !this.queue[0].isolate) {
                 const item = this.queue.shift()!;
                 sameModeMessages.push(item.message);
             }
-            logger.debug(`[MessageQueue2] Collected batch of ${sameModeMessages.length} messages with mode hash: ${targetModeHash}`);
+            logger.debug(
+                `[MessageQueue2] Collected batch of ${sameModeMessages.length} messages with mode hash: ${targetModeHash}`,
+            );
         }
 
         // Join all messages with newlines
@@ -279,7 +280,7 @@ export class MessageQueue2<T> {
             message: combinedMessage,
             mode,
             hash: targetModeHash,
-            isolate
+            isolate,
         };
     }
 

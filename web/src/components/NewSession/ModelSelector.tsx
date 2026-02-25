@@ -1,24 +1,23 @@
-import type { AgentType } from './types'
-import { MODEL_OPTIONS } from './types'
-import { useTranslation } from '@/lib/use-translation'
+import { useTranslation } from '@/lib/use-translation';
+import type { AgentType } from './types';
+import { MODEL_OPTIONS } from './types';
 
 export function ModelSelector(props: {
-    agent: AgentType
-    model: string
-    isDisabled: boolean
-    onModelChange: (value: string) => void
+    agent: AgentType;
+    model: string;
+    isDisabled: boolean;
+    onModelChange: (value: string) => void;
 }) {
-    const { t } = useTranslation()
-    const options = MODEL_OPTIONS[props.agent]
+    const { t } = useTranslation();
+    const options = MODEL_OPTIONS[props.agent];
     if (options.length === 0) {
-        return null
+        return null;
     }
 
     return (
         <div className="flex flex-col gap-1.5 px-3 py-3">
             <label className="text-xs font-medium text-[var(--app-hint)]">
-                {t('newSession.model')}{' '}
-                <span className="font-normal">({t('newSession.model.optional')})</span>
+                {t('newSession.model')} <span className="font-normal">({t('newSession.model.optional')})</span>
             </label>
             <select
                 value={props.model}
@@ -33,5 +32,5 @@ export function ModelSelector(props: {
                 ))}
             </select>
         </div>
-    )
+    );
 }

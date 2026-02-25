@@ -1,10 +1,17 @@
-import type { AgentBackend, AgentMessage, AgentSessionConfig, PermissionRequest, PermissionResponse, PromptContent } from '@/agent/types';
 import { asString, isObject } from '@hapi/protocol';
-import { AcpStdioTransport, type AcpStderrError } from './AcpStdioTransport';
-import { AcpMessageHandler } from './AcpMessageHandler';
+import type {
+    AgentBackend,
+    AgentMessage,
+    AgentSessionConfig,
+    PermissionRequest,
+    PermissionResponse,
+    PromptContent,
+} from '@/agent/types';
 import { logger } from '@/ui/logger';
 import { withRetry } from '@/utils/time';
 import packageJson from '../../../../package.json';
+import { AcpMessageHandler } from './AcpMessageHandler';
+import { type AcpStderrError, AcpStdioTransport } from './AcpStdioTransport';
 
 type PendingPermission = {
     resolve: (result: { outcome: { outcome: string; optionId?: string } }) => void;
@@ -24,7 +31,7 @@ export class AcpSdkBackend implements AgentBackend {
     private static readonly INIT_RETRY_OPTIONS = {
         maxAttempts: 3,
         minDelay: 1000,
-        maxDelay: 5000
+        maxDelay: 5000,
     };
 
     constructor(private readonly options: { command: string; args?: string[]; env?: Record<string, string> }) {}
@@ -35,7 +42,7 @@ export class AcpSdkBackend implements AgentBackend {
         this.transport = new AcpStdioTransport({
             command: this.options.command,
             args: this.options.args,
-            env: this.options.env
+            env: this.options.env,
         });
 
         this.transport.onNotification((method, params) => {
@@ -53,23 +60,24 @@ export class AcpSdkBackend implements AgentBackend {
         });
 
         const response = await withRetry(
-            () => this.transport!.sendRequest('initialize', {
-                protocolVersion: 1,
-                clientCapabilities: {
-                    fs: { readTextFile: false, writeTextFile: false },
-                    terminal: false
-                },
-                clientInfo: {
-                    name: 'hapi',
-                    version: packageJson.version
-                }
-            }),
+            () =>
+                this.transport!.sendRequest('initialize', {
+                    protocolVersion: 1,
+                    clientCapabilities: {
+                        fs: { readTextFile: false, writeTextFile: false },
+                        terminal: false,
+                    },
+                    clientInfo: {
+                        name: 'hapi',
+                        version: packageJson.version,
+                    },
+                }),
             {
                 ...AcpSdkBackend.INIT_RETRY_OPTIONS,
                 onRetry: (error, attempt, nextDelayMs) => {
                     logger.debug(`[ACP] Initialize attempt ${attempt} failed, retrying in ${nextDelayMs}ms`, error);
-                }
-            }
+                },
+            },
         );
 
         if (!isObject(response) || typeof response.protocolVersion !== 'number') {
@@ -85,16 +93,17 @@ export class AcpSdkBackend implements AgentBackend {
         }
 
         const response = await withRetry(
-            () => this.transport!.sendRequest('session/new', {
-                cwd: config.cwd,
-                mcpServers: config.mcpServers
-            }),
+            () =>
+                this.transport!.sendRequest('session/new', {
+                    cwd: config.cwd,
+                    mcpServers: config.mcpServers,
+                }),
             {
                 ...AcpSdkBackend.INIT_RETRY_OPTIONS,
                 onRetry: (error, attempt, nextDelayMs) => {
                     logger.debug(`[ACP] session/new attempt ${attempt} failed, retrying in ${nextDelayMs}ms`, error);
-                }
-            }
+                },
+            },
         );
 
         const sessionId = isObject(response) ? asString(response.sessionId) : null;
@@ -112,17 +121,18 @@ export class AcpSdkBackend implements AgentBackend {
         }
 
         const response = await withRetry(
-            () => this.transport!.sendRequest('session/load', {
-                sessionId: config.sessionId,
-                cwd: config.cwd,
-                mcpServers: config.mcpServers
-            }),
+            () =>
+                this.transport!.sendRequest('session/load', {
+                    sessionId: config.sessionId,
+                    cwd: config.cwd,
+                    mcpServers: config.mcpServers,
+                }),
             {
                 ...AcpSdkBackend.INIT_RETRY_OPTIONS,
                 onRetry: (error, attempt, nextDelayMs) => {
                     logger.debug(`[ACP] session/load attempt ${attempt} failed, retrying in ${nextDelayMs}ms`, error);
-                }
-            }
+                },
+            },
         );
 
         const loadedSessionId = isObject(response) ? asString(response.sessionId) : null;
@@ -131,11 +141,7 @@ export class AcpSdkBackend implements AgentBackend {
         return sessionId;
     }
 
-    async prompt(
-        sessionId: string,
-        content: PromptContent[],
-        onUpdate: (msg: AgentMessage) => void
-    ): Promise<void> {
+    async prompt(sessionId: string, content: PromptContent[], onUpdate: (msg: AgentMessage) => void): Promise<void> {
         if (!this.transport) {
             throw new Error('ACP transport not initialized');
         }
@@ -147,10 +153,14 @@ export class AcpSdkBackend implements AgentBackend {
         try {
             // No timeout for prompt requests - they can run for extended periods
             // during complex tasks, tool-heavy operations, or slow model responses
-            const response = await this.transport.sendRequest('session/prompt', {
-                sessionId,
-                prompt: content
-            }, { timeoutMs: Infinity });
+            const response = await this.transport.sendRequest(
+                'session/prompt',
+                {
+                    sessionId,
+                    prompt: content,
+                },
+                { timeoutMs: Infinity },
+            );
 
             const stopReason = isObject(response) ? asString(response.stopReason) : null;
             if (stopReason) {
@@ -176,7 +186,7 @@ export class AcpSdkBackend implements AgentBackend {
     async respondToPermission(
         _sessionId: string,
         request: PermissionRequest,
-        response: PermissionResponse
+        response: PermissionResponse,
     ): Promise<void> {
         const pending = this.pendingPermissions.get(request.id);
         if (!pending) {
@@ -194,8 +204,8 @@ export class AcpSdkBackend implements AgentBackend {
         pending.resolve({
             outcome: {
                 outcome: 'selected',
-                optionId: response.optionId
-            }
+                optionId: response.optionId,
+            },
         });
     }
 
@@ -247,7 +257,7 @@ export class AcpSdkBackend implements AgentBackend {
         this.messageHandler.handleUpdate(update);
     }
 
-    private async handlePermissionRequest(params: unknown, requestId: string | number | null): Promise<unknown> {
+    private async handlePermissionRequest(params: unknown, _requestId: string | number | null): Promise<unknown> {
         if (!isObject(params)) {
             return { outcome: { outcome: 'cancelled' } };
         }
@@ -261,12 +271,12 @@ export class AcpSdkBackend implements AgentBackend {
         const rawOutput = 'rawOutput' in toolCall ? toolCall.rawOutput : undefined;
         const options = Array.isArray(params.options)
             ? params.options
-                .filter((option) => isObject(option))
-                .map((option, index) => ({
-                    optionId: asString(option.optionId) ?? `option-${index + 1}`,
-                    name: asString(option.name) ?? `Option ${index + 1}`,
-                    kind: asString(option.kind) ?? 'allow_once'
-                }))
+                  .filter((option) => isObject(option))
+                  .map((option, index) => ({
+                      optionId: asString(option.optionId) ?? `option-${index + 1}`,
+                      name: asString(option.name) ?? `Option ${index + 1}`,
+                      kind: asString(option.kind) ?? 'allow_once',
+                  }))
             : [];
 
         const request: PermissionRequest = {
@@ -277,7 +287,7 @@ export class AcpSdkBackend implements AgentBackend {
             kind,
             rawInput,
             rawOutput,
-            options
+            options,
         };
 
         if (this.permissionHandler) {

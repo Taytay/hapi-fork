@@ -7,47 +7,43 @@
  */
 
 // Characters that stop the active word search
-const STOP_CHARACTERS = ['\n', ',', '(', ')', '[', ']', '{', '}', '<', '>', ';', '!', '?', '.']
+const STOP_CHARACTERS = ['\n', ',', '(', ')', '[', ']', '{', '}', '<', '>', ';', '!', '?', '.'];
 
 interface Selection {
-    start: number
-    end: number
+    start: number;
+    end: number;
 }
 
 export interface ActiveWord {
-    word: string           // Full word from prefix to end (e.g., "@username")
-    activeWord: string     // Part from prefix to cursor (e.g., "@use")
-    offset: number         // Starting position of the word
-    length: number         // Total length of the complete word
-    activeLength: number   // Length from prefix to cursor
-    endOffset: number      // Position where the word ends (offset + length)
+    word: string; // Full word from prefix to end (e.g., "@username")
+    activeWord: string; // Part from prefix to cursor (e.g., "@use")
+    offset: number; // Starting position of the word
+    length: number; // Total length of the complete word
+    activeLength: number; // Length from prefix to cursor
+    endOffset: number; // Position where the word ends (offset + length)
 }
 
-function findActiveWordStart(
-    content: string,
-    selection: Selection,
-    prefixes: string[]
-): number {
-    let startIndex = selection.start - 1
-    let spaceIndex = -1
-    let foundPrefix = false
-    let prefixIndex = -1
+function findActiveWordStart(content: string, selection: Selection, prefixes: string[]): number {
+    let startIndex = selection.start - 1;
+    let spaceIndex = -1;
+    let foundPrefix = false;
+    let prefixIndex = -1;
 
     while (startIndex >= 0) {
-        const char = content.charAt(startIndex)
+        const char = content.charAt(startIndex);
 
         // Check if we hit a space
         if (char === ' ') {
             if (foundPrefix) {
                 // We found a prefix earlier, return its position
-                return prefixIndex
+                return prefixIndex;
             }
             if (spaceIndex >= 0) {
                 // Multiple spaces, stop here
-                return spaceIndex + 1
+                return spaceIndex + 1;
             } else {
-                spaceIndex = startIndex
-                startIndex--
+                spaceIndex = startIndex;
+                startIndex--;
             }
         }
         // Check if this is a prefix character at word boundary
@@ -57,97 +53,93 @@ function findActiveWordStart(
         ) {
             // For @ prefix, continue searching backwards to include the entire file path
             if (char === '@') {
-                foundPrefix = true
-                prefixIndex = startIndex
+                foundPrefix = true;
+                prefixIndex = startIndex;
                 // Return immediately for @ at word boundary
-                return startIndex
+                return startIndex;
             } else {
-                return startIndex
+                return startIndex;
             }
         }
         // Check if we hit a stop character
         else if (STOP_CHARACTERS.includes(char)) {
             if (foundPrefix) {
-                return prefixIndex
+                return prefixIndex;
             }
-            return startIndex + 1
+            return startIndex + 1;
         }
         // Continue searching backwards
         else {
-            startIndex--
+            startIndex--;
         }
     }
 
     // Reached beginning of text
     if (foundPrefix) {
-        return prefixIndex
+        return prefixIndex;
     }
-    return (spaceIndex >= 0 ? spaceIndex : startIndex) + 1
+    return (spaceIndex >= 0 ? spaceIndex : startIndex) + 1;
 }
 
-function findActiveWordEnd(
-    content: string,
-    cursorPos: number,
-    wordStartPos?: number
-): number {
-    let endIndex = cursorPos
+function findActiveWordEnd(content: string, cursorPos: number, wordStartPos?: number): number {
+    let endIndex = cursorPos;
 
     // Check if this is a file path (starts with @ and may contain /)
-    let isFilePath = false
+    let isFilePath = false;
     if (wordStartPos !== undefined && wordStartPos >= 0 && wordStartPos < content.length) {
-        isFilePath = content.charAt(wordStartPos) === '@'
+        isFilePath = content.charAt(wordStartPos) === '@';
     }
 
     while (endIndex < content.length) {
-        const char = content.charAt(endIndex)
+        const char = content.charAt(endIndex);
 
         // For file paths starting with @, don't stop at / or .
         if (isFilePath && (char === '/' || char === '.')) {
-            endIndex++
-            continue
+            endIndex++;
+            continue;
         }
 
         // Stop at spaces or stop characters
         if (char === ' ' || STOP_CHARACTERS.includes(char)) {
-            break
+            break;
         }
-        endIndex++
+        endIndex++;
     }
 
-    return endIndex
+    return endIndex;
 }
 
 export function findActiveWord(
     content: string,
     selection: Selection,
-    prefixes: string[] = ['@', '/']
+    prefixes: string[] = ['@', '/'],
 ): ActiveWord | undefined {
     // Only detect when cursor is at a single point (no text selected)
     if (selection.start !== selection.end) {
-        return undefined
+        return undefined;
     }
 
     // Don't detect if cursor is at the very beginning
     if (selection.start === 0) {
-        return undefined
+        return undefined;
     }
 
-    const startIndex = findActiveWordStart(content, selection, prefixes)
-    const activeWordPart = content.substring(startIndex, selection.end)
+    const startIndex = findActiveWordStart(content, selection, prefixes);
+    const activeWordPart = content.substring(startIndex, selection.end);
 
     // Check if the active word ends with a space - if so, no active word
     if (activeWordPart.endsWith(' ')) {
-        return undefined
+        return undefined;
     }
 
     // Check if the word starts with one of our prefixes
     if (activeWordPart.length > 0) {
-        const firstChar = activeWordPart.charAt(0)
+        const firstChar = activeWordPart.charAt(0);
         if (prefixes.includes(firstChar)) {
             // Find where the word ends after the cursor
             // Pass the start position to help determine if this is a file path
-            const endIndex = findActiveWordEnd(content, selection.end, startIndex)
-            const fullWord = content.substring(startIndex, endIndex)
+            const endIndex = findActiveWordEnd(content, selection.end, startIndex);
+            const fullWord = content.substring(startIndex, endIndex);
 
             // Don't return just the prefix character alone
             if (activeWordPart.length === 1 && fullWord.length === 1) {
@@ -157,8 +149,8 @@ export function findActiveWord(
                     offset: startIndex,
                     length: fullWord.length,
                     activeLength: activeWordPart.length,
-                    endOffset: endIndex
-                } // Return single prefix to show suggestions immediately
+                    endOffset: endIndex,
+                }; // Return single prefix to show suggestions immediately
             }
             return {
                 word: fullWord,
@@ -166,12 +158,12 @@ export function findActiveWord(
                 offset: startIndex,
                 length: fullWord.length,
                 activeLength: activeWordPart.length,
-                endOffset: endIndex
-            }
+                endOffset: endIndex,
+            };
         }
     }
 
-    return undefined
+    return undefined;
 }
 
 /**
@@ -181,7 +173,7 @@ export function findActiveWord(
  */
 export function getActiveWordQuery(activeWord: string): string {
     if (activeWord.length > 1) {
-        return activeWord.substring(1)
+        return activeWord.substring(1);
     }
-    return ''
+    return '';
 }

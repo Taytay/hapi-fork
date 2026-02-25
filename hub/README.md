@@ -225,6 +225,7 @@ See `src/store/index.ts` for SQLite persistence:
 ## Security model
 
 Access is controlled by:
+
 - Telegram initData verification plus bound Telegram users (bound via `CLI_API_TOKEN:<namespace>`).
 - `CLI_API_TOKEN` base secret for CLI and browser access (namespace is appended by clients).
 

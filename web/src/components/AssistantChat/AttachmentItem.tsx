@@ -1,5 +1,5 @@
-import { AttachmentPrimitive, useThreadComposerAttachment } from '@assistant-ui/react'
-import { Spinner } from '@/components/Spinner'
+import { AttachmentPrimitive, useThreadComposerAttachment } from '@assistant-ui/react';
+import { Spinner } from '@/components/Spinner';
 
 function ErrorIcon() {
     return (
@@ -8,7 +8,7 @@ function ErrorIcon() {
             <path d="M8 5v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             <circle cx="8" cy="11" r="0.75" fill="currentColor" />
         </svg>
-    )
+    );
 }
 
 function RemoveIcon() {
@@ -27,13 +27,13 @@ function RemoveIcon() {
             <line x1="3" y1="3" x2="9" y2="9" />
             <line x1="9" y1="3" x2="3" y2="9" />
         </svg>
-    )
+    );
 }
 
 export function AttachmentItem() {
-    const { name, status } = useThreadComposerAttachment()
-    const isUploading = status.type === 'running'
-    const isError = status.type === 'incomplete'
+    const { name, status } = useThreadComposerAttachment();
+    const isUploading = status.type === 'running';
+    const isError = status.type === 'incomplete';
 
     return (
         <AttachmentPrimitive.Root className="flex items-center gap-2 rounded-lg bg-[var(--app-subtle-bg)] px-3 py-2 text-base text-[var(--app-fg)]">
@@ -52,5 +52,5 @@ export function AttachmentItem() {
                 <RemoveIcon />
             </AttachmentPrimitive.Remove>
         </AttachmentPrimitive.Root>
-    )
+    );
 }

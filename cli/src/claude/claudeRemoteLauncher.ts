@@ -1,22 +1,22 @@
-import React from "react";
-import { Session } from "./session";
-import { RemoteModeDisplay } from "@/ui/ink/RemoteModeDisplay";
-import { claudeRemote } from "./claudeRemote";
-import { PermissionHandler } from "./utils/permissionHandler";
-import { Future } from "@/utils/future";
-import { SDKAssistantMessage, SDKMessage, SDKUserMessage } from "./sdk";
-import { formatClaudeMessageForInk } from "@/ui/messageFormatterInk";
-import { logger } from "@/ui/logger";
-import { SDKToLogConverter } from "./utils/sdkToLogConverter";
-import { PLAN_FAKE_REJECT } from "./sdk/prompts";
-import { EnhancedMode } from "./loop";
-import { OutgoingMessageQueue } from "./utils/OutgoingMessageQueue";
-import type { ClaudePermissionMode } from "@hapi/protocol/types";
+import type { ClaudePermissionMode } from '@hapi/protocol/types';
+import React from 'react';
 import {
     RemoteLauncherBase,
     type RemoteLauncherDisplayContext,
-    type RemoteLauncherExitReason
-} from "@/modules/common/remote/RemoteLauncherBase";
+    type RemoteLauncherExitReason,
+} from '@/modules/common/remote/RemoteLauncherBase';
+import { RemoteModeDisplay } from '@/ui/ink/RemoteModeDisplay';
+import { logger } from '@/ui/logger';
+import { formatClaudeMessageForInk } from '@/ui/messageFormatterInk';
+import { Future } from '@/utils/future';
+import { claudeRemote } from './claudeRemote';
+import type { EnhancedMode } from './loop';
+import type { SDKAssistantMessage, SDKMessage, SDKUserMessage } from './sdk';
+import { PLAN_FAKE_REJECT } from './sdk/prompts';
+import type { Session } from './session';
+import { OutgoingMessageQueue } from './utils/OutgoingMessageQueue';
+import { PermissionHandler } from './utils/permissionHandler';
+import { SDKToLogConverter } from './utils/sdkToLogConverter';
 
 interface PermissionsField {
     date: number;
@@ -75,7 +75,7 @@ class ClaudeRemoteLauncher extends RemoteLauncherBase {
     public async launch(): Promise<RemoteLauncherExitReason> {
         return this.start({
             onExit: () => this.handleExitFromUi(),
-            onSwitchToLocal: () => this.handleSwitchFromUi()
+            onSwitchToLocal: () => this.handleSwitchFromUi(),
         });
     }
 
@@ -88,25 +88,28 @@ class ClaudeRemoteLauncher extends RemoteLauncherBase {
 
         this.setupAbortHandlers(session.client.rpcHandlerManager, {
             onAbort: () => this.handleAbortRequest(),
-            onSwitch: () => this.handleSwitchRequest()
+            onSwitch: () => this.handleSwitchRequest(),
         });
 
         const permissionHandler = new PermissionHandler(session);
         this.permissionHandler = permissionHandler;
 
-        const messageQueue = new OutgoingMessageQueue(
-            (logMessage) => session.client.sendClaudeSessionMessage(logMessage)
+        const messageQueue = new OutgoingMessageQueue((logMessage) =>
+            session.client.sendClaudeSessionMessage(logMessage),
         );
 
         permissionHandler.setOnPermissionRequest((toolCallId: string) => {
             messageQueue.releaseToolCall(toolCallId);
         });
 
-        const sdkToLogConverter = new SDKToLogConverter({
-            sessionId: session.sessionId || 'unknown',
-            cwd: session.path,
-            version: process.env.npm_package_version
-        }, permissionHandler.getResponses());
+        const sdkToLogConverter = new SDKToLogConverter(
+            {
+                sessionId: session.sessionId || 'unknown',
+                cwd: session.path,
+                version: process.env.npm_package_version,
+            },
+            permissionHandler.getResponses(),
+        );
 
         const handleSessionFound = (sessionId: string) => {
             sdkToLogConverter.updateSessionId(sessionId);
@@ -114,19 +117,19 @@ class ClaudeRemoteLauncher extends RemoteLauncherBase {
         this.handleSessionFound = handleSessionFound;
         session.addSessionFoundCallback(handleSessionFound);
 
-        let planModeToolCalls = new Set<string>();
-        let ongoingToolCalls = new Map<string, { parentToolCallId: string | null }>();
+        const planModeToolCalls = new Set<string>();
+        const ongoingToolCalls = new Map<string, { parentToolCallId: string | null }>();
 
         function onMessage(message: SDKMessage) {
             formatClaudeMessageForInk(message, messageBuffer);
             permissionHandler.onMessage(message);
 
             if (message.type === 'assistant') {
-                let umessage = message as SDKAssistantMessage;
+                const umessage = message as SDKAssistantMessage;
                 if (umessage.message.content && Array.isArray(umessage.message.content)) {
-                    for (let c of umessage.message.content) {
+                    for (const c of umessage.message.content) {
                         if (c.type === 'tool_use' && (c.name === 'exit_plan_mode' || c.name === 'ExitPlanMode')) {
-                            logger.debug('[remote]: detected plan mode tool call ' + c.id!);
+                            logger.debug(`[remote]: detected plan mode tool call ${c.id!}`);
                             planModeToolCalls.add(c.id! as string);
                         }
                     }
@@ -134,20 +137,20 @@ class ClaudeRemoteLauncher extends RemoteLauncherBase {
             }
 
             if (message.type === 'assistant') {
-                let umessage = message as SDKAssistantMessage;
+                const umessage = message as SDKAssistantMessage;
                 if (umessage.message.content && Array.isArray(umessage.message.content)) {
-                    for (let c of umessage.message.content) {
+                    for (const c of umessage.message.content) {
                         if (c.type === 'tool_use') {
-                            logger.debug('[remote]: detected tool use ' + c.id! + ' parent: ' + umessage.parent_tool_use_id);
+                            logger.debug(`[remote]: detected tool use ${c.id!} parent: ${umessage.parent_tool_use_id}`);
                             ongoingToolCalls.set(c.id!, { parentToolCallId: umessage.parent_tool_use_id ?? null });
                         }
                     }
                 }
             }
             if (message.type === 'user') {
-                let umessage = message as SDKUserMessage;
+                const umessage = message as SDKUserMessage;
                 if (umessage.message.content && Array.isArray(umessage.message.content)) {
-                    for (let c of umessage.message.content) {
+                    for (const c of umessage.message.content) {
                         if (c.type === 'tool_result' && c.tool_use_id) {
                             ongoingToolCalls.delete(c.tool_use_id);
                             messageQueue.releaseToolCall(c.tool_use_id);
@@ -159,14 +162,18 @@ class ClaudeRemoteLauncher extends RemoteLauncherBase {
             let msg = message;
 
             if (message.type === 'user') {
-                let umessage = message as SDKUserMessage;
+                const umessage = message as SDKUserMessage;
                 if (umessage.message.content && Array.isArray(umessage.message.content)) {
                     msg = {
                         ...umessage,
                         message: {
                             ...umessage.message,
                             content: umessage.message.content.map((c) => {
-                                if (c.type === 'tool_result' && c.tool_use_id && planModeToolCalls.has(c.tool_use_id!)) {
+                                if (
+                                    c.type === 'tool_result' &&
+                                    c.tool_use_id &&
+                                    planModeToolCalls.has(c.tool_use_id!)
+                                ) {
                                     if (c.content === PLAN_FAKE_REJECT) {
                                         logger.debug('[remote]: hack plan mode exit');
                                         logger.debugLargeJson('[remote]: hack plan mode exit', c);
@@ -174,15 +181,15 @@ class ClaudeRemoteLauncher extends RemoteLauncherBase {
                                             ...c,
                                             is_error: false,
                                             content: 'Plan approved',
-                                            mode: c.mode
+                                            mode: c.mode,
                                         };
                                     } else {
                                         return c;
                                     }
                                 }
                                 return c;
-                            })
-                        }
+                            }),
+                        },
                     };
                 }
             }
@@ -190,9 +197,7 @@ class ClaudeRemoteLauncher extends RemoteLauncherBase {
             const logMessage = sdkToLogConverter.convert(msg);
             if (logMessage) {
                 if (logMessage.type === 'user' && logMessage.message?.content) {
-                    const content = Array.isArray(logMessage.message.content)
-                        ? logMessage.message.content
-                        : [];
+                    const content = Array.isArray(logMessage.message.content) ? logMessage.message.content : [];
 
                     for (let i = 0; i < content.length; i++) {
                         const c = content[i];
@@ -203,7 +208,7 @@ class ClaudeRemoteLauncher extends RemoteLauncherBase {
                             if (response) {
                                 const permissions: PermissionsField = {
                                     date: response.receivedAt || Date.now(),
-                                    result: response.approved ? 'approved' : 'denied'
+                                    result: response.approved ? 'approved' : 'denied',
                                 };
 
                                 if (response.mode) {
@@ -216,7 +221,7 @@ class ClaudeRemoteLauncher extends RemoteLauncherBase {
 
                                 content[i] = {
                                     ...c,
-                                    permissions
+                                    permissions,
                                 };
                             }
                         }
@@ -241,7 +246,7 @@ class ClaudeRemoteLauncher extends RemoteLauncherBase {
                         if (!isSidechain) {
                             messageQueue.enqueue(logMessage, {
                                 delay: 250,
-                                toolCallIds
+                                toolCallIds,
                             });
                             return;
                         }
@@ -252,11 +257,19 @@ class ClaudeRemoteLauncher extends RemoteLauncherBase {
             }
 
             if (message.type === 'assistant') {
-                let umessage = message as SDKAssistantMessage;
+                const umessage = message as SDKAssistantMessage;
                 if (umessage.message.content && Array.isArray(umessage.message.content)) {
-                    for (let c of umessage.message.content) {
-                        if (c.type === 'tool_use' && c.name === 'Task' && c.input && typeof (c.input as any).prompt === 'string') {
-                            const logMessage2 = sdkToLogConverter.convertSidechainUserMessage(c.id!, (c.input as any).prompt);
+                    for (const c of umessage.message.content) {
+                        if (
+                            c.type === 'tool_use' &&
+                            c.name === 'Task' &&
+                            c.input &&
+                            typeof (c.input as any).prompt === 'string'
+                        ) {
+                            const logMessage2 = sdkToLogConverter.convertSidechainUserMessage(
+                                c.id!,
+                                (c.input as any).prompt,
+                            );
                             if (logMessage2) {
                                 messageQueue.enqueue(logMessage2);
                             }
@@ -282,7 +295,9 @@ class ClaudeRemoteLauncher extends RemoteLauncherBase {
                     messageBuffer.addMessage('Starting new Claude session...', 'status');
                     permissionHandler.reset();
                     sdkToLogConverter.resetParentChain();
-                    logger.debug(`[remote]: New session detected (previous: ${previousSessionId}, current: ${session.sessionId})`);
+                    logger.debug(
+                        `[remote]: New session detected (previous: ${previousSessionId}, current: ${session.sessionId})`,
+                    );
                 } else {
                     messageBuffer.addMessage('Continuing Claude session...', 'status');
                     logger.debug(`[remote]: Continuing existing session: ${session.sessionId}`);
@@ -307,13 +322,13 @@ class ClaudeRemoteLauncher extends RemoteLauncherBase {
                         },
                         nextMessage: async () => {
                             if (pending) {
-                                let p = pending;
+                                const p = pending;
                                 pending = null;
                                 permissionHandler.handleModeChange(p.mode.permissionMode);
                                 return p;
                             }
 
-                            let msg = await session.queue.waitForMessagesAndGetAsString(controller.signal);
+                            const msg = await session.queue.waitForMessagesAndGetAsString(controller.signal);
 
                             if (msg) {
                                 if ((modeHash && msg.hash !== modeHash) || msg.isolate) {
@@ -326,7 +341,7 @@ class ClaudeRemoteLauncher extends RemoteLauncherBase {
                                 permissionHandler.handleModeChange(mode.permissionMode);
                                 return {
                                     message: msg.message,
-                                    mode: msg.mode
+                                    mode: msg.mode,
                                 };
                             }
 
@@ -364,15 +379,14 @@ class ClaudeRemoteLauncher extends RemoteLauncherBase {
                     logger.debug('[remote]: launch error', e);
                     if (!this.exitReason) {
                         session.client.sendSessionEvent({ type: 'message', message: 'Process exited unexpectedly' });
-                        continue;
                     }
                 } finally {
                     logger.debug('[remote]: launch finally');
 
-                    for (let [toolCallId, { parentToolCallId }] of ongoingToolCalls) {
+                    for (const [toolCallId, { parentToolCallId }] of ongoingToolCalls) {
                         const converted = sdkToLogConverter.generateInterruptedToolResult(toolCallId, parentToolCallId);
                         if (converted) {
-                            logger.debug('[remote]: terminating tool call ' + toolCallId + ' parent: ' + parentToolCallId);
+                            logger.debug(`[remote]: terminating tool call ${toolCallId} parent: ${parentToolCallId}`);
                             session.client.sendClaudeSessionMessage(converted);
                         }
                     }

@@ -1,27 +1,25 @@
-import { claudeLocal } from "./claudeLocal";
-import { Session } from "./session";
-import { createSessionScanner } from "./utils/sessionScanner";
-import { BaseLocalLauncher } from "@/modules/common/launcher/BaseLocalLauncher";
+import { BaseLocalLauncher } from '@/modules/common/launcher/BaseLocalLauncher';
+import { claudeLocal } from './claudeLocal';
+import type { Session } from './session';
+import { createSessionScanner } from './utils/sessionScanner';
 
 export async function claudeLocalLauncher(session: Session): Promise<'switch' | 'exit'> {
-
     // Create scanner
     const scanner = await createSessionScanner({
         sessionId: session.sessionId,
         workingDirectory: session.path,
-        onMessage: (message) => { 
+        onMessage: (message) => {
             // Block SDK summary messages - we generate our own
             if (message.type !== 'summary') {
-                session.client.sendClaudeSessionMessage(message)
+                session.client.sendClaudeSessionMessage(message);
             }
-        }
+        },
     });
 
     const handleSessionFound = (sessionId: string) => {
         scanner.onNewSession(sessionId);
     };
     session.addSessionFoundCallback(handleSessionFound);
-
 
     const launcher = new BaseLocalLauncher({
         label: 'local',
@@ -52,7 +50,7 @@ export async function claudeLocalLauncher(session: Session): Promise<'switch' | 
             session.recordLocalLaunchFailure(message, exitReason);
         },
         abortLogMessage: 'doAbort',
-        switchLogMessage: 'doSwitch'
+        switchLogMessage: 'doSwitch',
     });
     try {
         return await launcher.run();

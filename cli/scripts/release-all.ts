@@ -19,10 +19,10 @@ const repoRoot = join(projectRoot, '..');
 
 // 解析参数
 const args = process.argv.slice(2);
-const version = args.find(arg => !arg.startsWith('--'));
+const version = args.find((arg) => !arg.startsWith('--'));
 const dryRun = args.includes('--dry-run');
-const publishNpm = args.includes('--publish-npm');  // 只发布 npm，跳过 git 操作
-const skipBuild = args.includes('--skip-build');    // 跳过构建（二进制已存在）
+const publishNpm = args.includes('--publish-npm'); // 只发布 npm，跳过 git 操作
+const skipBuild = args.includes('--skip-build'); // 跳过构建（二进制已存在）
 
 if (!version) {
     console.error('Usage: bun run scripts/release-all.ts <version> [options]');
@@ -53,7 +53,7 @@ async function runWithTimeoutRetry(cmd: string, cwd = projectRoot): Promise<void
             return;
         } catch {
             console.warn(`⚠️ ${cmd} failed or timed out. Retrying in 60s...`);
-            await new Promise(resolve => setTimeout(resolve, 60_000));
+            await new Promise((resolve) => setTimeout(resolve, 60_000));
         }
     }
 }
@@ -91,7 +91,7 @@ async function main(): Promise<void> {
     const oldVersion = pkg.version;
     pkg.version = version;
     if (!dryRun) {
-        writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+        writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
     }
     console.log(`   ${oldVersion} → ${version}`);
 
@@ -137,7 +137,7 @@ async function main(): Promise<void> {
     console.log(`\n✅ Release v${version} completed!`);
 }
 
-main().catch(err => {
+main().catch((err) => {
     console.error('Release failed:', err);
     process.exit(1);
 });

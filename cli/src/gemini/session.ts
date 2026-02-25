@@ -1,8 +1,8 @@
-import { ApiClient, ApiSessionClient } from '@/lib';
-import { MessageQueue2 } from '@/utils/MessageQueue2';
-import { AgentSessionBase } from '@/agent/sessionBase';
-import type { GeminiMode, PermissionMode } from './types';
 import type { LocalLaunchExitReason } from '@/agent/localLaunchPolicy';
+import { AgentSessionBase } from '@/agent/sessionBase';
+import type { ApiClient, ApiSessionClient } from '@/lib';
+import type { MessageQueue2 } from '@/utils/MessageQueue2';
+import type { GeminiMode, PermissionMode } from './types';
 
 type LocalLaunchFailure = {
     message: string;
@@ -43,9 +43,9 @@ export class GeminiSession extends AgentSessionBase<GeminiMode> {
             sessionIdLabel: 'Gemini',
             applySessionIdToMetadata: (metadata, sessionId) => ({
                 ...metadata,
-                geminiSessionId: sessionId
+                geminiSessionId: sessionId,
             }),
-            permissionMode: opts.permissionMode
+            permissionMode: opts.permissionMode,
         });
 
         this.startedBy = opts.startedBy;

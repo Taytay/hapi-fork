@@ -1,6 +1,6 @@
-import { logger } from "@/ui/logger";
-import { delay } from "@/utils/time";
-import { watch } from "fs/promises";
+import { watch } from 'node:fs/promises';
+import { logger } from '@/ui/logger';
+import { delay } from '@/utils/time';
 
 export function startFileWatcher(file: string, onFileChange: (file: string) => void) {
     const abortController = new AbortController();
@@ -10,7 +10,7 @@ export function startFileWatcher(file: string, onFileChange: (file: string) => v
             try {
                 logger.debug(`[FILE_WATCHER] Starting watcher for ${file}`);
                 const watcher = watch(file, { persistent: true, signal: abortController.signal });
-                for await (const event of watcher) {
+                for await (const _event of watcher) {
                     if (abortController.signal.aborted) {
                         return;
                     }

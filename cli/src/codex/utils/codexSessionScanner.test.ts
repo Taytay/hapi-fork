@@ -1,10 +1,10 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { mkdir, writeFile, appendFile, rm } from 'node:fs/promises';
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
 import { existsSync } from 'node:fs';
-import { createCodexSessionScanner } from './codexSessionScanner';
+import { appendFile, mkdir, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { CodexSessionEvent } from './codexEventConverter';
+import { createCodexSessionScanner } from './codexSessionScanner';
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -50,14 +50,14 @@ describe('codexSessionScanner', () => {
 
         const initialLines = [
             JSON.stringify({ type: 'session_meta', payload: { id: sessionId } }),
-            JSON.stringify({ type: 'event_msg', payload: { type: 'agent_message', message: 'hello' } })
+            JSON.stringify({ type: 'event_msg', payload: { type: 'agent_message', message: 'hello' } }),
         ];
 
-        await writeFile(sessionFile, initialLines.join('\n') + '\n');
+        await writeFile(sessionFile, `${initialLines.join('\n')}\n`);
 
         scanner = await createCodexSessionScanner({
             sessionId,
-            onEvent: (event) => events.push(event)
+            onEvent: (event) => events.push(event),
         });
 
         await wait(150);
@@ -65,9 +65,9 @@ describe('codexSessionScanner', () => {
 
         const newLine = JSON.stringify({
             type: 'response_item',
-            payload: { type: 'function_call', name: 'Tool', call_id: 'call-1', arguments: '{}' }
+            payload: { type: 'function_call', name: 'Tool', call_id: 'call-1', arguments: '{}' },
         });
-        await appendFile(sessionFile, newLine + '\n');
+        await appendFile(sessionFile, `${newLine}\n`);
 
         await wait(200);
         expect(events).toHaveLength(1);
@@ -85,13 +85,27 @@ describe('codexSessionScanner', () => {
 
         await mkdir(outsideDir, { recursive: true });
         const baseLines = [
-            JSON.stringify({ type: 'session_meta', payload: { id: matchingSessionId, cwd: '/data/github/happy/hapi', timestamp: '2025-12-22T00:00:30.000Z' } }),
-            JSON.stringify({ type: 'event_msg', payload: { type: 'agent_message', message: 'hello' } })
+            JSON.stringify({
+                type: 'session_meta',
+                payload: {
+                    id: matchingSessionId,
+                    cwd: '/data/github/happy/hapi',
+                    timestamp: '2025-12-22T00:00:30.000Z',
+                },
+            }),
+            JSON.stringify({ type: 'event_msg', payload: { type: 'agent_message', message: 'hello' } }),
         ];
-        await writeFile(matchingFile, baseLines.join('\n') + '\n');
+        await writeFile(matchingFile, `${baseLines.join('\n')}\n`);
         await writeFile(
             outsideFile,
-            JSON.stringify({ type: 'session_meta', payload: { id: outsideSessionId, cwd: '/data/github/happy/hapi', timestamp: '2025-12-20T00:00:00.000Z' } }) + '\n'
+            `${JSON.stringify({
+                type: 'session_meta',
+                payload: {
+                    id: outsideSessionId,
+                    cwd: '/data/github/happy/hapi',
+                    timestamp: '2025-12-20T00:00:00.000Z',
+                },
+            })}\n`,
         );
 
         scanner = await createCodexSessionScanner({
@@ -99,7 +113,7 @@ describe('codexSessionScanner', () => {
             cwd: '/data/github/happy/hapi',
             startupTimestampMs: referenceTimestampMs,
             sessionStartWindowMs: windowMs,
-            onEvent: (event) => events.push(event)
+            onEvent: (event) => events.push(event),
         });
 
         await wait(200);
@@ -107,9 +121,9 @@ describe('codexSessionScanner', () => {
 
         const newLine = JSON.stringify({
             type: 'response_item',
-            payload: { type: 'function_call', name: 'Tool', call_id: 'call-2', arguments: '{}' }
+            payload: { type: 'function_call', name: 'Tool', call_id: 'call-2', arguments: '{}' },
         });
-        await appendFile(matchingFile, newLine + '\n');
+        await appendFile(matchingFile, `${newLine}\n`);
 
         await wait(200);
         expect(events).toHaveLength(1);
@@ -121,10 +135,7 @@ describe('codexSessionScanner', () => {
         const matchFailedMessage = 'No cwd provided for Codex session matching; refusing to fallback.';
         sessionFile = join(sessionsDir, `codex-${sessionId}.jsonl`);
 
-        await writeFile(
-            sessionFile,
-            JSON.stringify({ type: 'session_meta', payload: { id: sessionId } }) + '\n'
-        );
+        await writeFile(sessionFile, `${JSON.stringify({ type: 'session_meta', payload: { id: sessionId } })}\n`);
 
         let failureMessage: string | null = null;
         scanner = await createCodexSessionScanner({
@@ -132,7 +143,7 @@ describe('codexSessionScanner', () => {
             onEvent: (event) => events.push(event),
             onSessionMatchFailed: (message) => {
                 failureMessage = message;
-            }
+            },
         });
 
         await wait(150);
@@ -141,9 +152,9 @@ describe('codexSessionScanner', () => {
 
         const newLine = JSON.stringify({
             type: 'response_item',
-            payload: { type: 'function_call', name: 'Tool', call_id: 'call-3', arguments: '{}' }
+            payload: { type: 'function_call', name: 'Tool', call_id: 'call-3', arguments: '{}' },
         });
-        await appendFile(sessionFile, newLine + '\n');
+        await appendFile(sessionFile, `${newLine}\n`);
 
         await wait(200);
         expect(events).toHaveLength(0);

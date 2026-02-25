@@ -1,34 +1,35 @@
-import type { AgentEvent, NormalizedAgentContent, NormalizedMessage, ToolResultPermission } from '@/chat/types'
-import { asNumber, asString, isObject } from '@hapi/protocol'
+import { asNumber, asString, isObject } from '@hapi/protocol';
+import type { AgentEvent, NormalizedAgentContent, NormalizedMessage, ToolResultPermission } from '@/chat/types';
 
 function normalizeToolResultPermissions(value: unknown): ToolResultPermission | undefined {
-    if (!isObject(value)) return undefined
-    const date = asNumber(value.date)
-    const result = value.result
-    if (date === null) return undefined
-    if (result !== 'approved' && result !== 'denied') return undefined
+    if (!isObject(value)) return undefined;
+    const date = asNumber(value.date);
+    const result = value.result;
+    if (date === null) return undefined;
+    if (result !== 'approved' && result !== 'denied') return undefined;
 
-    const mode = asString(value.mode) ?? undefined
+    const mode = asString(value.mode) ?? undefined;
     const allowedTools = Array.isArray(value.allowedTools)
         ? value.allowedTools.filter((tool) => typeof tool === 'string')
-        : undefined
-    const decision = value.decision
-    const normalizedDecision = decision === 'approved' || decision === 'approved_for_session' || decision === 'denied' || decision === 'abort'
-        ? decision
-        : undefined
+        : undefined;
+    const decision = value.decision;
+    const normalizedDecision =
+        decision === 'approved' || decision === 'approved_for_session' || decision === 'denied' || decision === 'abort'
+            ? decision
+            : undefined;
 
     return {
         date,
         result,
         mode,
         allowedTools,
-        decision: normalizedDecision
-    }
+        decision: normalizedDecision,
+    };
 }
 
 function normalizeAgentEvent(value: unknown): AgentEvent | null {
-    if (!isObject(value) || typeof value.type !== 'string') return null
-    return value as AgentEvent
+    if (!isObject(value) || typeof value.type !== 'string') return null;
+    return value as AgentEvent;
 }
 
 function normalizeAssistantOutput(
@@ -36,43 +37,43 @@ function normalizeAssistantOutput(
     localId: string | null,
     createdAt: number,
     data: Record<string, unknown>,
-    meta?: unknown
+    meta?: unknown,
 ): NormalizedMessage | null {
-    const uuid = asString(data.uuid) ?? messageId
-    const parentUUID = asString(data.parentUuid) ?? null
-    const isSidechain = Boolean(data.isSidechain)
+    const uuid = asString(data.uuid) ?? messageId;
+    const parentUUID = asString(data.parentUuid) ?? null;
+    const isSidechain = Boolean(data.isSidechain);
 
-    const message = isObject(data.message) ? data.message : null
-    if (!message) return null
+    const message = isObject(data.message) ? data.message : null;
+    if (!message) return null;
 
-    const modelContent = message.content
-    const blocks: NormalizedAgentContent[] = []
+    const modelContent = message.content;
+    const blocks: NormalizedAgentContent[] = [];
 
     if (typeof modelContent === 'string') {
-        blocks.push({ type: 'text', text: modelContent, uuid, parentUUID })
+        blocks.push({ type: 'text', text: modelContent, uuid, parentUUID });
     } else if (Array.isArray(modelContent)) {
         for (const block of modelContent) {
-            if (!isObject(block) || typeof block.type !== 'string') continue
+            if (!isObject(block) || typeof block.type !== 'string') continue;
             if (block.type === 'text' && typeof block.text === 'string') {
-                blocks.push({ type: 'text', text: block.text, uuid, parentUUID })
-                continue
+                blocks.push({ type: 'text', text: block.text, uuid, parentUUID });
+                continue;
             }
             if (block.type === 'thinking' && typeof block.thinking === 'string') {
-                blocks.push({ type: 'reasoning', text: block.thinking, uuid, parentUUID })
-                continue
+                blocks.push({ type: 'reasoning', text: block.thinking, uuid, parentUUID });
+                continue;
             }
             if (block.type === 'tool_use' && typeof block.id === 'string') {
-                const name = asString(block.name) ?? 'Tool'
-                const input = 'input' in block ? (block as Record<string, unknown>).input : undefined
-                const description = isObject(input) && typeof input.description === 'string' ? input.description : null
-                blocks.push({ type: 'tool-call', id: block.id, name, input, description, uuid, parentUUID })
+                const name = asString(block.name) ?? 'Tool';
+                const input = 'input' in block ? (block as Record<string, unknown>).input : undefined;
+                const description = isObject(input) && typeof input.description === 'string' ? input.description : null;
+                blocks.push({ type: 'tool-call', id: block.id, name, input, description, uuid, parentUUID });
             }
         }
     }
 
-    const usage = isObject(message.usage) ? (message.usage as Record<string, unknown>) : null
-    const inputTokens = usage ? asNumber(usage.input_tokens) : null
-    const outputTokens = usage ? asNumber(usage.output_tokens) : null
+    const usage = isObject(message.usage) ? (message.usage as Record<string, unknown>) : null;
+    const inputTokens = usage ? asNumber(usage.input_tokens) : null;
+    const outputTokens = usage ? asNumber(usage.output_tokens) : null;
 
     return {
         id: messageId,
@@ -82,14 +83,17 @@ function normalizeAssistantOutput(
         isSidechain,
         content: blocks,
         meta,
-        usage: inputTokens !== null && outputTokens !== null ? {
-            input_tokens: inputTokens,
-            output_tokens: outputTokens,
-            cache_creation_input_tokens: asNumber(usage?.cache_creation_input_tokens) ?? undefined,
-            cache_read_input_tokens: asNumber(usage?.cache_read_input_tokens) ?? undefined,
-            service_tier: asString(usage?.service_tier) ?? undefined
-        } : undefined
-    }
+        usage:
+            inputTokens !== null && outputTokens !== null
+                ? {
+                      input_tokens: inputTokens,
+                      output_tokens: outputTokens,
+                      cache_creation_input_tokens: asNumber(usage?.cache_creation_input_tokens) ?? undefined,
+                      cache_read_input_tokens: asNumber(usage?.cache_read_input_tokens) ?? undefined,
+                      service_tier: asString(usage?.service_tier) ?? undefined,
+                  }
+                : undefined,
+    };
 }
 
 function normalizeUserOutput(
@@ -97,16 +101,16 @@ function normalizeUserOutput(
     localId: string | null,
     createdAt: number,
     data: Record<string, unknown>,
-    meta?: unknown
+    meta?: unknown,
 ): NormalizedMessage | null {
-    const uuid = asString(data.uuid) ?? messageId
-    const parentUUID = asString(data.parentUuid) ?? null
-    const isSidechain = Boolean(data.isSidechain)
+    const uuid = asString(data.uuid) ?? messageId;
+    const parentUUID = asString(data.parentUuid) ?? null;
+    const isSidechain = Boolean(data.isSidechain);
 
-    const message = isObject(data.message) ? data.message : null
-    if (!message) return null
+    const message = isObject(data.message) ? data.message : null;
+    if (!message) return null;
 
-    const messageContent = message.content
+    const messageContent = message.content;
 
     if (isSidechain && typeof messageContent === 'string') {
         return {
@@ -115,8 +119,8 @@ function normalizeUserOutput(
             createdAt,
             role: 'agent',
             isSidechain: true,
-            content: [{ type: 'sidechain', uuid, prompt: messageContent }]
-        }
+            content: [{ type: 'sidechain', uuid, prompt: messageContent }],
+        };
     }
 
     if (typeof messageContent === 'string') {
@@ -127,25 +131,26 @@ function normalizeUserOutput(
             role: 'user',
             isSidechain: false,
             content: { type: 'text', text: messageContent },
-            meta
-        }
+            meta,
+        };
     }
 
-    const blocks: NormalizedAgentContent[] = []
+    const blocks: NormalizedAgentContent[] = [];
 
     if (Array.isArray(messageContent)) {
         for (const block of messageContent) {
-            if (!isObject(block) || typeof block.type !== 'string') continue
+            if (!isObject(block) || typeof block.type !== 'string') continue;
             if (block.type === 'text' && typeof block.text === 'string') {
-                blocks.push({ type: 'text', text: block.text, uuid, parentUUID })
-                continue
+                blocks.push({ type: 'text', text: block.text, uuid, parentUUID });
+                continue;
             }
             if (block.type === 'tool_result' && typeof block.tool_use_id === 'string') {
-                const isError = Boolean(block.is_error)
-                const rawContent = 'content' in block ? (block as Record<string, unknown>).content : undefined
-                const embeddedToolUseResult = 'toolUseResult' in data ? (data as Record<string, unknown>).toolUseResult : null
+                const isError = Boolean(block.is_error);
+                const rawContent = 'content' in block ? (block as Record<string, unknown>).content : undefined;
+                const embeddedToolUseResult =
+                    'toolUseResult' in data ? (data as Record<string, unknown>).toolUseResult : null;
 
-                const permissions = normalizeToolResultPermissions(block.permissions)
+                const permissions = normalizeToolResultPermissions(block.permissions);
 
                 blocks.push({
                     type: 'tool-result',
@@ -154,8 +159,8 @@ function normalizeUserOutput(
                     is_error: isError,
                     uuid,
                     parentUUID,
-                    permissions
-                })
+                    permissions,
+                });
             }
         }
     }
@@ -167,19 +172,19 @@ function normalizeUserOutput(
         role: 'agent',
         isSidechain,
         content: blocks,
-        meta
-    }
+        meta,
+    };
 }
 
 export function isSkippableAgentContent(content: unknown): boolean {
-    if (!isObject(content) || content.type !== 'output') return false
-    const data = isObject(content.data) ? content.data : null
-    if (!data) return false
-    return Boolean(data.isMeta) || Boolean(data.isCompactSummary)
+    if (!isObject(content) || content.type !== 'output') return false;
+    const data = isObject(content.data) ? content.data : null;
+    if (!data) return false;
+    return Boolean(data.isMeta) || Boolean(data.isCompactSummary);
 }
 
 export function isCodexContent(content: unknown): boolean {
-    return isObject(content) && content.type === 'codex'
+    return isObject(content) && content.type === 'codex';
 }
 
 export function normalizeAgentRecord(
@@ -187,23 +192,23 @@ export function normalizeAgentRecord(
     localId: string | null,
     createdAt: number,
     content: unknown,
-    meta?: unknown
+    meta?: unknown,
 ): NormalizedMessage | null {
-    if (!isObject(content) || typeof content.type !== 'string') return null
+    if (!isObject(content) || typeof content.type !== 'string') return null;
 
     if (content.type === 'output') {
-        const data = isObject(content.data) ? content.data : null
-        if (!data || typeof data.type !== 'string') return null
+        const data = isObject(content.data) ? content.data : null;
+        if (!data || typeof data.type !== 'string') return null;
 
         // Skip meta/compact-summary messages (parity with hapi-app)
-        if (data.isMeta) return null
-        if (data.isCompactSummary) return null
+        if (data.isMeta) return null;
+        if (data.isCompactSummary) return null;
 
         if (data.type === 'assistant') {
-            return normalizeAssistantOutput(messageId, localId, createdAt, data, meta)
+            return normalizeAssistantOutput(messageId, localId, createdAt, data, meta);
         }
         if (data.type === 'user') {
-            return normalizeUserOutput(messageId, localId, createdAt, data, meta)
+            return normalizeUserOutput(messageId, localId, createdAt, data, meta);
         }
         if (data.type === 'summary' && typeof data.summary === 'string') {
             return {
@@ -213,8 +218,8 @@ export function normalizeAgentRecord(
                 role: 'agent',
                 isSidechain: false,
                 content: [{ type: 'summary', summary: data.summary }],
-                meta
-            }
+                meta,
+            };
         }
         if (data.type === 'system' && data.subtype === 'api_error') {
             return {
@@ -226,11 +231,11 @@ export function normalizeAgentRecord(
                     type: 'api-error',
                     retryAttempt: asNumber(data.retryAttempt) ?? 0,
                     maxRetries: asNumber(data.maxRetries) ?? 0,
-                    error: data.error
+                    error: data.error,
                 },
                 isSidechain: false,
-                meta
-            }
+                meta,
+            };
         }
         if (data.type === 'system' && data.subtype === 'turn_duration') {
             return {
@@ -240,14 +245,14 @@ export function normalizeAgentRecord(
                 role: 'event',
                 content: {
                     type: 'turn-duration',
-                    durationMs: asNumber(data.durationMs) ?? 0
+                    durationMs: asNumber(data.durationMs) ?? 0,
                 },
                 isSidechain: false,
-                meta
-            }
+                meta,
+            };
         }
         if (data.type === 'system' && data.subtype === 'microcompact_boundary') {
-            const metadata = isObject(data.microcompactMetadata) ? data.microcompactMetadata : null
+            const metadata = isObject(data.microcompactMetadata) ? data.microcompactMetadata : null;
             return {
                 id: messageId,
                 localId,
@@ -257,14 +262,14 @@ export function normalizeAgentRecord(
                     type: 'microcompact',
                     trigger: asString(metadata?.trigger) ?? 'auto',
                     preTokens: asNumber(metadata?.preTokens) ?? 0,
-                    tokensSaved: asNumber(metadata?.tokensSaved) ?? 0
+                    tokensSaved: asNumber(metadata?.tokensSaved) ?? 0,
                 },
                 isSidechain: false,
-                meta
-            }
+                meta,
+            };
         }
         if (data.type === 'system' && data.subtype === 'compact_boundary') {
-            const metadata = isObject(data.compactMetadata) ? data.compactMetadata : null
+            const metadata = isObject(data.compactMetadata) ? data.compactMetadata : null;
             return {
                 id: messageId,
                 localId,
@@ -273,18 +278,18 @@ export function normalizeAgentRecord(
                 content: {
                     type: 'compact',
                     trigger: asString(metadata?.trigger) ?? 'auto',
-                    preTokens: asNumber(metadata?.preTokens) ?? 0
+                    preTokens: asNumber(metadata?.preTokens) ?? 0,
                 },
                 isSidechain: false,
-                meta
-            }
+                meta,
+            };
         }
-        return null
+        return null;
     }
 
     if (content.type === 'event') {
-        const event = normalizeAgentEvent(content.data)
-        if (!event) return null
+        const event = normalizeAgentEvent(content.data);
+        if (!event) return null;
         return {
             id: messageId,
             localId,
@@ -292,13 +297,13 @@ export function normalizeAgentRecord(
             role: 'event',
             content: event,
             isSidechain: false,
-            meta
-        }
+            meta,
+        };
     }
 
     if (content.type === 'codex') {
-        const data = isObject(content.data) ? content.data : null
-        if (!data || typeof data.type !== 'string') return null
+        const data = isObject(content.data) ? content.data : null;
+        if (!data || typeof data.type !== 'string') return null;
 
         if (data.type === 'message' && typeof data.message === 'string') {
             return {
@@ -308,8 +313,8 @@ export function normalizeAgentRecord(
                 role: 'agent',
                 isSidechain: false,
                 content: [{ type: 'text', text: data.message, uuid: messageId, parentUUID: null }],
-                meta
-            }
+                meta,
+            };
         }
 
         if (data.type === 'reasoning' && typeof data.message === 'string') {
@@ -320,51 +325,55 @@ export function normalizeAgentRecord(
                 role: 'agent',
                 isSidechain: false,
                 content: [{ type: 'reasoning', text: data.message, uuid: messageId, parentUUID: null }],
-                meta
-            }
+                meta,
+            };
         }
 
         if (data.type === 'tool-call' && typeof data.callId === 'string') {
-            const uuid = asString(data.id) ?? messageId
+            const uuid = asString(data.id) ?? messageId;
             return {
                 id: messageId,
                 localId,
                 createdAt,
                 role: 'agent',
                 isSidechain: false,
-                content: [{
-                    type: 'tool-call',
-                    id: data.callId,
-                    name: asString(data.name) ?? 'unknown',
-                    input: data.input,
-                    description: null,
-                    uuid,
-                    parentUUID: null
-                }],
-                meta
-            }
+                content: [
+                    {
+                        type: 'tool-call',
+                        id: data.callId,
+                        name: asString(data.name) ?? 'unknown',
+                        input: data.input,
+                        description: null,
+                        uuid,
+                        parentUUID: null,
+                    },
+                ],
+                meta,
+            };
         }
 
         if (data.type === 'tool-call-result' && typeof data.callId === 'string') {
-            const uuid = asString(data.id) ?? messageId
+            const uuid = asString(data.id) ?? messageId;
             return {
                 id: messageId,
                 localId,
                 createdAt,
                 role: 'agent',
                 isSidechain: false,
-                content: [{
-                    type: 'tool-result',
-                    tool_use_id: data.callId,
-                    content: data.output,
-                    is_error: false,
-                    uuid,
-                    parentUUID: null
-                }],
-                meta
-            }
+                content: [
+                    {
+                        type: 'tool-result',
+                        tool_use_id: data.callId,
+                        content: data.output,
+                        is_error: false,
+                        uuid,
+                        parentUUID: null,
+                    },
+                ],
+                meta,
+            };
         }
     }
 
-    return null
+    return null;
 }

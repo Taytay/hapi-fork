@@ -1,132 +1,134 @@
-import { useCallback, useEffect, useState } from 'react'
-import type { ApiClient } from '@/api/client'
+import { useCallback, useEffect, useState } from 'react';
+import type { ApiClient } from '@/api/client';
 
 function isPushSupported(): boolean {
-    return typeof window !== 'undefined'
-        && 'serviceWorker' in navigator
-        && 'PushManager' in window
-        && 'Notification' in window
+    return (
+        typeof window !== 'undefined' &&
+        'serviceWorker' in navigator &&
+        'PushManager' in window &&
+        'Notification' in window
+    );
 }
 
 function base64UrlToUint8Array(base64Url: string): Uint8Array {
-    const padding = '='.repeat((4 - (base64Url.length % 4)) % 4)
-    const base64 = (base64Url + padding)
-        .replace(/-/g, '+')
-        .replace(/_/g, '/')
-    const raw = atob(base64)
-    const output = new Uint8Array(raw.length)
+    const padding = '='.repeat((4 - (base64Url.length % 4)) % 4);
+    const base64 = (base64Url + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const raw = atob(base64);
+    const output = new Uint8Array(raw.length);
     for (let i = 0; i < raw.length; i += 1) {
-        output[i] = raw.charCodeAt(i)
+        output[i] = raw.charCodeAt(i);
     }
-    return output
+    return output;
 }
 
 export function usePushNotifications(api: ApiClient | null) {
-    const [isSupported, setIsSupported] = useState(false)
-    const [permission, setPermission] = useState<NotificationPermission>('default')
-    const [isSubscribed, setIsSubscribed] = useState(false)
+    const [isSupported, setIsSupported] = useState(false);
+    const [permission, setPermission] = useState<NotificationPermission>('default');
+    const [isSubscribed, setIsSubscribed] = useState(false);
 
     const refreshSubscription = useCallback(async () => {
         if (!isPushSupported()) {
-            setIsSupported(false)
-            setIsSubscribed(false)
-            return
+            setIsSupported(false);
+            setIsSubscribed(false);
+            return;
         }
 
-        setIsSupported(true)
-        setPermission(Notification.permission)
+        setIsSupported(true);
+        setPermission(Notification.permission);
 
         if (Notification.permission !== 'granted') {
-            setIsSubscribed(false)
-            return
+            setIsSubscribed(false);
+            return;
         }
 
-        const registration = await navigator.serviceWorker.ready
-        const subscription = await registration.pushManager.getSubscription()
-        setIsSubscribed(Boolean(subscription))
-    }, [])
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        setIsSubscribed(Boolean(subscription));
+    }, []);
 
     useEffect(() => {
-        void refreshSubscription()
-    }, [refreshSubscription])
+        void refreshSubscription();
+    }, [refreshSubscription]);
 
     const requestPermission = useCallback(async (): Promise<boolean> => {
         if (!isPushSupported()) {
-            return false
+            return false;
         }
 
-        const result = await Notification.requestPermission()
-        setPermission(result)
+        const result = await Notification.requestPermission();
+        setPermission(result);
         if (result !== 'granted') {
-            setIsSubscribed(false)
+            setIsSubscribed(false);
         }
-        return result === 'granted'
-    }, [])
+        return result === 'granted';
+    }, []);
 
     const subscribe = useCallback(async (): Promise<boolean> => {
         if (!api || !isPushSupported()) {
-            return false
+            return false;
         }
 
         if (Notification.permission !== 'granted') {
-            setPermission(Notification.permission)
-            return false
+            setPermission(Notification.permission);
+            return false;
         }
 
         try {
-            const registration = await navigator.serviceWorker.ready
-            const existing = await registration.pushManager.getSubscription()
-            const { publicKey } = await api.getPushVapidPublicKey()
-            const applicationServerKey = base64UrlToUint8Array(publicKey).buffer as ArrayBuffer
-            const subscription = existing ?? await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey
-            })
+            const registration = await navigator.serviceWorker.ready;
+            const existing = await registration.pushManager.getSubscription();
+            const { publicKey } = await api.getPushVapidPublicKey();
+            const applicationServerKey = base64UrlToUint8Array(publicKey).buffer as ArrayBuffer;
+            const subscription =
+                existing ??
+                (await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey,
+                }));
 
-            const json = subscription.toJSON()
-            const keys = json.keys
+            const json = subscription.toJSON();
+            const keys = json.keys;
             if (!json.endpoint || !keys?.p256dh || !keys.auth) {
-                return false
+                return false;
             }
 
             await api.subscribePushNotifications({
                 endpoint: json.endpoint,
                 keys: {
                     p256dh: keys.p256dh,
-                    auth: keys.auth
-                }
-            })
-            setIsSubscribed(true)
-            return true
+                    auth: keys.auth,
+                },
+            });
+            setIsSubscribed(true);
+            return true;
         } catch (error) {
-            console.error('[PushNotifications] Failed to subscribe:', error)
-            return false
+            console.error('[PushNotifications] Failed to subscribe:', error);
+            return false;
         }
-    }, [api])
+    }, [api]);
 
     const unsubscribe = useCallback(async (): Promise<boolean> => {
         if (!api || !isPushSupported()) {
-            return false
+            return false;
         }
 
         try {
-            const registration = await navigator.serviceWorker.ready
-            const subscription = await registration.pushManager.getSubscription()
+            const registration = await navigator.serviceWorker.ready;
+            const subscription = await registration.pushManager.getSubscription();
             if (!subscription) {
-                setIsSubscribed(false)
-                return true
+                setIsSubscribed(false);
+                return true;
             }
 
-            const endpoint = subscription.endpoint
-            const success = await subscription.unsubscribe()
-            await api.unsubscribePushNotifications({ endpoint })
-            setIsSubscribed(false)
-            return success
+            const endpoint = subscription.endpoint;
+            const success = await subscription.unsubscribe();
+            await api.unsubscribePushNotifications({ endpoint });
+            setIsSubscribed(false);
+            return success;
         } catch (error) {
-            console.error('[PushNotifications] Failed to unsubscribe:', error)
-            return false
+            console.error('[PushNotifications] Failed to unsubscribe:', error);
+            return false;
         }
-    }, [api])
+    }, [api]);
 
     return {
         isSupported,
@@ -134,6 +136,6 @@ export function usePushNotifications(api: ApiClient | null) {
         isSubscribed,
         requestPermission,
         subscribe,
-        unsubscribe
-    }
+        unsubscribe,
+    };
 }

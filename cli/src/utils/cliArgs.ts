@@ -47,9 +47,7 @@ export function normalizeCliArgs(rawArgv: string[]): string[] {
     if (dashIndex >= 0) {
         const preArgs = rawArgv.slice(0, dashIndex);
         const postArgs = rawArgv.slice(dashIndex + 1);
-        argv = hasRuntimeWrapper(preArgs, execPath, execBase, bunMain)
-            ? postArgs
-            : [...preArgs, ...postArgs];
+        argv = hasRuntimeWrapper(preArgs, execPath, execBase, bunMain) ? postArgs : [...preArgs, ...postArgs];
     }
 
     let startIndex = 0;
@@ -58,7 +56,10 @@ export function normalizeCliArgs(rawArgv: string[]): string[] {
         const nextValue = argv[startIndex + 1] || '';
         if (
             value === 'bun' &&
-            (nextValue === bunMain || nextValue === execPath || nextValue === execBase || isEntrypointPath(nextValue, bunMain))
+            (nextValue === bunMain ||
+                nextValue === execPath ||
+                nextValue === execBase ||
+                isEntrypointPath(nextValue, bunMain))
         ) {
             startIndex += 2;
             continue;

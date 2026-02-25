@@ -1,27 +1,26 @@
-import { mkdirSync } from "node:fs";
-import { logger } from "@/ui/logger";
-import { restoreTerminalState } from "@/ui/terminalState";
-import { claudeCheckSession } from "./utils/claudeCheckSession";
-import { getProjectPath } from "./utils/path";
-import { appendMcpConfigArg } from "./utils/mcpConfig";
-import { systemPrompt } from "./utils/systemPrompt";
-import { withBunRuntimeEnv } from "@/utils/bunRuntime";
-import { spawnWithAbort } from "@/utils/spawnWithAbort";
-import { getHapiBlobsDir } from "@/constants/uploadPaths";
-import { stripNewlinesForWindowsShellArg } from "@/utils/shellEscape";
-import { getDefaultClaudeCodePath } from "./sdk/utils";
+import { mkdirSync } from 'node:fs';
+import { getHapiBlobsDir } from '@/constants/uploadPaths';
+import { logger } from '@/ui/logger';
+import { restoreTerminalState } from '@/ui/terminalState';
+import { withBunRuntimeEnv } from '@/utils/bunRuntime';
+import { stripNewlinesForWindowsShellArg } from '@/utils/shellEscape';
+import { spawnWithAbort } from '@/utils/spawnWithAbort';
+import { getDefaultClaudeCodePath } from './sdk/utils';
+import { claudeCheckSession } from './utils/claudeCheckSession';
+import { appendMcpConfigArg } from './utils/mcpConfig';
+import { getProjectPath } from './utils/path';
+import { systemPrompt } from './utils/systemPrompt';
 
 export async function claudeLocal(opts: {
-    abort: AbortSignal,
-    sessionId: string | null,
-    mcpServers?: Record<string, any>,
-    path: string,
-    claudeEnvVars?: Record<string, string>,
-    claudeArgs?: string[]
-    allowedTools?: string[]
-    hookSettingsPath: string
+    abort: AbortSignal;
+    sessionId: string | null;
+    mcpServers?: Record<string, any>;
+    path: string;
+    claudeEnvVars?: Record<string, string>;
+    claudeArgs?: string[];
+    allowedTools?: string[];
+    hookSettingsPath: string;
 }) {
-
     // Ensure project directory exists
     const projectDir = getProjectPath(opts.path);
     mkdirSync(projectDir, { recursive: true });
@@ -55,7 +54,7 @@ export async function claudeLocal(opts: {
     args.push('--append-system-prompt', stripNewlinesForWindowsShellArg(systemPrompt));
 
     const cleanupMcpConfig = appendMcpConfigArg(args, opts.mcpServers, {
-        baseDir: projectDir
+        baseDir: projectDir,
     });
 
     if (opts.allowedTools && opts.allowedTools.length > 0) {
@@ -80,8 +79,8 @@ export async function claudeLocal(opts: {
     const env = {
         ...process.env,
         DISABLE_AUTOUPDATER: '1',
-        ...opts.claudeEnvVars
-    }
+        ...opts.claudeEnvVars,
+    };
 
     logger.debug(`[ClaudeLocal] Spawning claude with args: ${JSON.stringify(args)}`);
 
@@ -103,7 +102,7 @@ export async function claudeLocal(opts: {
             installHint: 'Claude CLI',
             includeCause: true,
             logExit: true,
-            shell: false  // Use absolute path, no shell needed
+            shell: false, // Use absolute path, no shell needed
         });
     } finally {
         cleanupMcpConfig?.();

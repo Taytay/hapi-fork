@@ -1,25 +1,25 @@
-import { useId, useMemo, useRef, useState } from 'react'
-import type { Session } from '@/types/api'
-import type { ApiClient } from '@/api/client'
-import { isTelegramApp } from '@/hooks/useTelegram'
-import { useSessionActions } from '@/hooks/mutations/useSessionActions'
-import { SessionActionMenu } from '@/components/SessionActionMenu'
-import { RenameSessionDialog } from '@/components/RenameSessionDialog'
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { useTranslation } from '@/lib/use-translation'
+import { useId, useMemo, useRef, useState } from 'react';
+import type { ApiClient } from '@/api/client';
+import { RenameSessionDialog } from '@/components/RenameSessionDialog';
+import { SessionActionMenu } from '@/components/SessionActionMenu';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { useSessionActions } from '@/hooks/mutations/useSessionActions';
+import { isTelegramApp } from '@/hooks/useTelegram';
+import { useTranslation } from '@/lib/use-translation';
+import type { Session } from '@/types/api';
 
 function getSessionTitle(session: Session): string {
     if (session.metadata?.name) {
-        return session.metadata.name
+        return session.metadata.name;
     }
     if (session.metadata?.summary?.text) {
-        return session.metadata.summary.text
+        return session.metadata.summary.text;
     }
     if (session.metadata?.path) {
-        const parts = session.metadata.path.split('/').filter(Boolean)
-        return parts.length > 0 ? parts[parts.length - 1] : session.id.slice(0, 8)
+        const parts = session.metadata.path.split('/').filter(Boolean);
+        return parts.length > 0 ? parts[parts.length - 1] : session.id.slice(0, 8);
     }
-    return session.id.slice(0, 8)
+    return session.id.slice(0, 8);
 }
 
 function FilesIcon(props: { className?: string }) {
@@ -39,7 +39,7 @@ function FilesIcon(props: { className?: string }) {
             <path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
             <path d="M14 2v6h6" />
         </svg>
-    )
+    );
 }
 
 function MoreVerticalIcon(props: { className?: string }) {
@@ -56,51 +56,51 @@ function MoreVerticalIcon(props: { className?: string }) {
             <circle cx="12" cy="12" r="2" />
             <circle cx="12" cy="19" r="2" />
         </svg>
-    )
+    );
 }
 
 export function SessionHeader(props: {
-    session: Session
-    onBack: () => void
-    onViewFiles?: () => void
-    api: ApiClient | null
-    onSessionDeleted?: () => void
+    session: Session;
+    onBack: () => void;
+    onViewFiles?: () => void;
+    api: ApiClient | null;
+    onSessionDeleted?: () => void;
 }) {
-    const { t } = useTranslation()
-    const { session, api, onSessionDeleted } = props
-    const title = useMemo(() => getSessionTitle(session), [session])
-    const worktreeBranch = session.metadata?.worktree?.branch
+    const { t } = useTranslation();
+    const { session, api, onSessionDeleted } = props;
+    const title = useMemo(() => getSessionTitle(session), [session]);
+    const worktreeBranch = session.metadata?.worktree?.branch;
 
-    const [menuOpen, setMenuOpen] = useState(false)
-    const [menuAnchorPoint, setMenuAnchorPoint] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
-    const menuId = useId()
-    const menuAnchorRef = useRef<HTMLButtonElement | null>(null)
-    const [renameOpen, setRenameOpen] = useState(false)
-    const [archiveOpen, setArchiveOpen] = useState(false)
-    const [deleteOpen, setDeleteOpen] = useState(false)
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [menuAnchorPoint, setMenuAnchorPoint] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+    const menuId = useId();
+    const menuAnchorRef = useRef<HTMLButtonElement | null>(null);
+    const [renameOpen, setRenameOpen] = useState(false);
+    const [archiveOpen, setArchiveOpen] = useState(false);
+    const [deleteOpen, setDeleteOpen] = useState(false);
 
     const { archiveSession, renameSession, deleteSession, isPending } = useSessionActions(
         api,
         session.id,
-        session.metadata?.flavor ?? null
-    )
+        session.metadata?.flavor ?? null,
+    );
 
     const handleDelete = async () => {
-        await deleteSession()
-        onSessionDeleted?.()
-    }
+        await deleteSession();
+        onSessionDeleted?.();
+    };
 
     const handleMenuToggle = () => {
         if (!menuOpen && menuAnchorRef.current) {
-            const rect = menuAnchorRef.current.getBoundingClientRect()
-            setMenuAnchorPoint({ x: rect.right, y: rect.bottom })
+            const rect = menuAnchorRef.current.getBoundingClientRect();
+            setMenuAnchorPoint({ x: rect.right, y: rect.bottom });
         }
-        setMenuOpen((open) => !open)
-    }
+        setMenuOpen((open) => !open);
+    };
 
     // In Telegram, don't render header (Telegram provides its own)
     if (isTelegramApp()) {
-        return null
+        return null;
     }
 
     return (
@@ -130,9 +130,7 @@ export function SessionHeader(props: {
 
                     {/* Session info - two lines: title and path */}
                     <div className="min-w-0 flex-1">
-                        <div className="truncate font-semibold">
-                            {title}
-                        </div>
+                        <div className="truncate font-semibold">{title}</div>
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[var(--app-hint)]">
                             <span className="inline-flex items-center gap-1">
                                 <span aria-hidden="true">❖</span>
@@ -142,7 +140,9 @@ export function SessionHeader(props: {
                                 {t('session.item.modelMode')}: {session.modelMode || 'default'}
                             </span>
                             {worktreeBranch ? (
-                                <span>{t('session.item.worktree')}: {worktreeBranch}</span>
+                                <span>
+                                    {t('session.item.worktree')}: {worktreeBranch}
+                                </span>
                             ) : null}
                         </div>
                     </div>
@@ -217,5 +217,5 @@ export function SessionHeader(props: {
                 destructive
             />
         </>
-    )
+    );
 }

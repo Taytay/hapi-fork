@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyVersionedAck, type AckResult, type VersionedAckOptions } from './versionedUpdate';
+import { type AckResult, applyVersionedAck, type VersionedAckOptions } from './versionedUpdate';
 
 type TestState = {
     value: string | null;
@@ -9,7 +9,7 @@ type TestState = {
 const baseOptions = (
     state: TestState,
     logInvalids: Array<{ context: AckResult; version: number }>,
-    overrides?: Partial<VersionedAckOptions<string, 'metadata'>>
+    overrides?: Partial<VersionedAckOptions<string, 'metadata'>>,
 ): VersionedAckOptions<string, 'metadata'> => ({
     valueKey: 'metadata',
     parseValue: (value) => (typeof value === 'string' ? value : null),
@@ -25,7 +25,7 @@ const baseOptions = (
     invalidResponseMessage: 'Invalid update-metadata response',
     errorMessage: 'Metadata update failed',
     versionMismatchMessage: 'Metadata version mismatch',
-    ...(overrides ?? {})
+    ...(overrides ?? {}),
 });
 
 describe('applyVersionedAck', () => {
@@ -34,11 +34,16 @@ describe('applyVersionedAck', () => {
         const logInvalids: Array<{ context: AckResult; version: number }> = [];
         const options = baseOptions(state, logInvalids);
 
-        expect(() => applyVersionedAck({
-            result: 'success',
-            version: 2,
-            metadata: 'next'
-        }, options)).not.toThrow();
+        expect(() =>
+            applyVersionedAck(
+                {
+                    result: 'success',
+                    version: 2,
+                    metadata: 'next',
+                },
+                options,
+            ),
+        ).not.toThrow();
 
         expect(state.value).toBe('next');
         expect(state.version).toBe(2);
@@ -52,11 +57,14 @@ describe('applyVersionedAck', () => {
 
         let caught: unknown;
         try {
-            applyVersionedAck({
-                result: 'version-mismatch',
-                version: 5,
-                metadata: 'server'
-            }, options);
+            applyVersionedAck(
+                {
+                    result: 'version-mismatch',
+                    version: 5,
+                    metadata: 'server',
+                },
+                options,
+            );
         } catch (error) {
             caught = error;
         }
@@ -75,10 +83,15 @@ describe('applyVersionedAck', () => {
         const logInvalids: Array<{ context: AckResult; version: number }> = [];
         const options = baseOptions(state, logInvalids);
 
-        expect(() => applyVersionedAck({
-            result: 'error',
-            reason: 'access-denied'
-        }, options)).toThrow('Metadata update failed (access-denied)');
+        expect(() =>
+            applyVersionedAck(
+                {
+                    result: 'error',
+                    reason: 'access-denied',
+                },
+                options,
+            ),
+        ).toThrow('Metadata update failed (access-denied)');
 
         expect(state.value).toBe('existing');
         expect(state.version).toBe(3);
@@ -89,11 +102,16 @@ describe('applyVersionedAck', () => {
         const logInvalids: Array<{ context: AckResult; version: number }> = [];
         const options = baseOptions(state, logInvalids);
 
-        expect(() => applyVersionedAck({
-            result: 'success',
-            version: 'nope',
-            metadata: 'value'
-        }, options)).toThrow('Invalid update-metadata response');
+        expect(() =>
+            applyVersionedAck(
+                {
+                    result: 'success',
+                    version: 'nope',
+                    metadata: 'value',
+                },
+                options,
+            ),
+        ).toThrow('Invalid update-metadata response');
 
         expect(state.value).toBe('existing');
         expect(state.version).toBe(3);
@@ -103,14 +121,17 @@ describe('applyVersionedAck', () => {
         const state: TestState = { value: 'existing', version: 1 };
         const logInvalids: Array<{ context: AckResult; version: number }> = [];
         const options = baseOptions(state, logInvalids, {
-            parseValue: () => null
+            parseValue: () => null,
         });
 
-        applyVersionedAck({
-            result: 'success',
-            version: 4,
-            metadata: 123
-        }, options);
+        applyVersionedAck(
+            {
+                result: 'success',
+                version: 4,
+                metadata: 123,
+            },
+            options,
+        );
 
         expect(state.value).toBe('existing');
         expect(state.version).toBe(4);

@@ -1,21 +1,19 @@
 /**
  * Doctor command implementation
- * 
+ *
  * Provides comprehensive diagnostics and troubleshooting information
  * for hapi CLI including configuration, runner status, logs, and links
  */
 
-import chalk from 'chalk'
-import { configuration } from '@/configuration'
-import { readSettings } from '@/persistence'
-import { checkIfRunnerRunningAndCleanupStaleState } from '@/runner/controlClient'
-import { findRunawayHappyProcesses, findAllHappyProcesses } from '@/runner/doctor'
-import { readRunnerState } from '@/persistence'
-import { existsSync, readdirSync, statSync } from 'node:fs'
-import { readFile } from 'node:fs/promises'
-import { join } from 'node:path'
-import { isBunCompiled, projectPath, runtimePath } from '@/projectPath'
-import packageJson from '../../package.json'
+import { existsSync, readdirSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import chalk from 'chalk';
+import { configuration } from '@/configuration';
+import { readRunnerState, readSettings } from '@/persistence';
+import { isBunCompiled, projectPath, runtimePath } from '@/projectPath';
+import { checkIfRunnerRunningAndCleanupStaleState } from '@/runner/controlClient';
+import { findAllHappyProcesses } from '@/runner/doctor';
+import packageJson from '../../package.json';
 
 /**
  * Get relevant environment information for debugging
@@ -46,15 +44,15 @@ export function getEnvironmentInfo(): Record<string, any> {
     };
 }
 
-function getLogFiles(logDir: string): { file: string, path: string, modified: Date }[] {
+function getLogFiles(logDir: string): { file: string; path: string; modified: Date }[] {
     if (!existsSync(logDir)) {
         return [];
     }
 
     try {
         return readdirSync(logDir)
-            .filter(file => file.endsWith('.log'))
-            .map(file => {
+            .filter((file) => file.endsWith('.log'))
+            .map((file) => {
                 const path = join(logDir, file);
                 const stats = statSync(path);
                 return { file, path, modified: stats.mtime };
@@ -77,7 +75,7 @@ export async function runDoctorCommand(filter?: 'all' | 'runner'): Promise<void>
     if (!filter) {
         filter = 'all';
     }
-    
+
     console.log(chalk.bold.cyan('\n🩺 hapi CLI Doctor\n'));
 
     // For 'all' filter, show everything. For 'runner', only show runner-related info
@@ -116,7 +114,9 @@ export async function runDoctorCommand(filter?: 'all' | 'runner'): Promise<void>
         console.log(`HAPI_HOME: ${env.HAPI_HOME ? chalk.green(env.HAPI_HOME) : chalk.gray('not set')}`);
         console.log(`HAPI_API_URL: ${env.HAPI_API_URL ? chalk.green(env.HAPI_API_URL) : chalk.gray('not set')}`);
         console.log(`CLI_API_TOKEN: ${env.CLI_API_TOKEN_SET ? chalk.green('set') : chalk.gray('not set')}`);
-        console.log(`DANGEROUSLY_LOG_TO_SERVER: ${env.DANGEROUSLY_LOG_TO_SERVER_FOR_AI_AUTO_DEBUGGING ? chalk.yellow('ENABLED') : chalk.gray('not set')}`);
+        console.log(
+            `DANGEROUSLY_LOG_TO_SERVER: ${env.DANGEROUSLY_LOG_TO_SERVER_FOR_AI_AUTO_DEBUGGING ? chalk.yellow('ENABLED') : chalk.gray('not set')}`,
+        );
         console.log(`DEBUG: ${env.DEBUG ? chalk.green(env.DEBUG) : chalk.gray('not set')}`);
         console.log(`NODE_ENV: ${env.NODE_ENV ? chalk.green(env.NODE_ENV) : chalk.gray('not set')}`);
 
@@ -128,7 +128,7 @@ export async function runDoctorCommand(filter?: 'all' | 'runner'): Promise<void>
             // Hide cliApiToken in output for security
             const displaySettings = { ...settings, cliApiToken: settings.cliApiToken ? '***' : undefined };
             console.log(chalk.gray(JSON.stringify(displaySettings, null, 2)));
-        } catch (error) {
+        } catch (_error) {
             console.log(chalk.bold('\n📄 Settings:'));
             console.log(chalk.red('❌ Failed to read settings'));
             settings = {};
@@ -139,14 +139,13 @@ export async function runDoctorCommand(filter?: 'all' | 'runner'): Promise<void>
         const envToken = process.env.CLI_API_TOKEN;
         const settingsToken = settings.cliApiToken;
         const hasToken = Boolean(envToken || settingsToken);
-        const tokenSource = envToken ? 'environment variable' : (settingsToken ? 'settings file' : 'none');
+        const tokenSource = envToken ? 'environment variable' : settingsToken ? 'settings file' : 'none';
         if (hasToken) {
             console.log(chalk.green(`✓ CLI_API_TOKEN is set (from ${tokenSource})`));
         } else {
             console.log(chalk.red('❌ CLI_API_TOKEN is not set'));
             console.log(chalk.gray('  Run `hapi auth login` to configure or set CLI_API_TOKEN env var'));
         }
-
     }
 
     // Runner status - shown for both 'all' and 'runner' filters
@@ -182,17 +181,20 @@ export async function runDoctorCommand(filter?: 'all' | 'runner'): Promise<void>
             console.log(chalk.bold('\n🔍 All hapi CLI Processes'));
 
             // Group by type
-            const grouped = allProcesses.reduce((groups, process) => {
-                if (!groups[process.type]) groups[process.type] = [];
-                groups[process.type].push(process);
-                return groups;
-            }, {} as Record<string, typeof allProcesses>);
+            const grouped = allProcesses.reduce(
+                (groups, process) => {
+                    if (!groups[process.type]) groups[process.type] = [];
+                    groups[process.type].push(process);
+                    return groups;
+                },
+                {} as Record<string, typeof allProcesses>,
+            );
 
             // Display each group
             Object.entries(grouped).forEach(([type, processes]) => {
                 const typeLabels: Record<string, string> = {
-                    'current': '📍 Current Process',
-                    'runner': '🤖 Runner',
+                    current: '📍 Current Process',
+                    runner: '🤖 Runner',
                     'runner-version-check': '🔍 Runner Version Check (stuck)',
                     'runner-spawned-session': '🔗 Runner-Spawned Sessions',
                     'user-session': '👤 User Sessions',
@@ -201,15 +203,20 @@ export async function runDoctorCommand(filter?: 'all' | 'runner'): Promise<void>
                     'dev-session': '🛠️  Dev Sessions',
                     'dev-doctor': '🛠️  Dev Doctor',
                     'dev-related': '🛠️  Dev Related',
-                    'doctor': '🩺 Doctor',
-                    'unknown': '❓ Unknown'
+                    doctor: '🩺 Doctor',
+                    unknown: '❓ Unknown',
                 };
 
                 console.log(chalk.blue(`\n${typeLabels[type] || type}:`));
                 processes.forEach(({ pid, command }) => {
-                    const color = type === 'current' ? chalk.green :
-                        type.startsWith('dev') ? chalk.cyan :
-                            type.includes('runner') ? chalk.blue : chalk.gray;
+                    const color =
+                        type === 'current'
+                            ? chalk.green
+                            : type.startsWith('dev')
+                              ? chalk.cyan
+                              : type.includes('runner')
+                                ? chalk.blue
+                                : chalk.gray;
                     console.log(`  ${color(`PID ${pid}`)}: ${chalk.gray(command)}`);
                 });
             });
@@ -217,11 +224,12 @@ export async function runDoctorCommand(filter?: 'all' | 'runner'): Promise<void>
             console.log(chalk.red('❌ No hapi processes found'));
         }
 
-        if (filter === 'all' && allProcesses.length > 1) { // More than just current process
+        if (filter === 'all' && allProcesses.length > 1) {
+            // More than just current process
             console.log(chalk.bold('\n💡 Process Management'));
             console.log(chalk.gray('To clean up runaway processes: hapi doctor clean'));
         }
-    } catch (error) {
+    } catch (_error) {
         console.log(chalk.red('❌ Error checking runner status'));
     }
 
@@ -231,7 +239,7 @@ export async function runDoctorCommand(filter?: 'all' | 'runner'): Promise<void>
 
         // Get ALL log files
         const allLogs = getLogFiles(configuration.logsDir);
-        
+
         if (allLogs.length > 0) {
             // Separate runner and regular logs
             const runnerLogs = allLogs.filter(({ file }) => file.includes('runner'));
@@ -270,8 +278,8 @@ export async function runDoctorCommand(filter?: 'all' | 'runner'): Promise<void>
 
         // Support and bug reports
         console.log(chalk.bold('\n🐛 Support & Bug Reports'));
-        const pkg = packageJson as unknown as { bugs?: string | { url?: string }; homepage?: string }
-        const bugsUrl = typeof pkg.bugs === 'string' ? pkg.bugs : pkg.bugs?.url
+        const pkg = packageJson as unknown as { bugs?: string | { url?: string }; homepage?: string };
+        const bugsUrl = typeof pkg.bugs === 'string' ? pkg.bugs : pkg.bugs?.url;
         if (bugsUrl) {
             console.log(`Report issues: ${chalk.blue(bugsUrl)}`);
         }

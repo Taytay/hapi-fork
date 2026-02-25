@@ -1,8 +1,8 @@
-import type { AgentBackend, PermissionRequest, PermissionResponse } from './types';
-import type { AgentState } from '@/api/types';
-import type { ApiSessionClient } from '@/api/apiSession';
-import { logger } from '@/ui/logger';
 import { deriveToolName } from '@/agent/utils';
+import type { ApiSessionClient } from '@/api/apiSession';
+import type { AgentState } from '@/api/types';
+import { logger } from '@/ui/logger';
+import type { AgentBackend, PermissionRequest, PermissionResponse } from './types';
 
 interface PermissionResponseMessage {
     id: string;
@@ -30,14 +30,14 @@ export class PermissionAdapter {
 
     constructor(
         private readonly session: ApiSessionClient,
-        private readonly backend: AgentBackend
+        private readonly backend: AgentBackend,
     ) {
         this.backend.onPermissionRequest((request) => this.handlePermissionRequest(request));
         this.session.rpcHandlerManager.registerHandler<PermissionResponseMessage, void>(
             'permission',
             async (response) => {
                 await this.handlePermissionResponse(response);
-            }
+            },
         );
     }
 
@@ -47,7 +47,7 @@ export class PermissionAdapter {
         const toolName = deriveToolName({
             title: request.title,
             kind: request.kind,
-            rawInput: request.rawInput
+            rawInput: request.rawInput,
         });
         const input = deriveToolInput(request);
 
@@ -58,9 +58,9 @@ export class PermissionAdapter {
                 [request.id]: {
                     tool: toolName,
                     arguments: input,
-                    createdAt: Date.now()
-                }
-            }
+                    createdAt: Date.now(),
+                },
+            },
         }));
 
         logger.debug(`[ACP] Permission request queued: ${toolName} (${request.id})`);
@@ -79,7 +79,7 @@ export class PermissionAdapter {
         const toolName = deriveToolName({
             title: pending.title,
             kind: pending.kind,
-            rawInput: pending.rawInput
+            rawInput: pending.rawInput,
         });
         const toolInput = deriveToolInput(pending);
 
@@ -109,9 +109,9 @@ export class PermissionAdapter {
                         createdAt: requestEntry?.createdAt ?? Date.now(),
                         completedAt: Date.now(),
                         status,
-                        decision
-                    }
-                }
+                        decision,
+                    },
+                },
             } satisfies AgentState;
         });
 
@@ -120,7 +120,7 @@ export class PermissionAdapter {
 
     private mapDecisionToOutcome(
         request: PermissionRequest,
-        decision: 'approved' | 'approved_for_session' | 'denied' | 'abort'
+        decision: 'approved' | 'approved_for_session' | 'denied' | 'abort',
     ): PermissionResponse | null {
         if (decision === 'abort') {
             return { outcome: 'cancelled' };
@@ -158,14 +158,14 @@ export class PermissionAdapter {
                     completedAt: Date.now(),
                     status: 'canceled',
                     reason,
-                    decision: 'abort'
+                    decision: 'abort',
                 };
             }
 
             return {
                 ...currentState,
                 requests: {},
-                completedRequests
+                completedRequests,
             };
         });
     }

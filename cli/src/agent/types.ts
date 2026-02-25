@@ -28,7 +28,13 @@ export type PlanItem = {
 
 export type AgentMessage =
     | { type: 'text'; text: string }
-    | { type: 'tool_call'; id: string; name: string; input: unknown; status: 'pending' | 'in_progress' | 'completed' | 'failed' }
+    | {
+          type: 'tool_call';
+          id: string;
+          name: string;
+          input: unknown;
+          status: 'pending' | 'in_progress' | 'completed' | 'failed';
+      }
     | { type: 'tool_result'; id: string; output: unknown; status: 'completed' | 'failed' }
     | { type: 'plan'; items: PlanItem[] }
     | { type: 'turn_complete'; stopReason: string }
@@ -51,9 +57,7 @@ export type PermissionRequest = {
     options: PermissionOption[];
 };
 
-export type PermissionResponse =
-    | { outcome: 'selected'; optionId: string }
-    | { outcome: 'cancelled' };
+export type PermissionResponse = { outcome: 'selected'; optionId: string } | { outcome: 'cancelled' };
 
 export interface AgentBackend {
     initialize(): Promise<void>;

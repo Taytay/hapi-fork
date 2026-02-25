@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { validatePath } from './pathSecurity';
 
 describe('validatePath', () => {
@@ -23,7 +23,7 @@ describe('validatePath', () => {
     });
 
     it('should correctly handle working directory at filesystem root', () => {
-        const rootDir = '/'
+        const rootDir = '/';
         expect(validatePath('/etc/passwd', rootDir).valid).toBe(true);
         expect(validatePath('etc/passwd', rootDir).valid).toBe(true);
     });

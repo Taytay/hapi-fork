@@ -1,14 +1,14 @@
-import { useOnlineStatus } from '@/hooks/useOnlineStatus'
-import { Spinner } from '@/components/Spinner'
-import { useTranslation } from '@/lib/use-translation'
+import { Spinner } from '@/components/Spinner';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { useTranslation } from '@/lib/use-translation';
 
 export function SyncingBanner({ isSyncing }: { isSyncing: boolean }) {
-    const { t } = useTranslation()
-    const isOnline = useOnlineStatus()
+    const { t } = useTranslation();
+    const isOnline = useOnlineStatus();
 
     // Don't show syncing banner when offline (OfflineBanner takes precedence)
     if (!isSyncing || !isOnline) {
-        return null
+        return null;
     }
 
     return (
@@ -16,5 +16,5 @@ export function SyncingBanner({ isSyncing }: { isSyncing: boolean }) {
             <Spinner size="sm" label={null} className="text-[var(--app-banner-text)]" />
             {t('syncing.title')}
         </div>
-    )
+    );
 }

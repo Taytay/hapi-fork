@@ -25,7 +25,7 @@ export type RemoteLauncherAbortHandlers = {
 type RpcHandlerManagerLike = {
     registerHandler<TRequest = unknown, TResponse = unknown>(
         method: string,
-        handler: (params: TRequest) => Promise<TResponse> | TResponse
+        handler: (params: TRequest) => Promise<TResponse> | TResponse,
     ): void;
 };
 
@@ -52,15 +52,18 @@ export abstract class RemoteLauncherBase {
     protected setupTerminal(handlers: RemoteLauncherTerminalHandlers): void {
         if (this.hasTTY) {
             console.clear();
-            this.inkInstance = render(this.createDisplay({
-                messageBuffer: this.messageBuffer,
-                logPath: this.logPath,
-                onExit: handlers.onExit,
-                onSwitchToLocal: handlers.onSwitchToLocal
-            }), {
-                exitOnCtrlC: false,
-                patchConsole: false
-            });
+            this.inkInstance = render(
+                this.createDisplay({
+                    messageBuffer: this.messageBuffer,
+                    logPath: this.logPath,
+                    onExit: handlers.onExit,
+                    onSwitchToLocal: handlers.onSwitchToLocal,
+                }),
+                {
+                    exitOnCtrlC: false,
+                    patchConsole: false,
+                },
+            );
         }
 
         if (this.hasTTY) {
@@ -74,7 +77,7 @@ export abstract class RemoteLauncherBase {
 
     protected setupAbortHandlers(
         rpcHandlerManager: RpcHandlerManagerLike,
-        handlers: RemoteLauncherAbortHandlers
+        handlers: RemoteLauncherAbortHandlers,
     ): void {
         rpcHandlerManager.registerHandler('abort', async () => {
             await handlers.onAbort();
@@ -90,10 +93,7 @@ export abstract class RemoteLauncherBase {
         rpcHandlerManager.registerHandler('switch', async () => {});
     }
 
-    protected async requestExit(
-        reason: RemoteLauncherExitReason,
-        handler: () => void | Promise<void>
-    ): Promise<void> {
+    protected async requestExit(reason: RemoteLauncherExitReason, handler: () => void | Promise<void>): Promise<void> {
         if (!this.exitReason) {
             this.exitReason = reason;
         }
@@ -106,8 +106,7 @@ export abstract class RemoteLauncherBase {
         if (this.hasTTY) {
             try {
                 process.stdin.pause();
-            } catch {
-            }
+            } catch {}
         }
         if (this.inkInstance) {
             this.inkInstance.unmount();

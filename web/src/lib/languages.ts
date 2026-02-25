@@ -1,8 +1,38 @@
 // ElevenLabs supported language codes
-export type ElevenLabsLanguage = "en" | "ja" | "zh" | "de" | "hi" | "fr" | "ko" |
-    "pt" | "pt-br" | "it" | "es" | "id" | "nl" | "tr" | "pl" | "sv" | "bg" |
-    "ro" | "ar" | "cs" | "el" | "fi" | "ms" | "da" | "ta" | "uk" | "ru" |
-    "hu" | "hr" | "sk" | "no" | "vi" | "tl";
+export type ElevenLabsLanguage =
+    | 'en'
+    | 'ja'
+    | 'zh'
+    | 'de'
+    | 'hi'
+    | 'fr'
+    | 'ko'
+    | 'pt'
+    | 'pt-br'
+    | 'it'
+    | 'es'
+    | 'id'
+    | 'nl'
+    | 'tr'
+    | 'pl'
+    | 'sv'
+    | 'bg'
+    | 'ro'
+    | 'ar'
+    | 'cs'
+    | 'el'
+    | 'fi'
+    | 'ms'
+    | 'da'
+    | 'ta'
+    | 'uk'
+    | 'ru'
+    | 'hu'
+    | 'hr'
+    | 'sk'
+    | 'no'
+    | 'vi'
+    | 'tl';
 
 // Language type definition
 export interface Language {
@@ -88,7 +118,7 @@ export const getLanguageDisplayName = (language: Language) => {
  * Find a language by its code (including null for autodetect)
  */
 export const findLanguageByCode = (code: string | null): Language | undefined => {
-    return LANGUAGES.find(lang => lang.code === code);
+    return LANGUAGES.find((lang) => lang.code === code);
 };
 
 /**
@@ -101,9 +131,7 @@ export const getElevenLabsCode = (language: Language): ElevenLabsLanguage | unde
 /**
  * Get ElevenLabs code from user's language preference (handles null/autodetect)
  */
-export const getElevenLabsCodeFromPreference = (
-    languageCode: string | null
-): ElevenLabsLanguage | undefined => {
+export const getElevenLabsCodeFromPreference = (languageCode: string | null): ElevenLabsLanguage | undefined => {
     if (!languageCode) return undefined; // Auto-detect case
     const language = findLanguageByCode(languageCode);
     return language?.elevenLabsCode;
@@ -113,5 +141,5 @@ export const getElevenLabsCodeFromPreference = (
  * Get all languages that support ElevenLabs (including auto-detect)
  */
 export const getElevenLabsSupportedLanguages = (): Language[] => {
-    return LANGUAGES.filter(lang => lang.code === null || lang.elevenLabsCode !== undefined);
+    return LANGUAGES.filter((lang) => lang.code === null || lang.elevenLabsCode !== undefined);
 };

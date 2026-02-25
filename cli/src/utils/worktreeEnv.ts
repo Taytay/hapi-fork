@@ -30,7 +30,7 @@ function readWorktreeFromEnv(): WorktreeInfo | null {
         branch,
         name,
         worktreePath,
-        createdAt
+        createdAt,
     };
 }
 
@@ -64,8 +64,8 @@ function readWorktreeFromGit(): WorktreeInfo | null {
         const worktreePath = normalizePath(worktreeRoot, cwd);
         const basePath = dirname(resolvedGitCommonDir);
 
-        const branch = runGit(['symbolic-ref', '--short', 'HEAD'], cwd)
-            ?? runGit(['rev-parse', '--short', 'HEAD'], cwd);
+        const branch =
+            runGit(['symbolic-ref', '--short', 'HEAD'], cwd) ?? runGit(['rev-parse', '--short', 'HEAD'], cwd);
         if (!branch) {
             return null;
         }
@@ -75,7 +75,7 @@ function readWorktreeFromGit(): WorktreeInfo | null {
             branch,
             name: basename(worktreePath),
             worktreePath,
-            createdAt: readCreatedAt(worktreePath)
+            createdAt: readCreatedAt(worktreePath),
         };
         return result;
     } finally {
@@ -89,7 +89,7 @@ function runGit(args: string[], cwd: string): string | null {
         const output = execFileSync('git', args, {
             cwd,
             encoding: 'utf8',
-            stdio: ['ignore', 'pipe', 'ignore']
+            stdio: ['ignore', 'pipe', 'ignore'],
         }).trim();
         return output.length > 0 ? output : null;
     } catch {

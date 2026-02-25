@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { logger } from '@/ui/logger';
-import type { CodexPermissionHandler } from './permissionHandler';
 import type { CodexAppServerClient } from '../codexAppServerClient';
+import type { CodexPermissionHandler } from './permissionHandler';
 
 type PermissionDecision = 'approved' | 'approved_for_session' | 'denied' | 'abort';
 
@@ -48,15 +48,11 @@ export function registerAppServerPermissionHandlers(args: {
         const command = record.command;
         const cwd = asString(record.cwd);
 
-        const result = await permissionHandler.handleToolCall(
-            toolCallId,
-            'CodexBash',
-            {
-                message: reason,
-                command,
-                cwd
-            }
-        ) as PermissionResult;
+        const result = (await permissionHandler.handleToolCall(toolCallId, 'CodexBash', {
+            message: reason,
+            command,
+            cwd,
+        })) as PermissionResult;
 
         return mapDecision(result.decision);
     });
@@ -67,14 +63,10 @@ export function registerAppServerPermissionHandlers(args: {
         const reason = asString(record.reason);
         const grantRoot = asString(record.grantRoot);
 
-        const result = await permissionHandler.handleToolCall(
-            toolCallId,
-            'CodexPatch',
-            {
-                message: reason,
-                grantRoot
-            }
-        ) as PermissionResult;
+        const result = (await permissionHandler.handleToolCall(toolCallId, 'CodexPatch', {
+            message: reason,
+            grantRoot,
+        })) as PermissionResult;
 
         return mapDecision(result.decision);
     });
@@ -88,7 +80,7 @@ export function registerAppServerPermissionHandlers(args: {
         const answers = await onUserInputRequest(params);
         return {
             decision: 'accept',
-            answers
+            answers,
         };
     });
 }

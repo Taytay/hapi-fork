@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
 import { Box, Text, useStdout } from 'ink';
-import { MessageBuffer, type BufferedMessage } from './messageBuffer';
+import React from 'react';
+import { useEffect, useState } from 'react';
+import type { BufferedMessage, MessageBuffer } from './messageBuffer';
 import { useSwitchControls } from './useSwitchControls';
 
 interface OpencodeDisplayProps {
@@ -21,7 +22,7 @@ function extractTag(messages: BufferedMessage[], tag: 'MODEL' | 'MODE'): string 
             continue;
         }
         const match = message.content.match(/\[\w+:(.+?)\]/);
-        if (match && match[1]) {
+        if (match?.[1]) {
             return match[1];
         }
     }
@@ -32,14 +33,14 @@ export const OpencodeDisplay: React.FC<OpencodeDisplayProps> = ({
     messageBuffer,
     logPath,
     onExit,
-    onSwitchToLocal
+    onSwitchToLocal,
 }) => {
     const [messages, setMessages] = useState<BufferedMessage[]>([]);
     const [model, setModel] = useState<string | null>(null);
     const [permissionMode, setPermissionMode] = useState<string | null>(null);
     const { confirmationMode, actionInProgress } = useSwitchControls({
         onExit,
-        onSwitch: onSwitchToLocal
+        onSwitch: onSwitchToLocal,
     });
     const { stdout } = useStdout();
     const terminalWidth = stdout.columns || 80;
@@ -67,27 +68,36 @@ export const OpencodeDisplay: React.FC<OpencodeDisplayProps> = ({
 
     const getMessageColor = (type: BufferedMessage['type']): string => {
         switch (type) {
-            case 'user': return 'magenta';
-            case 'assistant': return 'cyan';
-            case 'system': return 'blue';
-            case 'tool': return 'yellow';
-            case 'result': return 'green';
-            case 'status': return 'gray';
-            default: return 'white';
+            case 'user':
+                return 'magenta';
+            case 'assistant':
+                return 'cyan';
+            case 'system':
+                return 'blue';
+            case 'tool':
+                return 'yellow';
+            case 'result':
+                return 'green';
+            case 'status':
+                return 'gray';
+            default:
+                return 'white';
         }
     };
 
     const formatMessage = (msg: BufferedMessage): string => {
         const lines = msg.content.split('\n');
         const maxLineLength = Math.max(1, terminalWidth - 10);
-        return lines.map(line => {
-            if (line.length <= maxLineLength) return line;
-            const chunks: string[] = [];
-            for (let i = 0; i < line.length; i += maxLineLength) {
-                chunks.push(line.slice(i, i + maxLineLength));
-            }
-            return chunks.join('\n');
-        }).join('\n');
+        return lines
+            .map((line) => {
+                if (line.length <= maxLineLength) return line;
+                const chunks: string[] = [];
+                for (let i = 0; i < line.length; i += maxLineLength) {
+                    chunks.push(line.slice(i, i + maxLineLength));
+                }
+                return chunks.join('\n');
+            })
+            .join('\n');
     };
 
     const visibleMessages = messages.filter((msg) => {
@@ -112,23 +122,27 @@ export const OpencodeDisplay: React.FC<OpencodeDisplayProps> = ({
                 overflow="hidden"
             >
                 <Box flexDirection="column" marginBottom={1}>
-                    <Text color="gray" bold>OpenCode Agent Messages</Text>
-                    <Text color="gray" dimColor>{'-'.repeat(Math.min(terminalWidth - 4, 60))}</Text>
+                    <Text color="gray" bold>
+                        OpenCode Agent Messages
+                    </Text>
+                    <Text color="gray" dimColor>
+                        {'-'.repeat(Math.min(terminalWidth - 4, 60))}
+                    </Text>
                 </Box>
 
                 <Box flexDirection="column" height={terminalHeight - 10} overflow="hidden">
                     {visibleMessages.length === 0 ? (
-                        <Text color="gray" dimColor>Waiting for messages...</Text>
+                        <Text color="gray" dimColor>
+                            Waiting for messages...
+                        </Text>
                     ) : (
-                        visibleMessages
-                            .slice(-Math.max(1, terminalHeight - 10))
-                            .map((msg) => (
-                                <Box key={msg.id} flexDirection="column" marginBottom={1}>
-                                    <Text color={getMessageColor(msg.type)} dimColor>
-                                        {formatMessage(msg)}
-                                    </Text>
-                                </Box>
-                            ))
+                        visibleMessages.slice(-Math.max(1, terminalHeight - 10)).map((msg) => (
+                            <Box key={msg.id} flexDirection="column" marginBottom={1}>
+                                <Text color={getMessageColor(msg.type)} dimColor>
+                                    {formatMessage(msg)}
+                                </Text>
+                            </Box>
+                        ))
                     )}
                 </Box>
             </Box>
@@ -137,10 +151,13 @@ export const OpencodeDisplay: React.FC<OpencodeDisplayProps> = ({
                 width={terminalWidth}
                 borderStyle="round"
                 borderColor={
-                    actionInProgress ? 'gray' :
-                    confirmationMode === 'exit' ? 'red' :
-                    confirmationMode === 'switch' ? 'yellow' :
-                    'green'
+                    actionInProgress
+                        ? 'gray'
+                        : confirmationMode === 'exit'
+                          ? 'red'
+                          : confirmationMode === 'switch'
+                            ? 'yellow'
+                            : 'green'
                 }
                 paddingX={2}
                 justifyContent="center"
@@ -166,7 +183,8 @@ export const OpencodeDisplay: React.FC<OpencodeDisplayProps> = ({
                         </Text>
                     ) : (
                         <Text color="green" bold>
-                            OpenCode running {onSwitchToLocal ? '(Space to switch to local, Ctrl-C to exit)' : '(Ctrl-C to exit)'}
+                            OpenCode running{' '}
+                            {onSwitchToLocal ? '(Space to switch to local, Ctrl-C to exit)' : '(Ctrl-C to exit)'}
                         </Text>
                     )}
                     {(model || permissionMode) && (

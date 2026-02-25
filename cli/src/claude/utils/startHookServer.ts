@@ -5,8 +5,8 @@
  * (new session, resume, compact, fork, etc.) via the SessionStart hook.
  */
 
-import { createServer, type IncomingMessage, type ServerResponse, type Server } from 'node:http';
 import { randomBytes } from 'node:crypto';
+import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { logger } from '@/ui/logger';
 
 /**
@@ -149,7 +149,7 @@ export async function startHookServer(options: HookServerOptions): Promise<HookS
                 stop: () => {
                     server.close();
                     logger.debug('[hookServer] Stopped');
-                }
+                },
             });
         });
 

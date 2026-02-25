@@ -1,67 +1,77 @@
-import React, { useState, useEffect } from 'react'
-import { Box, Text, useStdout } from 'ink'
-import { MessageBuffer, type BufferedMessage } from './messageBuffer'
-import { useSwitchControls } from './useSwitchControls'
+import { Box, Text, useStdout } from 'ink';
+import React from 'react';
+import { useEffect, useState } from 'react';
+import type { BufferedMessage, MessageBuffer } from './messageBuffer';
+import { useSwitchControls } from './useSwitchControls';
 
 interface CodexDisplayProps {
-    messageBuffer: MessageBuffer
-    logPath?: string
-    onExit?: () => void
-    onSwitchToLocal?: () => void
+    messageBuffer: MessageBuffer;
+    logPath?: string;
+    onExit?: () => void;
+    onSwitchToLocal?: () => void;
 }
 
 export const CodexDisplay: React.FC<CodexDisplayProps> = ({ messageBuffer, logPath, onExit, onSwitchToLocal }) => {
-    const [messages, setMessages] = useState<BufferedMessage[]>([])
+    const [messages, setMessages] = useState<BufferedMessage[]>([]);
     const { confirmationMode, actionInProgress } = useSwitchControls({
         onExit,
-        onSwitch: onSwitchToLocal
-    })
-    const { stdout } = useStdout()
-    const terminalWidth = stdout.columns || 80
-    const terminalHeight = stdout.rows || 24
+        onSwitch: onSwitchToLocal,
+    });
+    const { stdout } = useStdout();
+    const terminalWidth = stdout.columns || 80;
+    const terminalHeight = stdout.rows || 24;
 
     useEffect(() => {
-        setMessages(messageBuffer.getMessages())
-        
+        setMessages(messageBuffer.getMessages());
+
         const unsubscribe = messageBuffer.onUpdate((newMessages) => {
-            setMessages(newMessages)
-        })
+            setMessages(newMessages);
+        });
 
         return () => {
-            unsubscribe()
-        }
-    }, [messageBuffer])
+            unsubscribe();
+        };
+    }, [messageBuffer]);
 
     const getMessageColor = (type: BufferedMessage['type']): string => {
         switch (type) {
-            case 'user': return 'magenta'
-            case 'assistant': return 'cyan'
-            case 'system': return 'blue'
-            case 'tool': return 'yellow'
-            case 'result': return 'green'
-            case 'status': return 'gray'
-            default: return 'white'
+            case 'user':
+                return 'magenta';
+            case 'assistant':
+                return 'cyan';
+            case 'system':
+                return 'blue';
+            case 'tool':
+                return 'yellow';
+            case 'result':
+                return 'green';
+            case 'status':
+                return 'gray';
+            default:
+                return 'white';
         }
-    }
+    };
 
     const formatMessage = (msg: BufferedMessage): string => {
-        const lines = msg.content.split('\n')
-        const maxLineLength = terminalWidth - 10 // Account for borders and padding
-        return lines.map(line => {
-            if (line.length <= maxLineLength) return line
-            const chunks: string[] = []
-            for (let i = 0; i < line.length; i += maxLineLength) {
-                chunks.push(line.slice(i, i + maxLineLength))
-            }
-            return chunks.join('\n')
-        }).join('\n')
-    }
+        const lines = msg.content.split('\n');
+        const maxLineLength = terminalWidth - 10; // Account for borders and padding
+        return lines
+            .map((line) => {
+                if (line.length <= maxLineLength) return line;
+                const chunks: string[] = [];
+                for (let i = 0; i < line.length; i += maxLineLength) {
+                    chunks.push(line.slice(i, i + maxLineLength));
+                }
+                return chunks.join('\n');
+            })
+            .join('\n');
+    };
 
     return (
         <Box flexDirection="column" width={terminalWidth} height={terminalHeight}>
             {/* Main content area with logs */}
-            <Box 
-                flexDirection="column" 
+            <Box
+                flexDirection="column"
                 width={terminalWidth}
                 height={terminalHeight - 4}
                 borderStyle="round"
@@ -70,13 +80,19 @@ export const CodexDisplay: React.FC<CodexDisplayProps> = ({ messageBuffer, logPa
                 overflow="hidden"
             >
                 <Box flexDirection="column" marginBottom={1}>
-                    <Text color="gray" bold>🤖 Codex Agent Messages</Text>
-                    <Text color="gray" dimColor>{'─'.repeat(Math.min(terminalWidth - 4, 60))}</Text>
+                    <Text color="gray" bold>
+                        🤖 Codex Agent Messages
+                    </Text>
+                    <Text color="gray" dimColor>
+                        {'─'.repeat(Math.min(terminalWidth - 4, 60))}
+                    </Text>
                 </Box>
-                
+
                 <Box flexDirection="column" height={terminalHeight - 10} overflow="hidden">
                     {messages.length === 0 ? (
-                        <Text color="gray" dimColor>Waiting for messages...</Text>
+                        <Text color="gray" dimColor>
+                            Waiting for messages...
+                        </Text>
                     ) : (
                         // Show only the last messages that fit in the available space
                         messages.slice(-Math.max(1, terminalHeight - 10)).map((msg) => (
@@ -91,14 +107,17 @@ export const CodexDisplay: React.FC<CodexDisplayProps> = ({ messageBuffer, logPa
             </Box>
 
             {/* Modal overlay at the bottom */}
-            <Box 
+            <Box
                 width={terminalWidth}
                 borderStyle="round"
                 borderColor={
-                    actionInProgress ? "gray" :
-                    confirmationMode === 'exit' ? "red" :
-                    confirmationMode === 'switch' ? "yellow" :
-                    "green"
+                    actionInProgress
+                        ? 'gray'
+                        : confirmationMode === 'exit'
+                          ? 'red'
+                          : confirmationMode === 'switch'
+                            ? 'yellow'
+                            : 'green'
                 }
                 paddingX={2}
                 justifyContent="center"
@@ -116,18 +135,19 @@ export const CodexDisplay: React.FC<CodexDisplayProps> = ({ messageBuffer, logPa
                         </Text>
                     ) : confirmationMode === 'exit' ? (
                         <Text color="red" bold>
-                            ⚠️  Press Ctrl-C again to exit the agent
+                            ⚠️ Press Ctrl-C again to exit the agent
                         </Text>
                     ) : confirmationMode === 'switch' ? (
                         <Text color="yellow" bold>
-                            ⏸️  Press space again to switch to local mode
+                            ⏸️ Press space again to switch to local mode
                         </Text>
                     ) : (
-                        <>
-                            <Text color="green" bold>
-                                🤖 Codex Agent Running {onSwitchToLocal ? '• Press space to switch to local mode • Ctrl-C to exit' : '• Ctrl-C to exit'}
-                            </Text>
-                        </>
+                        <Text color="green" bold>
+                            🤖 Codex Agent Running{' '}
+                            {onSwitchToLocal
+                                ? '• Press space to switch to local mode • Ctrl-C to exit'
+                                : '• Ctrl-C to exit'}
+                        </Text>
                     )}
                     {process.env.DEBUG && logPath && (
                         <Text color="gray" dimColor>
@@ -137,5 +157,5 @@ export const CodexDisplay: React.FC<CodexDisplayProps> = ({ messageBuffer, logPa
                 </Box>
             </Box>
         </Box>
-    )
-}
+    );
+};

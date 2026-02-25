@@ -1,20 +1,21 @@
-import { RawJSONLines, RawJSONLinesSchema } from "../types";
-import { basename, join } from "node:path";
-import { readFile } from "node:fs/promises";
-import { logger } from "@/ui/logger";
-import { getProjectPath } from "./path";
-import { BaseSessionScanner, SessionFileScanEntry, SessionFileScanResult, SessionFileScanStats } from "@/modules/common/session/BaseSessionScanner";
+import { readFile } from 'node:fs/promises';
+import { basename, join } from 'node:path';
+import {
+    BaseSessionScanner,
+    type SessionFileScanEntry,
+    type SessionFileScanResult,
+    type SessionFileScanStats,
+} from '@/modules/common/session/BaseSessionScanner';
+import { logger } from '@/ui/logger';
+import { type RawJSONLines, RawJSONLinesSchema } from '../types';
+import { getProjectPath } from './path';
 
 /**
  * Known internal Claude Code event types that should be silently skipped.
- * These are written to session JSONL files by Claude Code but are not 
+ * These are written to session JSONL files by Claude Code but are not
  * actual conversation messages - they're internal state/tracking events.
  */
-const INTERNAL_CLAUDE_EVENT_TYPES = new Set([
-    'file-history-snapshot',
-    'change',
-    'queue-operation',
-]);
+const INTERNAL_CLAUDE_EVENT_TYPES = new Set(['file-history-snapshot', 'change', 'queue-operation']);
 
 export async function createSessionScanner(opts: {
     sessionId: string | null;
@@ -24,7 +25,7 @@ export async function createSessionScanner(opts: {
     const scanner = new ClaudeSessionScanner({
         sessionId: opts.sessionId,
         workingDirectory: opts.workingDirectory,
-        onMessage: opts.onMessage
+        onMessage: opts.onMessage,
     });
 
     await scanner.start();
@@ -35,12 +36,11 @@ export async function createSessionScanner(opts: {
         },
         onNewSession: (sessionId: string) => {
             scanner.onNewSession(sessionId);
-        }
+        },
     };
 }
 
 export type SessionScanner = ReturnType<typeof createSessionScanner>;
-
 
 class ClaudeSessionScanner extends BaseSessionScanner<RawJSONLines> {
     private readonly projectDir: string;
@@ -50,7 +50,11 @@ class ClaudeSessionScanner extends BaseSessionScanner<RawJSONLines> {
     private currentSessionId: string | null;
     private readonly scannedSessions = new Set<string>();
 
-    constructor(opts: { sessionId: string | null; workingDirectory: string; onMessage: (message: RawJSONLines) => void }) {
+    constructor(opts: {
+        sessionId: string | null;
+        workingDirectory: string;
+        onMessage: (message: RawJSONLines) => void;
+    }) {
         super({ intervalMs: 3000 });
         this.projectDir = getProjectPath(opts.workingDirectory);
         this.onMessage = opts.onMessage;
@@ -84,7 +88,9 @@ class ClaudeSessionScanner extends BaseSessionScanner<RawJSONLines> {
         }
         const sessionFile = this.sessionFilePath(this.currentSessionId);
         const { events, totalLines } = await readSessionLog(sessionFile, 0);
-        logger.debug(`[SESSION_SCANNER] Marking ${events.length} existing messages as processed from session ${this.currentSessionId}`);
+        logger.debug(
+            `[SESSION_SCANNER] Marking ${events.length} existing messages as processed from session ${this.currentSessionId}`,
+        );
         const keys = events.map((entry) => messageKey(entry.event));
         this.seedProcessedKeys(keys);
         this.setCursor(sessionFile, totalLines);
@@ -116,7 +122,7 @@ class ClaudeSessionScanner extends BaseSessionScanner<RawJSONLines> {
         const { events, totalLines } = await readSessionLog(filePath, cursor);
         return {
             events,
-            nextCursor: totalLines
+            nextCursor: totalLines,
         };
     }
 
@@ -132,7 +138,9 @@ class ClaudeSessionScanner extends BaseSessionScanner<RawJSONLines> {
         }
         if (stats.parsedCount > 0) {
             const sessionId = sessionIdFromPath(stats.filePath) ?? 'unknown';
-            logger.debug(`[SESSION_SCANNER] Session ${sessionId}: found=${stats.parsedCount}, skipped=${stats.skippedCount}, sent=${stats.newCount}`);
+            logger.debug(
+                `[SESSION_SCANNER] Session ${sessionId}: found=${stats.parsedCount}, skipped=${stats.skippedCount}, sent=${stats.newCount}`,
+            );
         }
     }
 
@@ -160,11 +168,11 @@ function messageKey(message: RawJSONLines): string {
     } else if (message.type === 'assistant') {
         return message.uuid;
     } else if (message.type === 'summary') {
-        return 'summary: ' + message.leafUuid + ': ' + message.summary;
+        return `summary: ${message.leafUuid}: ${message.summary}`;
     } else if (message.type === 'system') {
         return message.uuid;
     } else {
-        throw Error() // Impossible
+        throw Error(); // Impossible
     }
 }
 
@@ -172,12 +180,15 @@ function messageKey(message: RawJSONLines): string {
  * Read and parse session log file.
  * Returns only valid conversation messages, silently skipping internal events.
  */
-async function readSessionLog(filePath: string, startLine: number): Promise<{ events: SessionFileScanEntry<RawJSONLines>[]; totalLines: number }> {
+async function readSessionLog(
+    filePath: string,
+    startLine: number,
+): Promise<{ events: SessionFileScanEntry<RawJSONLines>[]; totalLines: number }> {
     logger.debug(`[SESSION_SCANNER] Reading session file: ${filePath}`);
     let file: string;
     try {
         file = await readFile(filePath, 'utf-8');
-    } catch (error) {
+    } catch (_error) {
         logger.debug(`[SESSION_SCANNER] Session file not found: ${filePath}`);
         return { events: [], totalLines: startLine };
     }
@@ -195,15 +206,15 @@ async function readSessionLog(filePath: string, startLine: number): Promise<{ ev
             if (l.trim() === '') {
                 continue;
             }
-            let message = JSON.parse(l);
-            
+            const message = JSON.parse(l);
+
             // Silently skip known internal Claude Code events
             // These are state/tracking events, not conversation messages
             if (message.type && INTERNAL_CLAUDE_EVENT_TYPES.has(message.type)) {
                 continue;
             }
-            
-            let parsed = RawJSONLinesSchema.safeParse(message);
+
+            const parsed = RawJSONLinesSchema.safeParse(message);
             if (!parsed.success) {
                 // Unknown message types are silently skipped.
                 continue;
@@ -211,7 +222,6 @@ async function readSessionLog(filePath: string, startLine: number): Promise<{ ev
             messages.push({ event: parsed.data, lineIndex: index });
         } catch (e) {
             logger.debug(`[SESSION_SCANNER] Error processing message: ${e}`);
-            continue;
         }
     }
     return { events: messages, totalLines };

@@ -1,8 +1,8 @@
-import { clsx, type ClassValue } from 'clsx'
-import { twMerge } from 'tailwind-merge'
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]): string {
-    return twMerge(clsx(inputs))
+    return twMerge(clsx(inputs));
 }
 
 /**
@@ -10,12 +10,12 @@ export function cn(...inputs: ClassValue[]): string {
  */
 export function decodeBase64(value: string): { text: string; ok: boolean } {
     try {
-        const binaryString = atob(value)
-        const bytes = Uint8Array.from(binaryString, (char) => char.charCodeAt(0))
-        const text = new TextDecoder('utf-8').decode(bytes)
-        return { text, ok: true }
+        const binaryString = atob(value);
+        const bytes = Uint8Array.from(binaryString, (char) => char.charCodeAt(0));
+        const text = new TextDecoder('utf-8').decode(bytes);
+        return { text, ok: true };
     } catch {
-        return { text: '', ok: false }
+        return { text: '', ok: false };
     }
 }
 
@@ -23,8 +23,7 @@ export function decodeBase64(value: string): { text: string; ok: boolean } {
  * Encode UTF-8 text to base64 string
  */
 export function encodeBase64(value: string): string {
-    const bytes = new TextEncoder().encode(value)
-    const binaryString = Array.from(bytes, (byte) => String.fromCharCode(byte)).join('')
-    return btoa(binaryString)
+    const bytes = new TextEncoder().encode(value);
+    const binaryString = Array.from(bytes, (byte) => String.fromCharCode(byte)).join('');
+    return btoa(binaryString);
 }
-

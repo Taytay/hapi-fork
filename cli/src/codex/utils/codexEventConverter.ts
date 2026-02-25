@@ -5,38 +5,44 @@ import { logger } from '@/ui/logger';
 const CodexSessionEventSchema = z.object({
     timestamp: z.string().optional(),
     type: z.string(),
-    payload: z.unknown().optional()
+    payload: z.unknown().optional(),
 });
 
 export type CodexSessionEvent = z.infer<typeof CodexSessionEventSchema>;
 
-export type CodexMessage = {
-    type: 'message';
-    message: string;
-    id: string;
-} | {
-    type: 'reasoning';
-    message: string;
-    id: string;
-} | {
-    type: 'reasoning-delta';
-    delta: string;
-} | {
-    type: 'token_count';
-    info: Record<string, unknown>;
-    id: string;
-} | {
-    type: 'tool-call';
-    name: string;
-    callId: string;
-    input: unknown;
-    id: string;
-} | {
-    type: 'tool-call-result';
-    callId: string;
-    output: unknown;
-    id: string;
-};
+export type CodexMessage =
+    | {
+          type: 'message';
+          message: string;
+          id: string;
+      }
+    | {
+          type: 'reasoning';
+          message: string;
+          id: string;
+      }
+    | {
+          type: 'reasoning-delta';
+          delta: string;
+      }
+    | {
+          type: 'token_count';
+          info: Record<string, unknown>;
+          id: string;
+      }
+    | {
+          type: 'tool-call';
+          name: string;
+          callId: string;
+          input: unknown;
+          id: string;
+      }
+    | {
+          type: 'tool-call-result';
+          callId: string;
+          output: unknown;
+          id: string;
+      };
 
 export type CodexConversionResult = {
     sessionId?: string;
@@ -73,13 +79,7 @@ function parseArguments(value: unknown): unknown {
 }
 
 function extractCallId(payload: Record<string, unknown>): string | null {
-    const candidates = [
-        'call_id',
-        'callId',
-        'tool_call_id',
-        'toolCallId',
-        'id'
-    ];
+    const candidates = ['call_id', 'callId', 'tool_call_id', 'toolCallId', 'id'];
 
     for (const key of candidates) {
         const value = payload[key];
@@ -119,14 +119,13 @@ export function convertCodexEvent(rawEvent: unknown): CodexConversionResult | nu
         }
 
         if (eventType === 'user_message') {
-            const message = asString(payloadRecord.message)
-                ?? asString(payloadRecord.text)
-                ?? asString(payloadRecord.content);
+            const message =
+                asString(payloadRecord.message) ?? asString(payloadRecord.text) ?? asString(payloadRecord.content);
             if (!message) {
                 return null;
             }
             return {
-                userMessage: message
+                userMessage: message,
             };
         }
 
@@ -139,8 +138,8 @@ export function convertCodexEvent(rawEvent: unknown): CodexConversionResult | nu
                 message: {
                     type: 'message',
                     message,
-                    id: randomUUID()
-                }
+                    id: randomUUID(),
+                },
             };
         }
 
@@ -153,21 +152,22 @@ export function convertCodexEvent(rawEvent: unknown): CodexConversionResult | nu
                 message: {
                     type: 'reasoning',
                     message,
-                    id: randomUUID()
-                }
+                    id: randomUUID(),
+                },
             };
         }
 
         if (eventType === 'agent_reasoning_delta') {
-            const delta = asString(payloadRecord.delta) ?? asString(payloadRecord.text) ?? asString(payloadRecord.message);
+            const delta =
+                asString(payloadRecord.delta) ?? asString(payloadRecord.text) ?? asString(payloadRecord.message);
             if (!delta) {
                 return null;
             }
             return {
                 message: {
                     type: 'reasoning-delta',
-                    delta
-                }
+                    delta,
+                },
             };
         }
 
@@ -180,8 +180,8 @@ export function convertCodexEvent(rawEvent: unknown): CodexConversionResult | nu
                 message: {
                     type: 'token_count',
                     info,
-                    id: randomUUID()
-                }
+                    id: randomUUID(),
+                },
             };
         }
 
@@ -206,8 +206,8 @@ export function convertCodexEvent(rawEvent: unknown): CodexConversionResult | nu
                     name,
                     callId,
                     input: parseArguments(payloadRecord.arguments),
-                    id: randomUUID()
-                }
+                    id: randomUUID(),
+                },
             };
         }
 
@@ -221,8 +221,8 @@ export function convertCodexEvent(rawEvent: unknown): CodexConversionResult | nu
                     type: 'tool-call-result',
                     callId,
                     output: payloadRecord.output,
-                    id: randomUUID()
-                }
+                    id: randomUUID(),
+                },
             };
         }
 

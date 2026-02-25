@@ -1,5 +1,5 @@
+import { type Key, useInput } from 'ink';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useInput, type Key } from 'ink';
 
 // Ink's Key type is incomplete - these properties exist at runtime but aren't typed
 type ExtendedKey = Key & {
@@ -32,15 +32,18 @@ export function useSwitchControls(opts: {
         }
     }, []);
 
-    const setConfirmationWithTimeout = useCallback((mode: Exclude<ConfirmationMode, null>) => {
-        setConfirmationMode(mode);
-        if (confirmationTimeoutRef.current) {
-            clearTimeout(confirmationTimeoutRef.current);
-        }
-        confirmationTimeoutRef.current = setTimeout(() => {
-            resetConfirmation();
-        }, confirmationTimeoutMs);
-    }, [confirmationTimeoutMs, resetConfirmation]);
+    const setConfirmationWithTimeout = useCallback(
+        (mode: Exclude<ConfirmationMode, null>) => {
+            setConfirmationMode(mode);
+            if (confirmationTimeoutRef.current) {
+                clearTimeout(confirmationTimeoutRef.current);
+            }
+            confirmationTimeoutRef.current = setTimeout(() => {
+                resetConfirmation();
+            }, confirmationTimeoutMs);
+        },
+        [confirmationTimeoutMs, resetConfirmation],
+    );
 
     const readKeyString = useCallback((keyLike: unknown, prop: 'name' | 'sequence'): string | undefined => {
         if (!keyLike || typeof keyLike !== 'object') return undefined;
@@ -57,74 +60,79 @@ export function useSwitchControls(opts: {
         };
     }, []);
 
-    useInput(useCallback(async (input, key: ExtendedKey) => {
-        if (actionInProgress) {
-            return;
-        }
+    useInput(
+        useCallback(
+            async (input, key: ExtendedKey) => {
+                if (actionInProgress) {
+                    return;
+                }
 
-        if (key.ctrl && input === 'c') {
-            if (!onExit) {
-                if (confirmationMode) {
+                if (key.ctrl && input === 'c') {
+                    if (!onExit) {
+                        if (confirmationMode) {
+                            resetConfirmation();
+                        }
+                        try {
+                            process.kill(process.pid, 'SIGINT');
+                        } catch {
+                            process.exit(130);
+                        }
+                        return;
+                    }
+                    if (confirmationMode === 'exit') {
+                        resetConfirmation();
+                        setActionInProgress('exiting');
+                        await new Promise((resolve) => setTimeout(resolve, 100));
+                        onExit();
+                    } else {
+                        setConfirmationWithTimeout('exit');
+                    }
+                    return;
+                }
+
+                const keySequence = readKeyString(key, 'sequence');
+                const keyName = readKeyString(key, 'name');
+                const sequence = keySequence ?? input;
+                const sequenceString = typeof sequence === 'string' ? sequence : '';
+                const isKeyRelease = sequenceString.length > 0 && /^\u001b\[[0-9;]*:3u$/.test(sequenceString);
+                const csiUMatch =
+                    sequenceString.length > 0 ? sequenceString.match(/^\u001b\[(\d+)(?:;(\d+))?u$/) : null;
+                const csiUCodepoint = csiUMatch ? Number(csiUMatch[1]) : null;
+                const isCsiUSpace = csiUCodepoint === 32;
+                const isSpace =
+                    Boolean(onSwitch) && !isKeyRelease && (input === ' ' || keyName === 'space' || isCsiUSpace);
+                const hasPrintableInput = typeof input === 'string' && input.length > 0;
+
+                if (isSpace) {
+                    if (confirmationMode === 'switch') {
+                        resetConfirmation();
+                        setActionInProgress('switching');
+                        await new Promise((resolve) => setTimeout(resolve, 100));
+                        onSwitch?.();
+                    } else {
+                        setConfirmationWithTimeout('switch');
+                    }
+                    return;
+                }
+
+                if (confirmationMode && hasPrintableInput && !isKeyRelease) {
                     resetConfirmation();
                 }
-                try {
-                    process.kill(process.pid, 'SIGINT');
-                } catch {
-                    process.exit(130);
-                }
-                return;
-            }
-            if (confirmationMode === 'exit') {
-                resetConfirmation();
-                setActionInProgress('exiting');
-                await new Promise(resolve => setTimeout(resolve, 100));
-                onExit();
-            } else {
-                setConfirmationWithTimeout('exit');
-            }
-            return;
-        }
-
-        const keySequence = readKeyString(key, 'sequence');
-        const keyName = readKeyString(key, 'name');
-        const sequence = keySequence ?? input;
-        const sequenceString = typeof sequence === 'string' ? sequence : '';
-        const isKeyRelease = sequenceString.length > 0
-            && /^\u001b\[[0-9;]*:3u$/.test(sequenceString);
-        const csiUMatch = sequenceString.length > 0
-            ? sequenceString.match(/^\u001b\[(\d+)(?:;(\d+))?u$/)
-            : null;
-        const csiUCodepoint = csiUMatch ? Number(csiUMatch[1]) : null;
-        const isCsiUSpace = csiUCodepoint === 32;
-        const isSpace = Boolean(onSwitch) && !isKeyRelease && (input === ' ' || keyName === 'space' || isCsiUSpace);
-        const hasPrintableInput = typeof input === 'string' && input.length > 0;
-
-        if (isSpace) {
-            if (confirmationMode === 'switch') {
-                resetConfirmation();
-                setActionInProgress('switching');
-                await new Promise(resolve => setTimeout(resolve, 100));
-                onSwitch?.();
-            } else {
-                setConfirmationWithTimeout('switch');
-            }
-            return;
-        }
-
-        if (confirmationMode && hasPrintableInput && !isKeyRelease) {
-            resetConfirmation();
-        }
-    }, [
-        actionInProgress,
-        confirmationMode,
-        onExit,
-        onSwitch,
-        resetConfirmation,
-        setConfirmationWithTimeout
-    ]));
+            },
+            [
+                actionInProgress,
+                confirmationMode,
+                onExit,
+                onSwitch,
+                resetConfirmation,
+                setConfirmationWithTimeout,
+                readKeyString,
+            ],
+        ),
+    );
 
     return {
         confirmationMode,
-        actionInProgress
+        actionInProgress,
     };
 }

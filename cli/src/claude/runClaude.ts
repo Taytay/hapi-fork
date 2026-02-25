@@ -1,31 +1,31 @@
-import { logger } from '@/ui/logger';
-import { loop } from '@/claude/loop';
-import { AgentState, SessionModelMode } from '@/api/types';
-import { EnhancedMode, PermissionMode } from './loop';
-import { MessageQueue2 } from '@/utils/MessageQueue2';
-import { hashObject } from '@/utils/deterministicJson';
-import { extractSDKMetadataAsync } from '@/claude/sdk/metadataExtractor';
-import { parseSpecialCommand } from '@/parsers/specialCommands';
-import { getEnvironmentInfo } from '@/ui/doctor';
-import { startHappyServer } from '@/claude/utils/startHappyServer';
-import { startHookServer } from '@/claude/utils/startHookServer';
-import { generateHookSettingsFile, cleanupHookSettingsFile } from '@/modules/common/hooks/generateHookSettings';
-import { registerKillSessionHandler } from './registerKillSessionHandler';
-import type { Session } from './session';
-import { bootstrapSession } from '@/agent/sessionFactory';
-import { createModeChangeHandler, createRunnerLifecycle, setControlledByUser } from '@/agent/runnerLifecycle';
 import { isModelModeAllowedForFlavor, isPermissionModeAllowedForFlavor } from '@hapi/protocol';
 import { ModelModeSchema, PermissionModeSchema } from '@hapi/protocol/schemas';
+import { createModeChangeHandler, createRunnerLifecycle, setControlledByUser } from '@/agent/runnerLifecycle';
+import { bootstrapSession } from '@/agent/sessionFactory';
+import type { AgentState, SessionModelMode } from '@/api/types';
+import { loop } from '@/claude/loop';
+import { extractSDKMetadataAsync } from '@/claude/sdk/metadataExtractor';
+import { startHappyServer } from '@/claude/utils/startHappyServer';
+import { startHookServer } from '@/claude/utils/startHookServer';
+import { cleanupHookSettingsFile, generateHookSettingsFile } from '@/modules/common/hooks/generateHookSettings';
+import { parseSpecialCommand } from '@/parsers/specialCommands';
+import { getEnvironmentInfo } from '@/ui/doctor';
+import { logger } from '@/ui/logger';
 import { formatMessageWithAttachments } from '@/utils/attachmentFormatter';
+import { hashObject } from '@/utils/deterministicJson';
+import { MessageQueue2 } from '@/utils/MessageQueue2';
+import type { EnhancedMode, PermissionMode } from './loop';
+import { registerKillSessionHandler } from './registerKillSessionHandler';
+import type { Session } from './session';
 
 export interface StartOptions {
-    model?: string
-    permissionMode?: PermissionMode
-    startingMode?: 'local' | 'remote'
-    shouldStartRunner?: boolean
-    claudeEnvVars?: Record<string, string>
-    claudeArgs?: string[]
-    startedBy?: 'runner' | 'terminal'
+    model?: string;
+    permissionMode?: PermissionMode;
+    startingMode?: 'local' | 'remote';
+    shouldStartRunner?: boolean;
+    claudeEnvVars?: Record<string, string>;
+    claudeArgs?: string[];
+    startedBy?: 'runner' | 'terminal';
 }
 
 export async function runClaude(options: StartOptions = {}): Promise<void> {
@@ -49,7 +49,7 @@ export async function runClaude(options: StartOptions = {}): Promise<void> {
         flavor: 'claude',
         startedBy,
         workingDirectory,
-        agentState: initialState
+        agentState: initialState,
     });
     logger.debug(`Session created: ${sessionInfo.id}`);
 
@@ -61,7 +61,7 @@ export async function runClaude(options: StartOptions = {}): Promise<void> {
             session.updateMetadata((currentMetadata) => ({
                 ...currentMetadata,
                 tools: sdkMetadata.tools,
-                slashCommands: sdkMetadata.slashCommands
+                slashCommands: sdkMetadata.slashCommands,
             }));
             logger.debug('[start] Session metadata updated with SDK capabilities');
         } catch (error) {
@@ -97,13 +97,13 @@ export async function runClaude(options: StartOptions = {}): Promise<void> {
                     currentSession.onSessionFound(sessionId);
                 }
             }
-        }
+        },
     });
     logger.debug(`[START] Hook server started on port ${hookServer.port}`);
 
     const hookSettingsPath = generateHookSettingsFile(hookServer.port, hookServer.token, {
         filenamePrefix: 'session-hook',
-        logLabel: 'generateHookSettings'
+        logLabel: 'generateHookSettings',
     });
     logger.debug(`[START] Generated hook settings file: ${hookSettingsPath}`);
 
@@ -120,7 +120,7 @@ export async function runClaude(options: StartOptions = {}): Promise<void> {
             happyServer.stop();
             hookServer.stop();
             cleanupHookSettingsFile(hookSettingsPath, 'generateHookSettings');
-        }
+        },
     });
 
     lifecycle.registerProcessHandlers();
@@ -131,24 +131,27 @@ export async function runClaude(options: StartOptions = {}): Promise<void> {
     setControlledByUser(session, startingMode);
 
     // Import MessageQueue2 and create message queue
-    const messageQueue = new MessageQueue2<EnhancedMode>(mode => hashObject({
-        isPlan: mode.permissionMode === 'plan',
-        model: mode.model,
-        fallbackModel: mode.fallbackModel,
-        customSystemPrompt: mode.customSystemPrompt,
-        appendSystemPrompt: mode.appendSystemPrompt,
-        allowedTools: mode.allowedTools,
-        disallowedTools: mode.disallowedTools
-    }));
+    const messageQueue = new MessageQueue2<EnhancedMode>((mode) =>
+        hashObject({
+            isPlan: mode.permissionMode === 'plan',
+            model: mode.model,
+            fallbackModel: mode.fallbackModel,
+            customSystemPrompt: mode.customSystemPrompt,
+            appendSystemPrompt: mode.appendSystemPrompt,
+            allowedTools: mode.allowedTools,
+            disallowedTools: mode.disallowedTools,
+        }),
+    );
 
     // Forward messages to the queue
     let currentPermissionMode: PermissionMode = options.permissionMode ?? 'default';
-    let currentModelMode: SessionModelMode = options.model === 'sonnet' || options.model === 'opus' ? options.model : 'default';
-    let currentFallbackModel: string | undefined = undefined; // Track current fallback model
-    let currentCustomSystemPrompt: string | undefined = undefined; // Track current custom system prompt
-    let currentAppendSystemPrompt: string | undefined = undefined; // Track current append system prompt
-    let currentAllowedTools: string[] | undefined = undefined; // Track current allowed tools
-    let currentDisallowedTools: string[] | undefined = undefined; // Track current disallowed tools
+    let currentModelMode: SessionModelMode =
+        options.model === 'sonnet' || options.model === 'opus' ? options.model : 'default';
+    let currentFallbackModel: string | undefined; // Track current fallback model
+    let currentCustomSystemPrompt: string | undefined; // Track current custom system prompt
+    let currentAppendSystemPrompt: string | undefined; // Track current append system prompt
+    let currentAllowedTools: string[] | undefined; // Track current allowed tools
+    let currentDisallowedTools: string[] | undefined; // Track current disallowed tools
 
     const syncSessionModes = () => {
         const sessionInstance = currentSessionRef.current;
@@ -157,7 +160,9 @@ export async function runClaude(options: StartOptions = {}): Promise<void> {
         }
         sessionInstance.setPermissionMode(currentPermissionMode);
         sessionInstance.setModelMode(currentModelMode);
-        logger.debug(`[loop] Synced session modes for keepalive: permissionMode=${currentPermissionMode}, modelMode=${currentModelMode}`);
+        logger.debug(
+            `[loop] Synced session modes for keepalive: permissionMode=${currentPermissionMode}, modelMode=${currentModelMode}`,
+        );
     };
     session.onUserMessage((message) => {
         const sessionPermissionMode = currentSessionRef.current?.getPermissionMode();
@@ -166,16 +171,22 @@ export async function runClaude(options: StartOptions = {}): Promise<void> {
         }
         const messagePermissionMode = currentPermissionMode;
         const messageModel = currentModelMode === 'default' ? undefined : currentModelMode;
-        logger.debug(`[loop] User message received with permission mode: ${currentPermissionMode}, model: ${currentModelMode}`);
+        logger.debug(
+            `[loop] User message received with permission mode: ${currentPermissionMode}, model: ${currentModelMode}`,
+        );
 
         // Resolve custom system prompt - use message.meta.customSystemPrompt if provided, otherwise use current
         let messageCustomSystemPrompt = currentCustomSystemPrompt;
         if (message.meta?.hasOwnProperty('customSystemPrompt')) {
             messageCustomSystemPrompt = message.meta.customSystemPrompt || undefined; // null becomes undefined
             currentCustomSystemPrompt = messageCustomSystemPrompt;
-            logger.debug(`[loop] Custom system prompt updated from user message: ${messageCustomSystemPrompt ? 'set' : 'reset to none'}`);
+            logger.debug(
+                `[loop] Custom system prompt updated from user message: ${messageCustomSystemPrompt ? 'set' : 'reset to none'}`,
+            );
         } else {
-            logger.debug(`[loop] User message received with no custom system prompt override, using current: ${currentCustomSystemPrompt ? 'set' : 'none'}`);
+            logger.debug(
+                `[loop] User message received with no custom system prompt override, using current: ${currentCustomSystemPrompt ? 'set' : 'none'}`,
+            );
         }
 
         // Resolve fallback model - use message.meta.fallbackModel if provided, otherwise use current fallback model
@@ -185,7 +196,9 @@ export async function runClaude(options: StartOptions = {}): Promise<void> {
             currentFallbackModel = messageFallbackModel;
             logger.debug(`[loop] Fallback model updated from user message: ${messageFallbackModel || 'reset to none'}`);
         } else {
-            logger.debug(`[loop] User message received with no fallback model override, using current: ${currentFallbackModel || 'none'}`);
+            logger.debug(
+                `[loop] User message received with no fallback model override, using current: ${currentFallbackModel || 'none'}`,
+            );
         }
 
         // Resolve append system prompt - use message.meta.appendSystemPrompt if provided, otherwise use current
@@ -193,9 +206,13 @@ export async function runClaude(options: StartOptions = {}): Promise<void> {
         if (message.meta?.hasOwnProperty('appendSystemPrompt')) {
             messageAppendSystemPrompt = message.meta.appendSystemPrompt || undefined; // null becomes undefined
             currentAppendSystemPrompt = messageAppendSystemPrompt;
-            logger.debug(`[loop] Append system prompt updated from user message: ${messageAppendSystemPrompt ? 'set' : 'reset to none'}`);
+            logger.debug(
+                `[loop] Append system prompt updated from user message: ${messageAppendSystemPrompt ? 'set' : 'reset to none'}`,
+            );
         } else {
-            logger.debug(`[loop] User message received with no append system prompt override, using current: ${currentAppendSystemPrompt ? 'set' : 'none'}`);
+            logger.debug(
+                `[loop] User message received with no append system prompt override, using current: ${currentAppendSystemPrompt ? 'set' : 'none'}`,
+            );
         }
 
         // Resolve allowed tools - use message.meta.allowedTools if provided, otherwise use current
@@ -203,9 +220,13 @@ export async function runClaude(options: StartOptions = {}): Promise<void> {
         if (message.meta?.hasOwnProperty('allowedTools')) {
             messageAllowedTools = message.meta.allowedTools || undefined; // null becomes undefined
             currentAllowedTools = messageAllowedTools;
-            logger.debug(`[loop] Allowed tools updated from user message: ${messageAllowedTools ? messageAllowedTools.join(', ') : 'reset to none'}`);
+            logger.debug(
+                `[loop] Allowed tools updated from user message: ${messageAllowedTools ? messageAllowedTools.join(', ') : 'reset to none'}`,
+            );
         } else {
-            logger.debug(`[loop] User message received with no allowed tools override, using current: ${currentAllowedTools ? currentAllowedTools.join(', ') : 'none'}`);
+            logger.debug(
+                `[loop] User message received with no allowed tools override, using current: ${currentAllowedTools ? currentAllowedTools.join(', ') : 'none'}`,
+            );
         }
 
         // Resolve disallowed tools - use message.meta.disallowedTools if provided, otherwise use current
@@ -213,9 +234,13 @@ export async function runClaude(options: StartOptions = {}): Promise<void> {
         if (message.meta?.hasOwnProperty('disallowedTools')) {
             messageDisallowedTools = message.meta.disallowedTools || undefined; // null becomes undefined
             currentDisallowedTools = messageDisallowedTools;
-            logger.debug(`[loop] Disallowed tools updated from user message: ${messageDisallowedTools ? messageDisallowedTools.join(', ') : 'reset to none'}`);
+            logger.debug(
+                `[loop] Disallowed tools updated from user message: ${messageDisallowedTools ? messageDisallowedTools.join(', ') : 'reset to none'}`,
+            );
         } else {
-            logger.debug(`[loop] User message received with no disallowed tools override, using current: ${currentDisallowedTools ? currentDisallowedTools.join(', ') : 'none'}`);
+            logger.debug(
+                `[loop] User message received with no disallowed tools override, using current: ${currentDisallowedTools ? currentDisallowedTools.join(', ') : 'none'}`,
+            );
         }
 
         // Check for special commands before processing
@@ -233,7 +258,7 @@ export async function runClaude(options: StartOptions = {}): Promise<void> {
                 customSystemPrompt: messageCustomSystemPrompt,
                 appendSystemPrompt: messageAppendSystemPrompt,
                 allowedTools: messageAllowedTools,
-                disallowedTools: messageDisallowedTools
+                disallowedTools: messageDisallowedTools,
             };
             // Use raw text only, ignore attachments for special commands
             const commandText = specialCommand.originalMessage || message.content.text;
@@ -251,7 +276,7 @@ export async function runClaude(options: StartOptions = {}): Promise<void> {
                 customSystemPrompt: messageCustomSystemPrompt,
                 appendSystemPrompt: messageAppendSystemPrompt,
                 allowedTools: messageAllowedTools,
-                disallowedTools: messageDisallowedTools
+                disallowedTools: messageDisallowedTools,
             };
             // Use raw text only, ignore attachments for special commands
             const commandText = specialCommand.originalMessage || message.content.text;
@@ -268,10 +293,10 @@ export async function runClaude(options: StartOptions = {}): Promise<void> {
             customSystemPrompt: messageCustomSystemPrompt,
             appendSystemPrompt: messageAppendSystemPrompt,
             allowedTools: messageAllowedTools,
-            disallowedTools: messageDisallowedTools
+            disallowedTools: messageDisallowedTools,
         };
         messageQueue.push(formattedText, enhancedMode);
-        logger.debugLargeJson('User message pushed to queue:', message)
+        logger.debugLargeJson('User message pushed to queue:', message);
     });
 
     const resolvePermissionMode = (value: unknown): PermissionMode => {
@@ -319,23 +344,23 @@ export async function runClaude(options: StartOptions = {}): Promise<void> {
             startingMode,
             messageQueue,
             api,
-            allowedTools: happyServer.toolNames.map(toolName => `mcp__hapi__${toolName}`),
+            allowedTools: happyServer.toolNames.map((toolName) => `mcp__hapi__${toolName}`),
             onModeChange: createModeChangeHandler(session),
             onSessionReady: (sessionInstance) => {
                 currentSessionRef.current = sessionInstance;
                 syncSessionModes();
             },
             mcpServers: {
-                'hapi': {
+                hapi: {
                     type: 'http' as const,
                     url: happyServer.url,
-                }
+                },
             },
             session,
             claudeEnvVars: options.claudeEnvVars,
             claudeArgs: options.claudeArgs,
             startedBy,
-            hookSettingsPath
+            hookSettingsPath,
         });
     } catch (error) {
         loopError = error;

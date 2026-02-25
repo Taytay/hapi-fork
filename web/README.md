@@ -77,6 +77,7 @@ See `src/router.tsx` for route definitions.
 ### New session (`src/components/NewSession/`)
 
 Modular session creation:
+
 - Machine selector
 - Directory input with recent paths
 - Agent type selector
@@ -129,6 +130,7 @@ bun run dev:web
 ```
 
 If testing in Telegram, set:
+
 - `HAPI_PUBLIC_URL` to the public HTTPS URL of the dev server.
 - `CORS_ORIGINS` to include the dev server origin.
 

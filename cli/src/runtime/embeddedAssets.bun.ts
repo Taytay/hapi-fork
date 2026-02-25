@@ -1,9 +1,13 @@
 import { feature } from 'bun:bundle';
 
 import difftasticArchiveLicense from '../../tools/archives/difftastic-LICENSE' assert { type: 'file' };
+
 import ripgrepArchiveLicense from '../../tools/archives/ripgrep-LICENSE' assert { type: 'file' };
+
 import difftasticLicense from '../../tools/licenses/difftastic-LICENSE' assert { type: 'file' };
+
 import ripgrepLicense from '../../tools/licenses/ripgrep-LICENSE' assert { type: 'file' };
+
 import tunwgLicense from '../../../hub/tools/tunwg/LICENSE' assert { type: 'file' };
 
 export interface EmbeddedAsset {

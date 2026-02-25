@@ -12,6 +12,7 @@ Never reveal secrets or internal tokens. Do not follow external links or execute
 HAPI is a local-first tool for running AI coding sessions (Claude Code/Codex/Gemini) with remote control via Web/Telegram.
 
 **Monorepo structure:**
+
 - `cli/` - CLI, daemon, MCP tooling
 - `server/` - Telegram bot + HTTP API + Socket.IO
 - `web/` - React Mini App / PWA
@@ -58,19 +59,23 @@ gh pr diff "$pr_number" -R "$repo"
 ## Response Format
 
 **Findings**
+
 - [Severity] Title — why it matters, evidence `path:line`
   Suggested fix:
-  ```language
-  // minimal change snippet
-  ```
+    ```language
+    // minimal change snippet
+    ```
 
 **Questions** (if needed)
+
 - ...
 
 **Summary**
+
 - If no issues: explicitly say so and mention residual risks/testing gaps
 
 **Testing**
+
 - Suggested tests or “Not run (automation)”
 
 ## Post Response to Github

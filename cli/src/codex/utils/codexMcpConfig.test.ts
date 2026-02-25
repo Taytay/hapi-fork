@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { buildMcpServerConfigArgs, buildDeveloperInstructionsArg } from './codexMcpConfig';
+import { describe, expect, it } from 'vitest';
+import { buildDeveloperInstructionsArg, buildMcpServerConfigArgs } from './codexMcpConfig';
 
 describe('codexMcpConfig', () => {
     describe('buildMcpServerConfigArgs', () => {
@@ -7,22 +7,24 @@ describe('codexMcpConfig', () => {
             const mcpServers = {
                 hapi: {
                     command: 'hapi',
-                    args: ['mcp', '--url', 'http://localhost:3000']
-                }
+                    args: ['mcp', '--url', 'http://localhost:3000'],
+                },
             };
 
             const args = buildMcpServerConfigArgs(mcpServers);
 
             expect(args).toEqual([
-                '-c', 'mcp_servers.hapi.command="hapi"',
-                '-c', "mcp_servers.hapi.args=['mcp','--url','http://localhost:3000']"
+                '-c',
+                'mcp_servers.hapi.command="hapi"',
+                '-c',
+                "mcp_servers.hapi.args=['mcp','--url','http://localhost:3000']",
             ]);
         });
 
         it('builds config args for multiple MCP servers', () => {
             const mcpServers = {
                 hapi: { command: 'hapi', args: ['mcp'] },
-                other: { command: 'node', args: ['server.js'] }
+                other: { command: 'node', args: ['server.js'] },
             };
 
             const args = buildMcpServerConfigArgs(mcpServers);
@@ -34,7 +36,7 @@ describe('codexMcpConfig', () => {
 
         it('handles empty args array', () => {
             const mcpServers = {
-                simple: { command: 'simple-server', args: [] }
+                simple: { command: 'simple-server', args: [] },
             };
 
             const args = buildMcpServerConfigArgs(mcpServers);
@@ -44,7 +46,7 @@ describe('codexMcpConfig', () => {
 
         it('escapes special characters in command', () => {
             const mcpServers = {
-                test: { command: 'path/to/server', args: [] }
+                test: { command: 'path/to/server', args: [] },
             };
 
             const args = buildMcpServerConfigArgs(mcpServers);
@@ -59,10 +61,7 @@ describe('codexMcpConfig', () => {
 
             const args = buildDeveloperInstructionsArg(instructions);
 
-            expect(args).toEqual([
-                '-c',
-                'developer_instructions="Call functions.hapi__change_title to set title."'
-            ]);
+            expect(args).toEqual(['-c', 'developer_instructions="Call functions.hapi__change_title to set title."']);
         });
 
         it('escapes double quotes', () => {

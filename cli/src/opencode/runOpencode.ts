@@ -1,24 +1,26 @@
-import { logger } from '@/ui/logger';
-import { opencodeLoop } from './loop';
-import { MessageQueue2 } from '@/utils/MessageQueue2';
-import { hashObject } from '@/utils/deterministicJson';
-import { registerKillSessionHandler } from '@/claude/registerKillSessionHandler';
-import type { AgentState } from '@/api/types';
-import type { OpencodeSession } from './session';
-import type { OpencodeMode, PermissionMode } from './types';
-import { bootstrapSession } from '@/agent/sessionFactory';
-import { createModeChangeHandler, createRunnerLifecycle, setControlledByUser } from '@/agent/runnerLifecycle';
 import { isPermissionModeAllowedForFlavor } from '@hapi/protocol';
 import { PermissionModeSchema } from '@hapi/protocol/schemas';
-import { startOpencodeHookServer } from './utils/startOpencodeHookServer';
+import { createModeChangeHandler, createRunnerLifecycle, setControlledByUser } from '@/agent/runnerLifecycle';
+import { bootstrapSession } from '@/agent/sessionFactory';
+import type { AgentState } from '@/api/types';
+import { registerKillSessionHandler } from '@/claude/registerKillSessionHandler';
+import { logger } from '@/ui/logger';
 import { formatMessageWithAttachments } from '@/utils/attachmentFormatter';
+import { hashObject } from '@/utils/deterministicJson';
+import { MessageQueue2 } from '@/utils/MessageQueue2';
+import { opencodeLoop } from './loop';
+import type { OpencodeSession } from './session';
+import type { OpencodeMode, PermissionMode } from './types';
+import { startOpencodeHookServer } from './utils/startOpencodeHookServer';
 
-export async function runOpencode(opts: {
-    startedBy?: 'runner' | 'terminal';
-    startingMode?: 'local' | 'remote';
-    permissionMode?: PermissionMode;
-    resumeSessionId?: string;
-} = {}): Promise<void> {
+export async function runOpencode(
+    opts: {
+        startedBy?: 'runner' | 'terminal';
+        startingMode?: 'local' | 'remote';
+        permissionMode?: PermissionMode;
+        resumeSessionId?: string;
+    } = {},
+): Promise<void> {
     const workingDirectory = process.cwd();
     const startedBy = opts.startedBy ?? 'terminal';
 
@@ -30,24 +32,25 @@ export async function runOpencode(opts: {
     }
 
     const initialState: AgentState = {
-        controlledByUser: false
+        controlledByUser: false,
     };
 
     const { api, session } = await bootstrapSession({
         flavor: 'opencode',
         startedBy,
         workingDirectory,
-        agentState: initialState
+        agentState: initialState,
     });
 
-    const startingMode: 'local' | 'remote' = opts.startingMode
-        ?? (startedBy === 'runner' ? 'remote' : 'local');
+    const startingMode: 'local' | 'remote' = opts.startingMode ?? (startedBy === 'runner' ? 'remote' : 'local');
 
     setControlledByUser(session, startingMode);
 
-    const messageQueue = new MessageQueue2<OpencodeMode>((mode) => hashObject({
-        permissionMode: mode.permissionMode
-    }));
+    const messageQueue = new MessageQueue2<OpencodeMode>((mode) =>
+        hashObject({
+            permissionMode: mode.permissionMode,
+        }),
+    );
 
     const sessionWrapperRef: { current: OpencodeSession | null } = { current: null };
     let currentPermissionMode: PermissionMode = opts.permissionMode ?? 'default';
@@ -58,7 +61,7 @@ export async function runOpencode(opts: {
                 return;
             }
             currentSession.emitHookEvent(event);
-        }
+        },
     });
     const hookUrl = `http://127.0.0.1:${hookServer.port}/hook/opencode`;
 
@@ -68,7 +71,7 @@ export async function runOpencode(opts: {
         stopKeepAlive: () => sessionWrapperRef.current?.stopKeepAlive(),
         onAfterClose: () => {
             hookServer.stop();
-        }
+        },
     });
 
     lifecycle.registerProcessHandlers();
@@ -86,7 +89,7 @@ export async function runOpencode(opts: {
     session.onUserMessage((message) => {
         const formattedText = formatMessageWithAttachments(message.content.text, message.content.attachments);
         const mode: OpencodeMode = {
-            permissionMode: currentPermissionMode
+            permissionMode: currentPermissionMode,
         };
         messageQueue.push(formattedText, mode);
     });
@@ -129,7 +132,7 @@ export async function runOpencode(opts: {
             onSessionReady: (instance) => {
                 sessionWrapperRef.current = instance;
                 syncSessionMode();
-            }
+            },
         });
     } catch (error) {
         lifecycle.markCrash(error);

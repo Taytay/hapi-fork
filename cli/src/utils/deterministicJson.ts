@@ -1,16 +1,16 @@
 /**
  * Deterministic JSON utilities for consistent object serialization and hashing
- * 
+ *
  * Provides stable JSON stringification with sorted keys and consistent handling
  * of edge cases like undefined, circular references, and special types.
- * 
+ *
  * Used for:
  * - Consistent encryption/decryption in API communication
  * - Reliable message deduplication in session scanning
  * - Stable object comparison for optimistic concurrency
  */
 
-import { createHash } from 'crypto';
+import { createHash } from 'node:crypto';
 
 /**
  * Options for deterministic JSON stringification
@@ -28,21 +28,13 @@ export interface DeterministicJsonOptions {
 
 /**
  * Deterministically stringify a JSON object with sorted keys
- * 
+ *
  * @param obj Object to stringify
  * @param options Stringification options
  * @returns Deterministic JSON string
  */
-export function deterministicStringify(
-    obj: any,
-    options: DeterministicJsonOptions = {}
-): string {
-    const {
-        undefinedBehavior = 'omit',
-        sortArrays = false,
-        replacer,
-        includeSymbols = false
-    } = options;
+export function deterministicStringify(obj: any, options: DeterministicJsonOptions = {}): string {
+    const { undefinedBehavior = 'omit', sortArrays = false, replacer, includeSymbols = false } = options;
 
     const seen = new WeakSet();
 
@@ -56,9 +48,12 @@ export function deterministicStringify(
         if (value === null) return null;
         if (value === undefined) {
             switch (undefinedBehavior) {
-                case 'omit': return undefined;
-                case 'null': return null;
-                case 'throw': throw new Error(`Undefined value at key: ${key}`);
+                case 'omit':
+                    return undefined;
+                case 'null':
+                    return null;
+                case 'throw':
+                    throw new Error(`Undefined value at key: ${key}`);
             }
         }
         if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') {
@@ -79,7 +74,7 @@ export function deterministicStringify(
             return includeSymbols ? value.toString() : undefined;
         }
         if (typeof value === 'bigint') {
-            return value.toString() + 'n';
+            return `${value.toString()}n`;
         }
 
         // Handle circular references
@@ -90,9 +85,10 @@ export function deterministicStringify(
 
         // Handle arrays
         if (Array.isArray(value)) {
-            const processed = value.map((item, index) => processValue(item, String(index)))
-                .filter(item => item !== undefined);
-            
+            const processed = value
+                .map((item, index) => processValue(item, String(index)))
+                .filter((item) => item !== undefined);
+
             if (sortArrays) {
                 // Sort arrays by their stringified content for true determinism
                 processed.sort((a, b) => {
@@ -101,7 +97,7 @@ export function deterministicStringify(
                     return aStr.localeCompare(bStr);
                 });
             }
-            
+
             seen.delete(value);
             return processed;
         }
@@ -140,7 +136,7 @@ export function deterministicStringify(
 
 /**
  * Calculate SHA-256 hash of an object using deterministic JSON stringification
- * 
+ *
  * @param obj Object to hash
  * @param options Stringification options
  * @param encoding Output encoding (default: 'hex')
@@ -149,7 +145,7 @@ export function deterministicStringify(
 export function hashObject(
     obj: any,
     options?: DeterministicJsonOptions,
-    encoding: 'hex' | 'base64' | 'base64url' = 'hex'
+    encoding: 'hex' | 'base64' | 'base64url' = 'hex',
 ): string {
     const jsonString = deterministicStringify(obj, options);
     return createHash('sha256').update(jsonString).digest(encoding);
@@ -157,17 +153,13 @@ export function hashObject(
 
 /**
  * Compare two objects for deep equality using deterministic stringification
- * 
+ *
  * @param a First object
  * @param b Second object
  * @param options Stringification options
  * @returns True if objects are deeply equal
  */
-export function deepEqual(
-    a: any,
-    b: any,
-    options?: DeterministicJsonOptions
-): boolean {
+export function deepEqual(a: any, b: any, options?: DeterministicJsonOptions): boolean {
     try {
         return deterministicStringify(a, options) === deterministicStringify(b, options);
     } catch {
@@ -177,14 +169,11 @@ export function deepEqual(
 
 /**
  * Create a stable hash key for an object suitable for use as a Map key
- * 
+ *
  * @param obj Object to create key for
  * @param options Stringification options
  * @returns Stable string key
  */
-export function objectKey(
-    obj: any,
-    options?: DeterministicJsonOptions
-): string {
+export function objectKey(obj: any, options?: DeterministicJsonOptions): string {
     return hashObject(obj, options, 'base64url');
 }

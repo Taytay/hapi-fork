@@ -1,6 +1,6 @@
-import { mkdirSync, unlinkSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { mkdirSync, unlinkSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 export type McpConfigArg = {
     value: string;
@@ -12,10 +12,7 @@ export type McpConfigOptions = {
     baseDir?: string;
 };
 
-export function resolveMcpConfigArg(
-    mcpServers: Record<string, unknown>,
-    options?: McpConfigOptions
-): McpConfigArg {
+export function resolveMcpConfigArg(mcpServers: Record<string, unknown>, options?: McpConfigOptions): McpConfigArg {
     const configJson = JSON.stringify({ mcpServers });
     const useFile = options?.useFile ?? process.platform === 'win32';
     if (!useFile) {
@@ -25,11 +22,8 @@ export function resolveMcpConfigArg(
     const dir = options?.baseDir ?? tmpdir();
     mkdirSync(dir, { recursive: true });
 
-    const filePath = join(
-        dir,
-        `mcp-config-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}.json`
-    );
-    writeFileSync(filePath, configJson, "utf8");
+    const filePath = join(dir, `mcp-config-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}.json`);
+    writeFileSync(filePath, configJson, 'utf8');
 
     return {
         value: filePath,
@@ -39,14 +33,14 @@ export function resolveMcpConfigArg(
             } catch {
                 // Ignore cleanup errors; config file is optional and short-lived.
             }
-        }
+        },
     };
 }
 
 export function appendMcpConfigArg(
     args: string[],
     mcpServers?: Record<string, unknown>,
-    options?: McpConfigOptions
+    options?: McpConfigOptions,
 ): (() => void) | null {
     if (!mcpServers || Object.keys(mcpServers).length === 0) {
         return null;

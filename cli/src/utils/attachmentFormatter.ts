@@ -1,4 +1,4 @@
-import type { AttachmentMetadata } from '@/api/types'
+import type { AttachmentMetadata } from '@/api/types';
 
 /**
  * Formats attachments for Claude by converting them to @path references.
@@ -6,25 +6,22 @@ import type { AttachmentMetadata } from '@/api/types'
  */
 export function formatAttachmentsForClaude(attachments: AttachmentMetadata[] | undefined): string {
     if (!attachments || attachments.length === 0) {
-        return ''
+        return '';
     }
-    return attachments.map(a => `@${a.path}`).join(' ')
+    return attachments.map((a) => `@${a.path}`).join(' ');
 }
 
 /**
  * Combines text and formatted attachments into a single prompt string.
  * Attachments are formatted as @path references and prepended to the text.
  */
-export function formatMessageWithAttachments(
-    text: string,
-    attachments: AttachmentMetadata[] | undefined
-): string {
-    const attachmentText = formatAttachmentsForClaude(attachments)
+export function formatMessageWithAttachments(text: string, attachments: AttachmentMetadata[] | undefined): string {
+    const attachmentText = formatAttachmentsForClaude(attachments);
     if (!attachmentText) {
-        return text
+        return text;
     }
     if (!text) {
-        return attachmentText
+        return attachmentText;
     }
-    return `${attachmentText}\n\n${text}`
+    return `${attachmentText}\n\n${text}`;
 }

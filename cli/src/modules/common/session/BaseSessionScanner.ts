@@ -1,5 +1,5 @@
-import { InvalidateSync } from "@/utils/sync";
-import { startFileWatcher } from "@/modules/watcher/startFileWatcher";
+import { startFileWatcher } from '@/modules/watcher/startFileWatcher';
+import { InvalidateSync } from '@/utils/sync';
 
 export type SessionFileScanEntry<TEvent> = {
     event: TEvent;
@@ -42,17 +42,13 @@ export abstract class BaseSessionScanner<TEvent> {
     protected abstract parseSessionFile(filePath: string, cursor: number): Promise<SessionFileScanResult<TEvent>>;
     protected abstract generateEventKey(event: TEvent, context: { filePath: string; lineIndex?: number }): string;
 
-    protected async handleFileScan(_stats: SessionFileScanStats<TEvent>): Promise<void> {
-    }
+    protected async handleFileScan(_stats: SessionFileScanStats<TEvent>): Promise<void> {}
 
-    protected async initialize(): Promise<void> {
-    }
+    protected async initialize(): Promise<void> {}
 
-    protected async beforeScan(): Promise<void> {
-    }
+    protected async beforeScan(): Promise<void> {}
 
-    protected async afterScan(): Promise<void> {
-    }
+    protected async afterScan(): Promise<void> {}
 
     protected shouldScan(): boolean {
         return true;
@@ -66,7 +62,10 @@ export abstract class BaseSessionScanner<TEvent> {
         if (this.watchers.has(filePath)) {
             return;
         }
-        this.watchers.set(filePath, startFileWatcher(filePath, () => this.sync.invalidate()));
+        this.watchers.set(
+            filePath,
+            startFileWatcher(filePath, () => this.sync.invalidate()),
+        );
     }
 
     protected invalidate(): void {
@@ -173,7 +172,7 @@ export abstract class BaseSessionScanner<TEvent> {
                 newCount: newEvents.length,
                 skippedCount: events.length - newEvents.length,
                 cursor,
-                nextCursor
+                nextCursor,
             });
             this.setCursor(filePath, nextCursor);
             for (const key of newKeys) {

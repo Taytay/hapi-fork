@@ -1,10 +1,14 @@
 import React from 'react';
-import { logger } from '@/ui/logger';
-import { buildHapiMcpBridge } from '@/codex/utils/buildHapiMcpBridge';
 import { convertAgentMessage } from '@/agent/messageConverter';
 import type { AgentMessage, McpServerStdio, PromptContent } from '@/agent/types';
-import { RemoteLauncherBase, type RemoteLauncherDisplayContext, type RemoteLauncherExitReason } from '@/modules/common/remote/RemoteLauncherBase';
+import { buildHapiMcpBridge } from '@/codex/utils/buildHapiMcpBridge';
+import {
+    RemoteLauncherBase,
+    type RemoteLauncherDisplayContext,
+    type RemoteLauncherExitReason,
+} from '@/modules/common/remote/RemoteLauncherBase';
 import { OpencodeDisplay } from '@/ui/ink/OpencodeDisplay';
+import { logger } from '@/ui/logger';
 import type { OpencodeSession } from './session';
 import type { PermissionMode } from './types';
 import { createOpencodeBackend } from './utils/opencodeBackend';
@@ -28,7 +32,7 @@ class OpencodeRemoteLauncher extends RemoteLauncherBase {
     public async launch(): Promise<RemoteLauncherExitReason> {
         return this.start({
             onExit: () => this.handleExitFromUi(),
-            onSwitchToLocal: () => this.handleSwitchFromUi()
+            onSwitchToLocal: () => this.handleSwitchFromUi(),
         });
     }
 
@@ -44,7 +48,7 @@ class OpencodeRemoteLauncher extends RemoteLauncherBase {
         this.happyServer = happyServer;
 
         const backend = createOpencodeBackend({
-            cwd: session.path
+            cwd: session.path,
         });
         this.backend = backend;
 
@@ -64,23 +68,23 @@ class OpencodeRemoteLauncher extends RemoteLauncherBase {
                 acpSessionId = await backend.loadSession({
                     sessionId: resumeSessionId,
                     cwd: session.path,
-                    mcpServers: mcpServerList
+                    mcpServers: mcpServerList,
                 });
             } catch (error) {
                 logger.warn('[opencode-remote] resume failed, starting new session', error);
                 session.sendSessionEvent({
                     type: 'message',
-                    message: 'OpenCode resume failed; starting a new session.'
+                    message: 'OpenCode resume failed; starting a new session.',
                 });
                 acpSessionId = await backend.newSession({
                     cwd: session.path,
-                    mcpServers: mcpServerList
+                    mcpServers: mcpServerList,
                 });
             }
         } else {
             acpSessionId = await backend.newSession({
                 cwd: session.path,
-                mcpServers: mcpServerList
+                mcpServers: mcpServerList,
             });
         }
         session.onSessionFound(acpSessionId);
@@ -88,13 +92,13 @@ class OpencodeRemoteLauncher extends RemoteLauncherBase {
         this.permissionHandler = new OpencodePermissionHandler(
             session.client,
             backend,
-            () => session.getPermissionMode() as PermissionMode | undefined
+            () => session.getPermissionMode() as PermissionMode | undefined,
         );
         this.applyDisplayMode(session.getPermissionMode() as PermissionMode);
 
         this.setupAbortHandlers(session.client.rpcHandlerManager, {
             onAbort: () => this.handleAbort(),
-            onSwitch: () => this.handleSwitchRequest()
+            onSwitch: () => this.handleSwitchRequest(),
         });
 
         const sendReady = () => {
@@ -121,10 +125,12 @@ class OpencodeRemoteLauncher extends RemoteLauncherBase {
                 this.instructionsSent = true;
             }
 
-            const promptContent: PromptContent[] = [{
-                type: 'text',
-                text: messageText
-            }];
+            const promptContent: PromptContent[] = [
+                {
+                    type: 'text',
+                    text: messageText,
+                },
+            ];
 
             session.onThinkingChange(true);
 
@@ -136,7 +142,7 @@ class OpencodeRemoteLauncher extends RemoteLauncherBase {
                 logger.warn('[opencode-remote] prompt failed', error);
                 session.sendSessionEvent({
                     type: 'message',
-                    message: 'OpenCode prompt failed. Check logs for details.'
+                    message: 'OpenCode prompt failed. Check logs for details.',
                 });
                 messageBuffer.addMessage('OpenCode prompt failed', 'status');
             } finally {
@@ -238,13 +244,11 @@ function toAcpMcpServers(config: Record<string, { command: string; args: string[
         name,
         command: entry.command,
         args: entry.args,
-        env: []
+        env: [],
     }));
 }
 
-export async function opencodeRemoteLauncher(
-    session: OpencodeSession
-): Promise<'switch' | 'exit'> {
+export async function opencodeRemoteLauncher(session: OpencodeSession): Promise<'switch' | 'exit'> {
     const launcher = new OpencodeRemoteLauncher(session);
     return launcher.launch();
 }

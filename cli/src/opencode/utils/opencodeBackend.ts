@@ -11,15 +11,13 @@ function filterEnv(env: NodeJS.ProcessEnv): Record<string, string> {
     return result;
 }
 
-export function createOpencodeBackend(opts: {
-    cwd?: string;
-}): AcpSdkBackend {
+export function createOpencodeBackend(opts: { cwd?: string }): AcpSdkBackend {
     const env = buildOpencodeEnv();
     const args = ['acp', '--cwd', opts.cwd ?? process.cwd()];
 
     return new AcpSdkBackend({
         command: 'opencode',
         args,
-        env: filterEnv(env)
+        env: filterEnv(env),
     });
 }

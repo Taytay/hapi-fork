@@ -1,28 +1,27 @@
-import React from 'react';
 import { randomUUID } from 'node:crypto';
-
-import { CodexMcpClient } from './codexMcpClient';
-import { CodexAppServerClient } from './codexAppServerClient';
-import { CodexPermissionHandler } from './utils/permissionHandler';
-import { ReasoningProcessor } from './utils/reasoningProcessor';
-import { DiffProcessor } from './utils/diffProcessor';
-import { logger } from '@/ui/logger';
-import { CodexDisplay } from '@/ui/ink/CodexDisplay';
-import type { CodexSessionConfig } from './types';
-import { buildHapiMcpBridge } from './utils/buildHapiMcpBridge';
-import { emitReadyIfIdle } from './utils/emitReadyIfIdle';
-import type { CodexSession } from './session';
-import type { EnhancedMode } from './loop';
-import { hasCodexCliOverrides } from './utils/codexCliOverrides';
-import { buildCodexStartConfig } from './utils/codexStartConfig';
-import { AppServerEventConverter } from './utils/appServerEventConverter';
-import { registerAppServerPermissionHandlers } from './utils/appServerPermissionAdapter';
-import { buildThreadStartParams, buildTurnStartParams } from './utils/appServerConfig';
+import React from 'react';
 import {
     RemoteLauncherBase,
     type RemoteLauncherDisplayContext,
-    type RemoteLauncherExitReason
+    type RemoteLauncherExitReason,
 } from '@/modules/common/remote/RemoteLauncherBase';
+import { CodexDisplay } from '@/ui/ink/CodexDisplay';
+import { logger } from '@/ui/logger';
+import { CodexAppServerClient } from './codexAppServerClient';
+import { CodexMcpClient } from './codexMcpClient';
+import type { EnhancedMode } from './loop';
+import type { CodexSession } from './session';
+import type { CodexSessionConfig } from './types';
+import { buildThreadStartParams, buildTurnStartParams } from './utils/appServerConfig';
+import { AppServerEventConverter } from './utils/appServerEventConverter';
+import { registerAppServerPermissionHandlers } from './utils/appServerPermissionAdapter';
+import { buildHapiMcpBridge } from './utils/buildHapiMcpBridge';
+import { hasCodexCliOverrides } from './utils/codexCliOverrides';
+import { buildCodexStartConfig } from './utils/codexStartConfig';
+import { DiffProcessor } from './utils/diffProcessor';
+import { emitReadyIfIdle } from './utils/emitReadyIfIdle';
+import { CodexPermissionHandler } from './utils/permissionHandler';
+import { ReasoningProcessor } from './utils/reasoningProcessor';
 
 type HappyServer = Awaited<ReturnType<typeof buildHapiMcpBridge>>['server'];
 
@@ -64,7 +63,7 @@ class CodexRemoteLauncher extends RemoteLauncherBase {
                     try {
                         await this.appServerClient.interruptTurn({
                             threadId: this.currentThreadId,
-                            turnId: this.currentTurnId
+                            turnId: this.currentTurnId,
                         });
                     } catch (error) {
                         logger.debug('[Codex] Error interrupting app-server turn:', error);
@@ -110,17 +109,21 @@ class CodexRemoteLauncher extends RemoteLauncherBase {
     public async launch(): Promise<RemoteLauncherExitReason> {
         if (this.session.codexArgs && this.session.codexArgs.length > 0) {
             if (hasCodexCliOverrides(this.session.codexCliOverrides)) {
-                logger.debug(`[codex-remote] CLI args include sandbox/approval overrides; other args ` +
-                    `are ignored in remote mode.`);
+                logger.debug(
+                    `[codex-remote] CLI args include sandbox/approval overrides; other args ` +
+                        `are ignored in remote mode.`,
+                );
             } else {
-                logger.debug(`[codex-remote] Warning: CLI args [${this.session.codexArgs.join(', ')}] are ignored in remote mode. ` +
-                    `Remote mode uses message-based configuration (model/sandbox set via web interface).`);
+                logger.debug(
+                    `[codex-remote] Warning: CLI args [${this.session.codexArgs.join(', ')}] are ignored in remote mode. ` +
+                        `Remote mode uses message-based configuration (model/sandbox set via web interface).`,
+                );
             }
         }
 
         return this.start({
             onExit: () => this.handleExitFromUi(),
-            onSwitchToLocal: () => this.handleSwitchFromUi()
+            onSwitchToLocal: () => this.handleSwitchFromUi(),
         });
     }
 
@@ -168,14 +171,14 @@ class CodexRemoteLauncher extends RemoteLauncherBase {
 
         const permissionHandler = new CodexPermissionHandler(session.client, {
             onRequest: ({ id, toolName, input }) => {
-                const inputRecord = input && typeof input === 'object' ? input as Record<string, unknown> : {};
+                const inputRecord = input && typeof input === 'object' ? (input as Record<string, unknown>) : {};
                 const message = typeof inputRecord.message === 'string' ? inputRecord.message : undefined;
                 const rawCommand = inputRecord.command;
                 const command = Array.isArray(rawCommand)
                     ? rawCommand.filter((part): part is string => typeof part === 'string').join(' ')
                     : typeof rawCommand === 'string'
-                        ? rawCommand
-                        : undefined;
+                      ? rawCommand
+                      : undefined;
                 const cwdValue = inputRecord.cwd;
                 const cwd = typeof cwdValue === 'string' && cwdValue.trim().length > 0 ? cwdValue : undefined;
 
@@ -187,9 +190,9 @@ class CodexRemoteLauncher extends RemoteLauncherBase {
                         tool: toolName,
                         message,
                         command,
-                        cwd
+                        cwd,
                     },
-                    id: randomUUID()
+                    id: randomUUID(),
                 });
             },
             onComplete: ({ id, decision, reason, approved }) => {
@@ -198,12 +201,12 @@ class CodexRemoteLauncher extends RemoteLauncherBase {
                     callId: id,
                     output: {
                         decision,
-                        reason
+                        reason,
                     },
                     is_error: !approved,
-                    id: randomUUID()
+                    id: randomUUID(),
                 });
-            }
+            },
         });
         const reasoningProcessor = new ReasoningProcessor((message) => {
             session.sendCodexMessage(message);
@@ -245,7 +248,9 @@ class CodexRemoteLauncher extends RemoteLauncherBase {
                 if (msgType === 'event_msg' || msgType === 'response_item' || msgType === 'session_meta') {
                     const payload = asRecord(msg.payload);
                     const payloadType = asString(payload?.type);
-                    logger.debug(`[Codex] MCP wrapper event type: ${msgType}${payloadType ? ` (payload=${payloadType})` : ''}`);
+                    logger.debug(
+                        `[Codex] MCP wrapper event type: ${msgType}${payloadType ? ` (payload=${payloadType})` : ''}`,
+                    );
                 }
             }
 
@@ -266,10 +271,7 @@ class CodexRemoteLauncher extends RemoteLauncherBase {
                 const output = msg.output ?? msg.error ?? 'Command completed';
                 const outputText = formatOutputPreview(output);
                 const truncatedOutput = outputText.substring(0, 200);
-                messageBuffer.addMessage(
-                    `Result: ${truncatedOutput}${outputText.length > 200 ? '...' : ''}`,
-                    'result'
-                );
+                messageBuffer.addMessage(`Result: ${truncatedOutput}${outputText.length > 200 ? '...' : ''}`, 'result');
             } else if (msgType === 'task_started') {
                 messageBuffer.addMessage('Starting task...', 'status');
             } else if (msgType === 'task_complete') {
@@ -325,7 +327,7 @@ class CodexRemoteLauncher extends RemoteLauncherBase {
                     session.sendCodexMessage({
                         type: 'message',
                         message,
-                        id: randomUUID()
+                        id: randomUUID(),
                     });
                 }
             }
@@ -342,7 +344,7 @@ class CodexRemoteLauncher extends RemoteLauncherBase {
                         name: 'CodexBash',
                         callId: callId,
                         input: inputs,
-                        id: randomUUID()
+                        id: randomUUID(),
                     });
                 }
             }
@@ -358,14 +360,14 @@ class CodexRemoteLauncher extends RemoteLauncherBase {
                         type: 'tool-call-result',
                         callId: callId,
                         output,
-                        id: randomUUID()
+                        id: randomUUID(),
                     });
                 }
             }
             if (msgType === 'token_count') {
                 session.sendCodexMessage({
                     ...msg,
-                    id: randomUUID()
+                    id: randomUUID(),
                 });
             }
             if (msgType === 'patch_apply_begin') {
@@ -382,9 +384,9 @@ class CodexRemoteLauncher extends RemoteLauncherBase {
                         callId: callId,
                         input: {
                             auto_approved: msg.auto_approved ?? msg.autoApproved,
-                            changes
+                            changes,
                         },
-                        id: randomUUID()
+                        id: randomUUID(),
                     });
                 }
             }
@@ -409,9 +411,9 @@ class CodexRemoteLauncher extends RemoteLauncherBase {
                         output: {
                             stdout,
                             stderr,
-                            success
+                            success,
                         },
-                        id: randomUUID()
+                        id: randomUUID(),
                     });
                 }
             }
@@ -426,7 +428,7 @@ class CodexRemoteLauncher extends RemoteLauncherBase {
         if (useAppServer && appServerClient && appServerEventConverter) {
             registerAppServerPermissionHandlers({
                 client: appServerClient,
-                permissionHandler
+                permissionHandler,
             });
 
             appServerClient.setNotificationHandler((method, params) => {
@@ -449,7 +451,7 @@ class CodexRemoteLauncher extends RemoteLauncherBase {
 
         this.setupAbortHandlers(session.client.rpcHandlerManager, {
             onAbort: () => this.handleAbort(),
-            onSwitch: () => this.handleSwitchRequest()
+            onSwitch: () => this.handleSwitchRequest(),
         });
 
         function logActiveHandles(tag: string) {
@@ -459,7 +461,7 @@ class CodexRemoteLauncher extends RemoteLauncherBase {
             const requests = typeof anyProc._getActiveRequests === 'function' ? anyProc._getActiveRequests() : [];
             logger.debug(`[codex][handles] ${tag}: handles=${handles.length} requests=${requests.length}`);
             try {
-                const kinds = handles.map((h: any) => (h && h.constructor ? h.constructor.name : typeof h));
+                const kinds = handles.map((h: any) => (h?.constructor ? h.constructor.name : typeof h));
                 logger.debug(`[codex][handles] kinds=${JSON.stringify(kinds)}`);
             } catch {}
         }
@@ -481,8 +483,8 @@ class CodexRemoteLauncher extends RemoteLauncherBase {
             await appServerClient.initialize({
                 clientInfo: {
                     name: 'hapi-codex-client',
-                    version: '1.0.0'
-                }
+                    version: '1.0.0',
+                },
             });
         } else if (mcpClient) {
             await mcpClient.connect();
@@ -540,7 +542,7 @@ class CodexRemoteLauncher extends RemoteLauncherBase {
                         const threadParams = buildThreadStartParams({
                             mode: message.mode,
                             mcpServers,
-                            cliOverrides: session.codexCliOverrides
+                            cliOverrides: session.codexCliOverrides,
                         });
 
                         const resumeCandidate = session.sessionId;
@@ -548,24 +550,30 @@ class CodexRemoteLauncher extends RemoteLauncherBase {
 
                         if (resumeCandidate) {
                             try {
-                                const resumeResponse = await appServerClient.resumeThread({
-                                    threadId: resumeCandidate,
-                                    ...threadParams
-                                }, {
-                                    signal: this.abortController.signal
-                                });
+                                const resumeResponse = await appServerClient.resumeThread(
+                                    {
+                                        threadId: resumeCandidate,
+                                        ...threadParams,
+                                    },
+                                    {
+                                        signal: this.abortController.signal,
+                                    },
+                                );
                                 const resumeRecord = asRecord(resumeResponse);
                                 const resumeThread = resumeRecord ? asRecord(resumeRecord.thread) : null;
                                 threadId = asString(resumeThread?.id) ?? resumeCandidate;
                                 logger.debug(`[Codex] Resumed app-server thread ${threadId}`);
                             } catch (error) {
-                                logger.warn(`[Codex] Failed to resume app-server thread ${resumeCandidate}, starting new thread`, error);
+                                logger.warn(
+                                    `[Codex] Failed to resume app-server thread ${resumeCandidate}, starting new thread`,
+                                    error,
+                                );
                             }
                         }
 
                         if (!threadId) {
                             const threadResponse = await appServerClient.startThread(threadParams, {
-                                signal: this.abortController.signal
+                                signal: this.abortController.signal,
                             });
                             const threadRecord = asRecord(threadResponse);
                             const thread = threadRecord ? asRecord(threadRecord.thread) : null;
@@ -586,11 +594,11 @@ class CodexRemoteLauncher extends RemoteLauncherBase {
                             threadId,
                             message: message.message,
                             mode: message.mode,
-                            cliOverrides: session.codexCliOverrides
+                            cliOverrides: session.codexCliOverrides,
                         });
                         turnInFlight = true;
                         const turnResponse = await appServerClient.startTurn(turnParams, {
-                            signal: this.abortController.signal
+                            signal: this.abortController.signal,
                         });
                         const turnRecord = asRecord(turnResponse);
                         const turn = turnRecord ? asRecord(turnRecord.turn) : null;
@@ -604,7 +612,7 @@ class CodexRemoteLauncher extends RemoteLauncherBase {
                             mode: message.mode,
                             first,
                             mcpServers,
-                            cliOverrides: session.codexCliOverrides
+                            cliOverrides: session.codexCliOverrides,
                         });
 
                         await mcpClient.startSession(startConfig, { signal: this.abortController.signal });
@@ -625,11 +633,11 @@ class CodexRemoteLauncher extends RemoteLauncherBase {
                         threadId: this.currentThreadId,
                         message: message.message,
                         mode: message.mode,
-                        cliOverrides: session.codexCliOverrides
+                        cliOverrides: session.codexCliOverrides,
                     });
                     turnInFlight = true;
                     const turnResponse = await appServerClient.startTurn(turnParams, {
-                        signal: this.abortController.signal
+                        signal: this.abortController.signal,
                     });
                     const turnRecord = asRecord(turnResponse);
                     const turn = turnRecord ? asRecord(turnRecord.turn) : null;
@@ -676,7 +684,7 @@ class CodexRemoteLauncher extends RemoteLauncherBase {
                         pending,
                         queueSize: () => session.queue.size(),
                         shouldExit: this.shouldExit,
-                        sendReady
+                        sendReady,
                     });
                 }
                 logActiveHandles('after-turn');

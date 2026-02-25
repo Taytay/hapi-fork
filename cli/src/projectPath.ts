@@ -1,5 +1,5 @@
-import { dirname, resolve, join } from 'path';
-import { fileURLToPath } from 'url';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { configuration } from '@/configuration';
 import packageJson from '../package.json';
 

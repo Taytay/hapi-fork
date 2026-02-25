@@ -16,18 +16,18 @@ export function convertAgentMessage(message: AgentMessage): CodexMessage | null 
                 type: 'tool-call',
                 name: message.name,
                 callId: message.id,
-                input: message.input
+                input: message.input,
             };
         case 'tool_result':
             return {
                 type: 'tool-call-result',
                 callId: message.id,
-                output: message.output
+                output: message.output,
             };
         case 'plan':
             return {
                 type: 'plan',
-                entries: message.items
+                entries: message.items,
             };
         case 'error':
             return { type: 'error', message: message.message };

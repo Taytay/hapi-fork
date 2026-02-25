@@ -1,24 +1,19 @@
-import type { AgentType } from './types'
-import { useTranslation } from '@/lib/use-translation'
+import { useTranslation } from '@/lib/use-translation';
+import type { AgentType } from './types';
 
 export function AgentSelector(props: {
-    agent: AgentType
-    isDisabled: boolean
-    onAgentChange: (value: AgentType) => void
+    agent: AgentType;
+    isDisabled: boolean;
+    onAgentChange: (value: AgentType) => void;
 }) {
-    const { t } = useTranslation()
+    const { t } = useTranslation();
 
     return (
         <div className="flex flex-col gap-1.5 px-3 py-3">
-            <label className="text-xs font-medium text-[var(--app-hint)]">
-                {t('newSession.agent')}
-            </label>
+            <label className="text-xs font-medium text-[var(--app-hint)]">{t('newSession.agent')}</label>
             <div className="flex gap-3">
                 {(['claude', 'codex', 'gemini', 'opencode'] as const).map((agentType) => (
-                    <label
-                        key={agentType}
-                        className="flex items-center gap-1.5 cursor-pointer"
-                    >
+                    <label key={agentType} className="flex items-center gap-1.5 cursor-pointer">
                         <input
                             type="radio"
                             name="agent"
@@ -33,5 +28,5 @@ export function AgentSelector(props: {
                 ))}
             </div>
         </div>
-    )
+    );
 }

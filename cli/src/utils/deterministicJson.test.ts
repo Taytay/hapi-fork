@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { deterministicStringify, hashObject, deepEqual, objectKey } from './deterministicJson';
+import { deepEqual, deterministicStringify, hashObject, objectKey } from './deterministicJson';
 
 describe('deterministicStringify', () => {
     it('should produce consistent output for objects with different key orders', () => {
@@ -19,11 +19,11 @@ describe('deterministicStringify', () => {
     it('should handle nested objects consistently', () => {
         const obj1 = {
             outer: { z: 26, y: 25 },
-            inner: { b: 2, a: 1 }
+            inner: { b: 2, a: 1 },
         };
         const obj2 = {
             inner: { a: 1, b: 2 },
-            outer: { y: 25, z: 26 }
+            outer: { y: 25, z: 26 },
         };
 
         expect(deterministicStringify(obj1)).toBe(deterministicStringify(obj2));
@@ -47,12 +47,10 @@ describe('deterministicStringify', () => {
         expect(deterministicStringify(obj)).toBe('{"a":1,"c":3}');
 
         // null behavior
-        expect(deterministicStringify(obj, { undefinedBehavior: 'null' }))
-            .toBe('{"a":1,"b":null,"c":3}');
+        expect(deterministicStringify(obj, { undefinedBehavior: 'null' })).toBe('{"a":1,"b":null,"c":3}');
 
         // throw behavior
-        expect(() => deterministicStringify(obj, { undefinedBehavior: 'throw' }))
-            .toThrow('Undefined value at key: b');
+        expect(() => deterministicStringify(obj, { undefinedBehavior: 'throw' })).toThrow('Undefined value at key: b');
     });
 
     it('should handle special types', () => {
@@ -62,7 +60,7 @@ describe('deterministicStringify', () => {
             regex: /test/gi,
             bigint: BigInt(123),
             func: () => {},
-            symbol: Symbol('test')
+            symbol: Symbol('test'),
         };
 
         const result = deterministicStringify(obj);
@@ -80,12 +78,12 @@ describe('deterministicStringify', () => {
         const obj = {
             users: [
                 { id: 2, name: 'Bob', tags: ['admin', 'user'] },
-                { id: 1, name: 'Alice', tags: ['user'] }
+                { id: 1, name: 'Alice', tags: ['user'] },
             ],
             metadata: {
                 version: '1.0',
-                counts: { total: 2, active: 2 }
-            }
+                counts: { total: 2, active: 2 },
+            },
         };
 
         const str1 = deterministicStringify(obj);

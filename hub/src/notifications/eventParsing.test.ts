@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'bun:test'
-import type { SyncEvent } from '../sync/syncEngine'
-import { extractMessageEventType } from './eventParsing'
+import { describe, expect, it } from 'bun:test';
+import type { SyncEvent } from '../sync/syncEngine';
+import { extractMessageEventType } from './eventParsing';
 
 describe('extractMessageEventType', () => {
     it('returns the event type from a role-wrapped envelope', () => {
@@ -17,14 +17,14 @@ describe('extractMessageEventType', () => {
                     content: {
                         id: 'event-1',
                         type: 'event',
-                        data: { type: 'ready' }
+                        data: { type: 'ready' },
                     },
-                }
-            }
-        }
+                },
+            },
+        };
 
-        expect(extractMessageEventType(event)).toBe('ready')
-    })
+        expect(extractMessageEventType(event)).toBe('ready');
+    });
 
     it('returns the event type from a direct envelope', () => {
         const event: SyncEvent = {
@@ -37,13 +37,13 @@ describe('extractMessageEventType', () => {
                 createdAt: 0,
                 content: {
                     type: 'event',
-                    data: { type: 'ready' }
-                }
-            }
-        }
+                    data: { type: 'ready' },
+                },
+            },
+        };
 
-        expect(extractMessageEventType(event)).toBe('ready')
-    })
+        expect(extractMessageEventType(event)).toBe('ready');
+    });
 
     it('returns null when the envelope is missing', () => {
         const event: SyncEvent = {
@@ -58,21 +58,21 @@ describe('extractMessageEventType', () => {
                     role: 'agent',
                     content: {
                         type: 'text',
-                        text: 'hello'
-                    }
-                }
-            }
-        }
+                        text: 'hello',
+                    },
+                },
+            },
+        };
 
-        expect(extractMessageEventType(event)).toBeNull()
-    })
+        expect(extractMessageEventType(event)).toBeNull();
+    });
 
     it('returns null for non-message events', () => {
         const event: SyncEvent = {
             type: 'session-updated',
-            sessionId: 'session-1'
-        }
+            sessionId: 'session-1',
+        };
 
-        expect(extractMessageEventType(event)).toBeNull()
-    })
-})
+        expect(extractMessageEventType(event)).toBeNull();
+    });
+});

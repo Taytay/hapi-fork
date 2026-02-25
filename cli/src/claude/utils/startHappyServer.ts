@@ -3,14 +3,14 @@
  * Provides HAPI CLI specific tools including chat session title management
  */
 
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { createServer } from "node:http";
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import { AddressInfo } from "node:net";
-import { z } from "zod";
-import { logger } from "@/ui/logger";
-import { ApiSessionClient } from "@/api/apiSession";
-import { randomUUID } from "node:crypto";
+import { randomUUID } from 'node:crypto';
+import { createServer } from 'node:http';
+import type { AddressInfo } from 'node:net';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import { z } from 'zod';
+import type { ApiSessionClient } from '@/api/apiSession';
+import { logger } from '@/ui/logger';
 
 export async function startHappyServer(client: ApiSessionClient) {
     // Handler that sends title updates via the client
@@ -21,9 +21,9 @@ export async function startHappyServer(client: ApiSessionClient) {
             client.sendClaudeSessionMessage({
                 type: 'summary',
                 summary: title,
-                leafUuid: randomUUID()
+                leafUuid: randomUUID(),
             });
-            
+
             return { success: true };
         } catch (error) {
             return { success: false, error: String(error) };
@@ -35,8 +35,8 @@ export async function startHappyServer(client: ApiSessionClient) {
     //
 
     const mcp = new McpServer({
-        name: "HAPI MCP",
-        version: "1.0.0",
+        name: 'HAPI MCP',
+        version: '1.0.0',
     });
 
     // Avoid TS instantiation depth issues by widening the schema type.
@@ -44,41 +44,45 @@ export async function startHappyServer(client: ApiSessionClient) {
         title: z.string().describe('The new title for the chat session'),
     });
 
-    mcp.registerTool<any, any>('change_title', {
-        description: 'Change the title of the current chat session',
-        title: 'Change Chat Title',
-        inputSchema: changeTitleInputSchema,
-    }, async (args: { title: string }) => {
-        const response = await handler(args.title);
-        logger.debug('[hapiMCP] Response:', response);
-        
-        if (response.success) {
-            return {
-                content: [
-                    {
-                        type: 'text' as const,
-                        text: `Successfully changed chat title to: "${args.title}"`,
-                    },
-                ],
-                isError: false,
-            };
-        } else {
-            return {
-                content: [
-                    {
-                        type: 'text' as const,
-                        text: `Failed to change chat title: ${response.error || 'Unknown error'}`,
-                    },
-                ],
-                isError: true,
-            };
-        }
-    });
+    mcp.registerTool<any, any>(
+        'change_title',
+        {
+            description: 'Change the title of the current chat session',
+            title: 'Change Chat Title',
+            inputSchema: changeTitleInputSchema,
+        },
+        async (args: { title: string }) => {
+            const response = await handler(args.title);
+            logger.debug('[hapiMCP] Response:', response);
+
+            if (response.success) {
+                return {
+                    content: [
+                        {
+                            type: 'text' as const,
+                            text: `Successfully changed chat title to: "${args.title}"`,
+                        },
+                    ],
+                    isError: false,
+                };
+            } else {
+                return {
+                    content: [
+                        {
+                            type: 'text' as const,
+                            text: `Failed to change chat title: ${response.error || 'Unknown error'}`,
+                        },
+                    ],
+                    isError: true,
+                };
+            }
+        },
+    );
 
     const transport = new StreamableHTTPServerTransport({
         // NOTE: Returning session id here will result in claude
         // sdk spawn to fail with `Invalid Request: Server already initialized`
-        sessionIdGenerator: undefined
+        sessionIdGenerator: undefined,
     });
     await mcp.connect(transport);
 
@@ -90,7 +94,7 @@ export async function startHappyServer(client: ApiSessionClient) {
         try {
             await transport.handleRequest(req, res);
         } catch (error) {
-            logger.debug("Error handling request:", error);
+            logger.debug('Error handling request:', error);
             if (!res.headersSent) {
                 res.writeHead(500).end();
             }
@@ -98,7 +102,7 @@ export async function startHappyServer(client: ApiSessionClient) {
     });
 
     const baseUrl = await new Promise<URL>((resolve) => {
-        server.listen(0, "127.0.0.1", () => {
+        server.listen(0, '127.0.0.1', () => {
             const addr = server.address() as AddressInfo;
             resolve(new URL(`http://127.0.0.1:${addr.port}`));
         });
@@ -111,6 +115,6 @@ export async function startHappyServer(client: ApiSessionClient) {
             logger.debug('[hapiMCP] Stopping server');
             mcp.close();
             server.close();
-        }
-    }
+        },
+    };
 }

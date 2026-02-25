@@ -5,9 +5,9 @@
  * bridge server and generating the MCP server configuration that Codex needs.
  */
 
+import type { ApiSessionClient } from '@/api/apiSession';
 import { startHappyServer } from '@/claude/utils/startHappyServer';
 import { getHappyCliCommand } from '@/utils/spawnHappyCLI';
-import type { ApiSessionClient } from '@/api/apiSession';
 
 /**
  * MCP server entry configuration.
@@ -49,13 +49,13 @@ export async function buildHapiMcpBridge(client: ApiSessionClient): Promise<Hapi
     return {
         server: {
             url: happyServer.url,
-            stop: happyServer.stop
+            stop: happyServer.stop,
         },
         mcpServers: {
             hapi: {
                 command: bridgeCommand.command,
-                args: bridgeCommand.args
-            }
-        }
+                args: bridgeCommand.args,
+            },
+        },
     };
 }

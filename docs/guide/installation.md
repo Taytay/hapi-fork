@@ -26,11 +26,11 @@ opencode --version
 
 HAPI has three components:
 
-| Component | Role | Required |
-|-----------|------|----------|
-| **CLI** | Wraps AI agents (Claude/Codex/Gemini/OpenCode), runs sessions | Yes |
-| **Hub** | Central coordinator: persistence, real-time sync, remote access | Yes |
-| **Runner** | Background service for remote session spawning | Optional |
+| Component  | Role                                                            | Required |
+| ---------- | --------------------------------------------------------------- | -------- |
+| **CLI**    | Wraps AI agents (Claude/Codex/Gemini/OpenCode), runs sessions   | Yes      |
+| **Hub**    | Central coordinator: persistence, real-time sync, remote access | Yes      |
+| **Runner** | Background service for remote session spawning                  | Optional |
 
 ### How they work together
 
@@ -87,6 +87,7 @@ brew install tiann/tap/hapi
 ```bash
 npx @twsxtd/hapi
 ```
+
 </details>
 
 <details>
@@ -99,6 +100,7 @@ xattr -d com.apple.quarantine ./hapi
 chmod +x ./hapi
 sudo mv ./hapi /usr/local/bin/
 ```
+
 </details>
 
 <details>
@@ -112,6 +114,7 @@ bun build:single-exe
 
 ./cli/dist/hapi
 ```
+
 </details>
 
 ## Hub setup
@@ -163,27 +166,29 @@ On first run, HAPI:
 ├── runner.state.json  # Runner process state
 └── logs/             # Log files
 ```
+
 </details>
 
 <details>
 <summary>Environment variables</summary>
 
-| Variable | Default | settings.json | Description |
-|----------|---------|---------------|-------------|
-| `CLI_API_TOKEN` | Auto-generated | `cliApiToken` | Shared secret for authentication |
-| `HAPI_API_URL` | `http://localhost:3006` | `apiUrl` | Hub URL for CLI connections |
-| `HAPI_LISTEN_HOST` | `127.0.0.1` | `listenHost` | Hub HTTP bind address |
-| `HAPI_LISTEN_PORT` | `3006` | `listenPort` | Hub HTTP port |
-| `HAPI_PUBLIC_URL` | - | `publicUrl` | Public URL for external access |
-| `CORS_ORIGINS` | - | `corsOrigins` | Allowed CORS origins (comma-separated) |
-| `TELEGRAM_BOT_TOKEN` | - | `telegramBotToken` | Telegram Bot API token |
-| `TELEGRAM_NOTIFICATION` | `true` | `telegramNotification` | Enable Telegram notifications |
-| `HAPI_RELAY_FORCE_TCP` | `false` | - | Force TCP mode for relay |
-| `VAPID_SUBJECT` | `mailto:admin@hapi.run` | - | Web Push contact info |
-| `HAPI_HOME` | `~/.hapi` | - | Config directory path |
-| `DB_PATH` | `~/.hapi/hapi.db` | - | Database file path |
-| `ELEVENLABS_API_KEY` | - | - | ElevenLabs API key for voice |
-| `ELEVENLABS_AGENT_ID` | Auto-created | - | Custom ElevenLabs agent ID |
+| Variable                | Default                 | settings.json          | Description                            |
+| ----------------------- | ----------------------- | ---------------------- | -------------------------------------- |
+| `CLI_API_TOKEN`         | Auto-generated          | `cliApiToken`          | Shared secret for authentication       |
+| `HAPI_API_URL`          | `http://localhost:3006` | `apiUrl`               | Hub URL for CLI connections            |
+| `HAPI_LISTEN_HOST`      | `127.0.0.1`             | `listenHost`           | Hub HTTP bind address                  |
+| `HAPI_LISTEN_PORT`      | `3006`                  | `listenPort`           | Hub HTTP port                          |
+| `HAPI_PUBLIC_URL`       | -                       | `publicUrl`            | Public URL for external access         |
+| `CORS_ORIGINS`          | -                       | `corsOrigins`          | Allowed CORS origins (comma-separated) |
+| `TELEGRAM_BOT_TOKEN`    | -                       | `telegramBotToken`     | Telegram Bot API token                 |
+| `TELEGRAM_NOTIFICATION` | `true`                  | `telegramNotification` | Enable Telegram notifications          |
+| `HAPI_RELAY_FORCE_TCP`  | `false`                 | -                      | Force TCP mode for relay               |
+| `VAPID_SUBJECT`         | `mailto:admin@hapi.run` | -                      | Web Push contact info                  |
+| `HAPI_HOME`             | `~/.hapi`               | -                      | Config directory path                  |
+| `DB_PATH`               | `~/.hapi/hapi.db`       | -                      | Database file path                     |
+| `ELEVENLABS_API_KEY`    | -                       | -                      | ElevenLabs API key for voice           |
+| `ELEVENLABS_AGENT_ID`   | Auto-created            | -                      | Custom ElevenLabs agent ID             |
+
 </details>
 
 <details>
@@ -195,14 +200,15 @@ When ENV values are set and not present in settings.json, they are automatically
 
 ```json
 {
-  "$schema": "https://hapi.run/docs/schemas/settings.schema.json",
-  "listenHost": "0.0.0.0",
-  "listenPort": 3006,
-  "publicUrl": "https://your-domain.com"
+    "$schema": "https://hapi.run/docs/schemas/settings.schema.json",
+    "listenHost": "0.0.0.0",
+    "listenPort": 3006,
+    "publicUrl": "https://your-domain.com"
 }
 ```
 
 JSON Schema: [settings.schema.json](https://hapi.run/schemas/settings.schema.json)
+
 </details>
 
 ## CLI setup
@@ -279,6 +285,7 @@ Access via your Tailscale IP:
 ```
 http://100.x.x.x:3006
 ```
+
 </details>
 
 <details>
@@ -362,6 +369,7 @@ If you prefer pm2 for process management:
 pm2 start "hapi runner start --foreground" --name hapi-runner
 pm2 save
 ```
+
 </details>
 
 ### Background service deployment
@@ -394,6 +402,7 @@ Stop processes:
 pkill -f "hapi hub"
 pkill -f "hapi runner"
 ```
+
 </details>
 
 <details>
@@ -418,6 +427,7 @@ pm2 logs hapi-runner
 pm2 startup    # Follow the printed instructions
 pm2 save       # Save current process list
 ```
+
 </details>
 
 <details>
@@ -493,10 +503,13 @@ launchctl unload ~/Library/LaunchAgents/com.hapi.runner.plist
 ```
 
 > **macOS sleep note:** macOS may suspend background processes when the display sleeps. Use `caffeinate` to prevent this:
+>
 > ```bash
 > caffeinate -dimsu hapi hub --relay
 > ```
+>
 > Or run `caffeinate -dimsu` in a separate terminal while HAPI is running.
+
 </details>
 
 <details>
@@ -558,9 +571,11 @@ journalctl --user -u hapi-hub -f
 ```
 
 > **Persist after logout:** To keep services running even when not logged in:
+>
 > ```bash
 > loginctl enable-linger $USER
 > ```
+
 </details>
 
 ### Voice assistant setup
@@ -589,4 +604,5 @@ See [Voice Assistant](./voice-assistant.md) for usage details.
 ```bash
 ufw allow from 192.168.1.0/24 to any port 3006
 ```
+
 </details>

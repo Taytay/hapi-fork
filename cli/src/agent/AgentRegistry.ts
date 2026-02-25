@@ -7,11 +7,11 @@ export class AgentRegistry {
         if (!agentType || typeof agentType !== 'string') {
             throw new Error('Agent type must be a non-empty string');
         }
-        this.factories.set(agentType, factory);
+        AgentRegistry.factories.set(agentType, factory);
     }
 
     static create(agentType: string): AgentBackend {
-        const factory = this.factories.get(agentType);
+        const factory = AgentRegistry.factories.get(agentType);
         if (!factory) {
             throw new Error(`Unknown agent type: ${agentType}`);
         }
@@ -19,6 +19,6 @@ export class AgentRegistry {
     }
 
     static list(): string[] {
-        return Array.from(this.factories.keys()).sort();
+        return Array.from(AgentRegistry.factories.keys()).sort();
     }
 }

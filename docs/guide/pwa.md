@@ -74,12 +74,12 @@ Actions taken offline are synced when reconnected:
 
 HAPI uses intelligent caching:
 
-| Content | Strategy | Duration |
-|---------|----------|----------|
-| App shell | Cache first | Until update |
-| Sessions API | Network first | 5 minutes |
-| Machines API | Network first | 10 minutes |
-| Static assets | Cache first | Forever |
+| Content       | Strategy      | Duration     |
+| ------------- | ------------- | ------------ |
+| App shell     | Cache first   | Until update |
+| Sessions API  | Network first | 5 minutes    |
+| Machines API  | Network first | 10 minutes   |
+| Static assets | Cache first   | Forever      |
 
 ## Notifications
 
@@ -93,10 +93,10 @@ HAPI supports push notifications to alert you when agents need attention.
 
 ### Notification Types
 
-| Type | When Sent |
-|------|-----------|
-| Permission Request | Agent needs your approval |
-| Ready | Agent finished and awaits input |
+| Type               | When Sent                       |
+| ------------------ | ------------------------------- |
+| Permission Request | Agent needs your approval       |
+| Ready              | Agent finished and awaits input |
 
 ::: tip
 If push notifications don't work in your region (e.g., FCM unavailable), use [Telegram integration](./installation.md#telegram-setup) instead.
@@ -115,14 +115,17 @@ HAPI shows different UI based on install status:
 ### Uninstalling
 
 **Android:**
+
 1. Long-press the HAPI icon
 2. Drag to "Uninstall" or tap the X
 
 **iOS:**
+
 1. Long-press the HAPI icon
 2. Tap "Remove App" → "Delete App"
 
 **Desktop:**
+
 1. Open HAPI
 2. Click the three-dot menu
 3. Select "Uninstall HAPI"
@@ -141,6 +144,7 @@ If you experience issues:
 ### Battery Optimization
 
 On Android, disable battery optimization for HAPI to ensure:
+
 - Background sync works reliably
 - Notifications arrive promptly
 

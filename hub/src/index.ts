@@ -8,163 +8,163 @@
  * - Optional Telegram bot for notifications and Mini App entrypoint
  */
 
-import { createConfiguration, type ConfigSource } from './configuration'
-import { Store } from './store'
-import { SyncEngine, type SyncEvent } from './sync/syncEngine'
-import { NotificationHub } from './notifications/notificationHub'
-import type { NotificationChannel } from './notifications/notificationTypes'
-import { HappyBot } from './telegram/bot'
-import { startWebServer } from './web/server'
-import { getOrCreateJwtSecret } from './config/jwtSecret'
-import { createSocketServer } from './socket/server'
-import { SSEManager } from './sse/sseManager'
-import { getOrCreateVapidKeys } from './config/vapidKeys'
-import { PushService } from './push/pushService'
-import { PushNotificationChannel } from './push/pushNotificationChannel'
-import { VisibilityTracker } from './visibility/visibilityTracker'
-import { TunnelManager } from './tunnel'
-import { waitForTunnelTlsReady } from './tunnel/tlsGate'
-import QRCode from 'qrcode'
-import type { Server as BunServer } from 'bun'
-import type { WebSocketData } from '@socket.io/bun-engine'
+import type { WebSocketData } from '@socket.io/bun-engine';
+import type { Server as BunServer } from 'bun';
+import QRCode from 'qrcode';
+import { getOrCreateJwtSecret } from './config/jwtSecret';
+import { getOrCreateVapidKeys } from './config/vapidKeys';
+import { type ConfigSource, createConfiguration } from './configuration';
+import { NotificationHub } from './notifications/notificationHub';
+import type { NotificationChannel } from './notifications/notificationTypes';
+import { PushNotificationChannel } from './push/pushNotificationChannel';
+import { PushService } from './push/pushService';
+import { createSocketServer } from './socket/server';
+import { SSEManager } from './sse/sseManager';
+import { Store } from './store';
+import { SyncEngine, type SyncEvent } from './sync/syncEngine';
+import { HappyBot } from './telegram/bot';
+import { TunnelManager } from './tunnel';
+import { waitForTunnelTlsReady } from './tunnel/tlsGate';
+import { VisibilityTracker } from './visibility/visibilityTracker';
+import { startWebServer } from './web/server';
 
 /** Format config source for logging */
 function formatSource(source: ConfigSource | 'generated'): string {
     switch (source) {
         case 'env':
-            return 'environment'
+            return 'environment';
         case 'file':
-            return 'settings.json'
+            return 'settings.json';
         case 'default':
-            return 'default'
+            return 'default';
         case 'generated':
-            return 'generated'
+            return 'generated';
     }
 }
 
-type RelayFlagSource = 'default' | '--relay' | '--no-relay'
+type RelayFlagSource = 'default' | '--relay' | '--no-relay';
 
 function resolveRelayFlag(args: string[]): { enabled: boolean; source: RelayFlagSource } {
-    let enabled = false
-    let source: RelayFlagSource = 'default'
+    let enabled = false;
+    let source: RelayFlagSource = 'default';
 
     for (const arg of args) {
         if (arg === '--relay') {
-            enabled = true
-            source = '--relay'
+            enabled = true;
+            source = '--relay';
         } else if (arg === '--no-relay') {
-            enabled = false
-            source = '--no-relay'
+            enabled = false;
+            source = '--no-relay';
         }
     }
 
-    return { enabled, source }
+    return { enabled, source };
 }
 
 function normalizeOrigin(value: string): string {
-    const trimmed = value.trim()
+    const trimmed = value.trim();
     if (!trimmed) {
-        return ''
+        return '';
     }
     try {
-        return new URL(trimmed).origin
+        return new URL(trimmed).origin;
     } catch {
-        return trimmed
+        return trimmed;
     }
 }
 
 function normalizeOrigins(origins: string[]): string[] {
-    const normalized = origins
-        .map(normalizeOrigin)
-        .filter(Boolean)
+    const normalized = origins.map(normalizeOrigin).filter(Boolean);
     if (normalized.includes('*')) {
-        return ['*']
+        return ['*'];
     }
-    return Array.from(new Set(normalized))
+    return Array.from(new Set(normalized));
 }
 
 function mergeCorsOrigins(base: string[], extra: string[]): string[] {
     if (base.includes('*') || extra.includes('*')) {
-        return ['*']
+        return ['*'];
     }
-    const merged = new Set<string>()
+    const merged = new Set<string>();
     for (const origin of base) {
-        merged.add(origin)
+        merged.add(origin);
     }
     for (const origin of extra) {
-        merged.add(origin)
+        merged.add(origin);
     }
-    return Array.from(merged)
+    return Array.from(merged);
 }
 
-let syncEngine: SyncEngine | null = null
-let happyBot: HappyBot | null = null
-let webServer: BunServer<WebSocketData> | null = null
-let sseManager: SSEManager | null = null
-let visibilityTracker: VisibilityTracker | null = null
-let notificationHub: NotificationHub | null = null
-let tunnelManager: TunnelManager | null = null
+let syncEngine: SyncEngine | null = null;
+let happyBot: HappyBot | null = null;
+let webServer: BunServer<WebSocketData> | null = null;
+let sseManager: SSEManager | null = null;
+let visibilityTracker: VisibilityTracker | null = null;
+let notificationHub: NotificationHub | null = null;
+let tunnelManager: TunnelManager | null = null;
 
 async function main() {
-    console.log('HAPI Hub starting...')
+    console.log('HAPI Hub starting...');
 
     // Load configuration (async - loads from env/file with persistence)
-    const relayApiDomain = process.env.HAPI_RELAY_API || 'relay.hapi.run'
-    const relayFlag = resolveRelayFlag(process.argv)
-    const officialWebUrl = process.env.HAPI_OFFICIAL_WEB_URL || 'https://app.hapi.run'
-    const config = await createConfiguration()
-    const baseCorsOrigins = normalizeOrigins(config.corsOrigins)
-    const relayCorsOrigin = normalizeOrigin(officialWebUrl)
+    const relayApiDomain = process.env.HAPI_RELAY_API || 'relay.hapi.run';
+    const relayFlag = resolveRelayFlag(process.argv);
+    const officialWebUrl = process.env.HAPI_OFFICIAL_WEB_URL || 'https://app.hapi.run';
+    const config = await createConfiguration();
+    const baseCorsOrigins = normalizeOrigins(config.corsOrigins);
+    const relayCorsOrigin = normalizeOrigin(officialWebUrl);
     const corsOrigins = relayFlag.enabled
         ? mergeCorsOrigins(baseCorsOrigins, relayCorsOrigin ? [relayCorsOrigin] : [])
-        : baseCorsOrigins
+        : baseCorsOrigins;
 
     // Display CLI API token information
     if (config.cliApiTokenIsNew) {
-        console.log('')
-        console.log('='.repeat(70))
-        console.log('  NEW CLI_API_TOKEN GENERATED')
-        console.log('='.repeat(70))
-        console.log('')
-        console.log(`  Token: ${config.cliApiToken}`)
-        console.log('')
-        console.log(`  Saved to: ${config.settingsFile}`)
-        console.log('')
-        console.log('='.repeat(70))
-        console.log('')
+        console.log('');
+        console.log('='.repeat(70));
+        console.log('  NEW CLI_API_TOKEN GENERATED');
+        console.log('='.repeat(70));
+        console.log('');
+        console.log(`  Token: ${config.cliApiToken}`);
+        console.log('');
+        console.log(`  Saved to: ${config.settingsFile}`);
+        console.log('');
+        console.log('='.repeat(70));
+        console.log('');
     } else {
-        console.log(`[Hub] CLI_API_TOKEN: loaded from ${formatSource(config.sources.cliApiToken)}`)
+        console.log(`[Hub] CLI_API_TOKEN: loaded from ${formatSource(config.sources.cliApiToken)}`);
     }
 
     // Display other configuration sources
-    console.log(`[Hub] HAPI_LISTEN_HOST: ${config.listenHost} (${formatSource(config.sources.listenHost)})`)
-    console.log(`[Hub] HAPI_LISTEN_PORT: ${config.listenPort} (${formatSource(config.sources.listenPort)})`)
-    console.log(`[Hub] HAPI_PUBLIC_URL: ${config.publicUrl} (${formatSource(config.sources.publicUrl)})`)
+    console.log(`[Hub] HAPI_LISTEN_HOST: ${config.listenHost} (${formatSource(config.sources.listenHost)})`);
+    console.log(`[Hub] HAPI_LISTEN_PORT: ${config.listenPort} (${formatSource(config.sources.listenPort)})`);
+    console.log(`[Hub] HAPI_PUBLIC_URL: ${config.publicUrl} (${formatSource(config.sources.publicUrl)})`);
 
     if (!config.telegramEnabled) {
-        console.log('[Hub] Telegram: disabled (no TELEGRAM_BOT_TOKEN)')
+        console.log('[Hub] Telegram: disabled (no TELEGRAM_BOT_TOKEN)');
     } else {
-        const tokenSource = formatSource(config.sources.telegramBotToken)
-        console.log(`[Hub] Telegram: enabled (${tokenSource})`)
-        const notificationSource = formatSource(config.sources.telegramNotification)
-        console.log(`[Hub] Telegram notifications: ${config.telegramNotification ? 'enabled' : 'disabled'} (${notificationSource})`)
+        const tokenSource = formatSource(config.sources.telegramBotToken);
+        console.log(`[Hub] Telegram: enabled (${tokenSource})`);
+        const notificationSource = formatSource(config.sources.telegramNotification);
+        console.log(
+            `[Hub] Telegram notifications: ${config.telegramNotification ? 'enabled' : 'disabled'} (${notificationSource})`,
+        );
     }
 
     // Display tunnel status
     if (relayFlag.enabled) {
-        console.log(`[Hub] Tunnel: enabled (${relayFlag.source}), API: ${relayApiDomain}`)
+        console.log(`[Hub] Tunnel: enabled (${relayFlag.source}), API: ${relayApiDomain}`);
     } else {
-        console.log(`[Hub] Tunnel: disabled (${relayFlag.source})`)
+        console.log(`[Hub] Tunnel: disabled (${relayFlag.source})`);
     }
 
-    const store = new Store(config.dbPath)
-    const jwtSecret = await getOrCreateJwtSecret()
-    const vapidKeys = await getOrCreateVapidKeys(config.dataDir)
-    const vapidSubject = process.env.VAPID_SUBJECT ?? 'mailto:admin@hapi.run'
-    const pushService = new PushService(vapidKeys, vapidSubject, store)
+    const store = new Store(config.dbPath);
+    const jwtSecret = await getOrCreateJwtSecret();
+    const vapidKeys = await getOrCreateVapidKeys(config.dataDir);
+    const vapidSubject = process.env.VAPID_SUBJECT ?? 'mailto:admin@hapi.run';
+    const pushService = new PushService(vapidKeys, vapidSubject, store);
 
-    visibilityTracker = new VisibilityTracker()
-    sseManager = new SSEManager(30_000, visibilityTracker)
+    visibilityTracker = new VisibilityTracker();
+    sseManager = new SSEManager(30_000, visibilityTracker);
 
     const socketServer = createSocketServer({
         store,
@@ -172,21 +172,21 @@ async function main() {
         corsOrigins,
         getSession: (sessionId) => {
             if (syncEngine) {
-                return syncEngine.getSession(sessionId) ?? null
+                return syncEngine.getSession(sessionId) ?? null;
             }
-            return store.sessions.getSession(sessionId)
+            return store.sessions.getSession(sessionId);
         },
         onWebappEvent: (event: SyncEvent) => syncEngine?.handleRealtimeEvent(event),
         onSessionAlive: (payload) => syncEngine?.handleSessionAlive(payload),
         onSessionEnd: (payload) => syncEngine?.handleSessionEnd(payload),
-        onMachineAlive: (payload) => syncEngine?.handleMachineAlive(payload)
-    })
+        onMachineAlive: (payload) => syncEngine?.handleMachineAlive(payload),
+    });
 
-    syncEngine = new SyncEngine(store, socketServer.io, socketServer.rpcRegistry, sseManager)
+    syncEngine = new SyncEngine(store, socketServer.io, socketServer.rpcRegistry, sseManager);
 
     const notificationChannels: NotificationChannel[] = [
-        new PushNotificationChannel(pushService, sseManager, visibilityTracker, config.publicUrl)
-    ]
+        new PushNotificationChannel(pushService, sseManager, visibilityTracker, config.publicUrl),
+    ];
 
     // Initialize Telegram bot (optional)
     if (config.telegramEnabled && config.telegramBotToken) {
@@ -194,15 +194,15 @@ async function main() {
             syncEngine,
             botToken: config.telegramBotToken,
             publicUrl: config.publicUrl,
-            store
-        })
+            store,
+        });
         // Only add to notification channels if notifications are enabled
         if (config.telegramNotification) {
-            notificationChannels.push(happyBot)
+            notificationChannels.push(happyBot);
         }
     }
 
-    notificationHub = new NotificationHub(syncEngine, notificationChannels)
+    notificationHub = new NotificationHub(syncEngine, notificationChannels);
 
     // Start HTTP service first (before tunnel, so tunnel has something to forward to)
     webServer = await startWebServer({
@@ -215,60 +215,60 @@ async function main() {
         socketEngine: socketServer.engine,
         corsOrigins,
         relayMode: relayFlag.enabled,
-        officialWebUrl
-    })
+        officialWebUrl,
+    });
 
     // Start the bot if configured
     if (happyBot) {
-        await happyBot.start()
+        await happyBot.start();
     }
 
-    console.log('')
-    console.log('[Web] Hub listening on :' + config.listenPort)
-    console.log('[Web] Local:  http://localhost:' + config.listenPort)
+    console.log('');
+    console.log(`[Web] Hub listening on :${config.listenPort}`);
+    console.log(`[Web] Local:  http://localhost:${config.listenPort}`);
 
     // Initialize tunnel AFTER web service is ready
-    let tunnelUrl: string | null = null
+    let tunnelUrl: string | null = null;
     if (relayFlag.enabled) {
         tunnelManager = new TunnelManager({
             localPort: config.listenPort,
             enabled: true,
             apiDomain: relayApiDomain,
             authKey: process.env.HAPI_RELAY_AUTH || null,
-            useRelay: process.env.HAPI_RELAY_FORCE_TCP === 'true' || process.env.HAPI_RELAY_FORCE_TCP === '1'
-        })
+            useRelay: process.env.HAPI_RELAY_FORCE_TCP === 'true' || process.env.HAPI_RELAY_FORCE_TCP === '1',
+        });
 
         try {
-            tunnelUrl = await tunnelManager.start()
+            tunnelUrl = await tunnelManager.start();
         } catch (error) {
-            console.error('[Tunnel] Failed to start:', error instanceof Error ? error.message : error)
-            console.log('[Tunnel] Hub continuing without tunnel. Restart without --relay to disable.')
+            console.error('[Tunnel] Failed to start:', error instanceof Error ? error.message : error);
+            console.log('[Tunnel] Hub continuing without tunnel. Restart without --relay to disable.');
         }
     }
 
     if (tunnelUrl && tunnelManager) {
-        const manager = tunnelManager
+        const manager = tunnelManager;
         const announceTunnelAccess = async () => {
-            const tlsReady = await waitForTunnelTlsReady(tunnelUrl, manager)
+            const tlsReady = await waitForTunnelTlsReady(tunnelUrl, manager);
             if (!tlsReady) {
-                console.log('[Tunnel] Tunnel stopped before TLS was ready.')
-                return
+                console.log('[Tunnel] Tunnel stopped before TLS was ready.');
+                return;
             }
 
-            console.log('[Web] Public: ' + tunnelUrl)
+            console.log(`[Web] Public: ${tunnelUrl}`);
 
             // Generate direct access link with hub and token
             const params = new URLSearchParams({
                 hub: tunnelUrl,
-                token: config.cliApiToken
-            })
-            const directAccessUrl = `${officialWebUrl}/?${params.toString()}`
+                token: config.cliApiToken,
+            });
+            const directAccessUrl = `${officialWebUrl}/?${params.toString()}`;
 
-            console.log('')
-            console.log('Open in browser:')
-            console.log(`  ${directAccessUrl}`)
-            console.log('')
-            console.log('or scan the QR code to open:')
+            console.log('');
+            console.log('Open in browser:');
+            console.log(`  ${directAccessUrl}`);
+            console.log('');
+            console.log('or scan the QR code to open:');
 
             // Display QR code for easy mobile access
             try {
@@ -276,40 +276,40 @@ async function main() {
                     type: 'terminal',
                     small: true,
                     margin: 1,
-                    errorCorrectionLevel: 'L'
-                })
-                console.log('')
-                console.log(qrString)
+                    errorCorrectionLevel: 'L',
+                });
+                console.log('');
+                console.log(qrString);
             } catch {
                 // QR code generation failure should not affect main flow
             }
-        }
+        };
 
-        void announceTunnelAccess()
+        void announceTunnelAccess();
     }
-    console.log('')
-    console.log('HAPI Hub is ready!')
+    console.log('');
+    console.log('HAPI Hub is ready!');
 
     // Handle shutdown
     const shutdown = async () => {
-        console.log('\nShutting down...')
-        await tunnelManager?.stop()
-        await happyBot?.stop()
-        notificationHub?.stop()
-        syncEngine?.stop()
-        sseManager?.stop()
-        webServer?.stop()
-        process.exit(0)
-    }
+        console.log('\nShutting down...');
+        await tunnelManager?.stop();
+        await happyBot?.stop();
+        notificationHub?.stop();
+        syncEngine?.stop();
+        sseManager?.stop();
+        webServer?.stop();
+        process.exit(0);
+    };
 
-    process.on('SIGINT', shutdown)
-    process.on('SIGTERM', shutdown)
+    process.on('SIGINT', shutdown);
+    process.on('SIGTERM', shutdown);
 
     // Keep process running
-    await new Promise(() => {})
+    await new Promise(() => {});
 }
 
 main().catch((error) => {
-    console.error('Fatal error:', error)
-    process.exit(1)
-})
+    console.error('Fatal error:', error);
+    process.exit(1);
+});

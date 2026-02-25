@@ -1,8 +1,8 @@
-import { memo, ReactNode } from 'react'
+import { memo, type ReactNode } from 'react';
 
 interface FloatingOverlayProps {
-    children: ReactNode
-    maxHeight?: number
+    children: ReactNode;
+    maxHeight?: number;
 }
 
 /**
@@ -10,7 +10,7 @@ interface FloatingOverlayProps {
  * Used for autocomplete suggestions and settings panels
  */
 export const FloatingOverlay = memo(function FloatingOverlay(props: FloatingOverlayProps) {
-    const { children, maxHeight = 240 } = props
+    const { children, maxHeight = 240 } = props;
 
     return (
         <div
@@ -21,5 +21,5 @@ export const FloatingOverlay = memo(function FloatingOverlay(props: FloatingOver
                 {children}
             </div>
         </div>
-    )
-})
+    );
+});

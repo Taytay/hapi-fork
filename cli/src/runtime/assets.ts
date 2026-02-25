@@ -1,10 +1,20 @@
-import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import {
+    chmodSync,
+    copyFileSync,
+    existsSync,
+    mkdirSync,
+    readdirSync,
+    readFileSync,
+    rmSync,
+    statSync,
+    writeFileSync,
+} from 'node:fs';
 import { arch, platform } from 'node:os';
+import { dirname, join } from 'node:path';
 import * as tar from 'tar';
-import packageJson from '../../package.json';
 import type { EmbeddedAsset } from '#embedded-assets';
 import { isBunCompiled, runtimePath } from '@/projectPath';
+import packageJson from '../../package.json';
 
 const RUNTIME_MARKER = '.runtime-version';
 
@@ -12,9 +22,11 @@ function ensureDirectory(path: string): void {
     mkdirSync(path, { recursive: true });
 }
 
-const bunRuntime = (globalThis as typeof globalThis & {
-    Bun?: { file: (source: string | URL) => { arrayBuffer: () => Promise<ArrayBuffer> } };
-}).Bun;
+const bunRuntime = (
+    globalThis as typeof globalThis & {
+        Bun?: { file: (source: string | URL) => { arrayBuffer: () => Promise<ArrayBuffer> } };
+    }
+).Bun;
 
 async function copyAssetFile(asset: EmbeddedAsset, targetPath: string): Promise<void> {
     ensureDirectory(dirname(targetPath));
@@ -59,10 +71,7 @@ function areToolsUnpacked(unpackedPath: string): boolean {
     const difftBinary = isWin ? 'difft.exe' : 'difft';
     const rgBinary = isWin ? 'rg.exe' : 'rg';
 
-    const expectedFiles = [
-        join(unpackedPath, difftBinary),
-        join(unpackedPath, rgBinary)
-    ];
+    const expectedFiles = [join(unpackedPath, difftBinary), join(unpackedPath, rgBinary)];
 
     return expectedFiles.every((file) => existsSync(file));
 }
@@ -98,10 +107,7 @@ function unpackTools(runtimeRoot: string): void {
     rmSync(unpackedPath, { recursive: true, force: true });
     ensureDirectory(unpackedPath);
 
-    const archives = [
-        `difftastic-${platformDir}.tar.gz`,
-        `ripgrep-${platformDir}.tar.gz`
-    ];
+    const archives = [`difftastic-${platformDir}.tar.gz`, `ripgrep-${platformDir}.tar.gz`];
 
     for (const archiveName of archives) {
         const archivePath = join(archivesDir, archiveName);
@@ -112,7 +118,7 @@ function unpackTools(runtimeRoot: string): void {
             file: archivePath,
             cwd: unpackedPath,
             sync: true,
-            preserveOwner: false
+            preserveOwner: false,
         });
     }
 

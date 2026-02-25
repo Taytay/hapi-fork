@@ -1,10 +1,10 @@
-import { MessageQueue2 } from '@/utils/MessageQueue2';
-import { logger } from '@/ui/logger';
 import { runLocalRemoteSession } from '@/agent/loopBase';
-import { OpencodeSession } from './session';
+import type { ApiClient, ApiSessionClient } from '@/lib';
+import { logger } from '@/ui/logger';
+import type { MessageQueue2 } from '@/utils/MessageQueue2';
 import { opencodeLocalLauncher } from './opencodeLocalLauncher';
 import { opencodeRemoteLauncher } from './opencodeRemoteLauncher';
-import { ApiClient, ApiSessionClient } from '@/lib';
+import { OpencodeSession } from './session';
 import type { OpencodeMode, PermissionMode } from './types';
 import type { OpencodeHookServer } from './utils/startOpencodeHookServer';
 
@@ -39,7 +39,7 @@ export async function opencodeLoop(opts: OpencodeLoopOptions): Promise<void> {
         mode: startingMode,
         startedBy,
         startingMode,
-        permissionMode: opts.permissionMode ?? 'default'
+        permissionMode: opts.permissionMode ?? 'default',
     });
 
     if (opts.resumeSessionId) {
@@ -50,11 +50,12 @@ export async function opencodeLoop(opts: OpencodeLoopOptions): Promise<void> {
         session,
         startingMode: opts.startingMode,
         logTag: 'opencode-loop',
-        runLocal: (instance) => opencodeLocalLauncher(instance, {
-            hookServer: opts.hookServer,
-            hookUrl: opts.hookUrl
-        }),
+        runLocal: (instance) =>
+            opencodeLocalLauncher(instance, {
+                hookServer: opts.hookServer,
+                hookUrl: opts.hookUrl,
+            }),
         runRemote: (instance) => opencodeRemoteLauncher(instance),
-        onSessionReady: opts.onSessionReady
+        onSessionReady: opts.onSessionReady,
     });
 }

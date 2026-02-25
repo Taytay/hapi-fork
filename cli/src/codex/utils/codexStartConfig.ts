@@ -1,14 +1,18 @@
-import type { CodexSessionConfig } from '../types';
 import type { EnhancedMode } from '../loop';
+import type { CodexSessionConfig } from '../types';
 import type { CodexCliOverrides } from './codexCliOverrides';
 import { codexSystemPrompt } from './systemPrompt';
 
 function resolveApprovalPolicy(mode: EnhancedMode): CodexSessionConfig['approval-policy'] {
     switch (mode.permissionMode) {
-        case 'default': return 'untrusted';
-        case 'read-only': return 'never';
-        case 'safe-yolo': return 'on-failure';
-        case 'yolo': return 'on-failure';
+        case 'default':
+            return 'untrusted';
+        case 'read-only':
+            return 'never';
+        case 'safe-yolo':
+            return 'on-failure';
+        case 'yolo':
+            return 'on-failure';
         default: {
             throw new Error(`Unknown permission mode: ${mode.permissionMode}`);
         }
@@ -17,10 +21,14 @@ function resolveApprovalPolicy(mode: EnhancedMode): CodexSessionConfig['approval
 
 function resolveSandbox(mode: EnhancedMode): CodexSessionConfig['sandbox'] {
     switch (mode.permissionMode) {
-        case 'default': return 'workspace-write';
-        case 'read-only': return 'read-only';
-        case 'safe-yolo': return 'workspace-write';
-        case 'yolo': return 'danger-full-access';
+        case 'default':
+            return 'workspace-write';
+        case 'read-only':
+            return 'read-only';
+        case 'safe-yolo':
+            return 'workspace-write';
+        case 'yolo':
+            return 'danger-full-access';
         default: {
             throw new Error(`Unknown permission mode: ${mode.permissionMode}`);
         }
@@ -48,13 +56,13 @@ export function buildCodexStartConfig(args: {
         mcp_servers: args.mcpServers,
         developer_instructions: args.developerInstructions
             ? `${baseInstructions}\n\n${args.developerInstructions}`
-            : baseInstructions
+            : baseInstructions,
     };
     const startConfig: CodexSessionConfig = {
         prompt,
         sandbox: resolvedSandbox,
         'approval-policy': resolvedApprovalPolicy,
-        config
+        config,
     };
 
     if (args.mode.model) {

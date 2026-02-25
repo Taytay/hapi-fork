@@ -9,7 +9,7 @@ describe('appServerConfig', () => {
         const params = buildThreadStartParams({
             mode: { permissionMode: 'default' },
             mcpServers,
-            cliOverrides: { sandbox: 'danger-full-access', approvalPolicy: 'never' }
+            cliOverrides: { sandbox: 'danger-full-access', approvalPolicy: 'never' },
         });
 
         expect(params.sandbox).toBe('danger-full-access');
@@ -18,8 +18,8 @@ describe('appServerConfig', () => {
         expect(params.config).toEqual({
             'mcp_servers.hapi': {
                 command: 'node',
-                args: ['mcp']
-            }
+                args: ['mcp'],
+            },
         });
     });
 
@@ -27,7 +27,7 @@ describe('appServerConfig', () => {
         const params = buildThreadStartParams({
             mode: { permissionMode: 'yolo' },
             mcpServers,
-            cliOverrides: { sandbox: 'read-only', approvalPolicy: 'never' }
+            cliOverrides: { sandbox: 'read-only', approvalPolicy: 'never' },
         });
 
         expect(params.sandbox).toBe('danger-full-access');
@@ -38,7 +38,7 @@ describe('appServerConfig', () => {
         const params = buildTurnStartParams({
             threadId: 'thread-1',
             message: 'hello',
-            mode: { permissionMode: 'read-only', model: 'o3' }
+            mode: { permissionMode: 'read-only', model: 'o3' },
         });
 
         expect(params.threadId).toBe('thread-1');
@@ -52,7 +52,7 @@ describe('appServerConfig', () => {
         const params = buildTurnStartParams({
             threadId: 'thread-1',
             message: 'hello',
-            mode: { permissionMode: 'default', model: 'o3', collaborationMode: 'plan' }
+            mode: { permissionMode: 'default', model: 'o3', collaborationMode: 'plan' },
         });
 
         expect(params.collaborationMode).toEqual({ mode: 'plan', settings: { model: 'o3' } });
@@ -64,7 +64,7 @@ describe('appServerConfig', () => {
             threadId: 'thread-1',
             message: 'hello',
             mode: { permissionMode: 'default' },
-            cliOverrides: { sandbox: 'danger-full-access', approvalPolicy: 'never' }
+            cliOverrides: { sandbox: 'danger-full-access', approvalPolicy: 'never' },
         });
 
         expect(params.approvalPolicy).toBe('never');
@@ -76,7 +76,7 @@ describe('appServerConfig', () => {
             threadId: 'thread-1',
             message: 'hello',
             mode: { permissionMode: 'safe-yolo' },
-            cliOverrides: { sandbox: 'read-only', approvalPolicy: 'never' }
+            cliOverrides: { sandbox: 'read-only', approvalPolicy: 'never' },
         });
 
         expect(params.approvalPolicy).toBe('on-failure');
@@ -88,7 +88,7 @@ describe('appServerConfig', () => {
             threadId: 'thread-1',
             message: 'hello',
             mode: { permissionMode: 'default' },
-            overrides: { approvalPolicy: 'on-request', model: 'gpt-5' }
+            overrides: { approvalPolicy: 'on-request', model: 'gpt-5' },
         });
 
         expect(params.approvalPolicy).toBe('on-request');

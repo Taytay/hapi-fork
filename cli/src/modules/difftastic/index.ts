@@ -2,19 +2,19 @@
  * Low-level difftastic wrapper - just arguments in, string out
  */
 
-import { spawn } from 'child_process';
-import { join, resolve } from 'path';
-import { platform, arch } from 'os';
+import { spawn } from 'node:child_process';
+import { platform } from 'node:os';
+import { join, resolve } from 'node:path';
 import { runtimePath } from '@/projectPath';
 
 export interface DifftasticResult {
-    exitCode: number
-    stdout: string
-    stderr: string
+    exitCode: number;
+    stdout: string;
+    stderr: string;
 }
 
 export interface DifftasticOptions {
-    cwd?: string
+    cwd?: string;
 }
 
 /**
@@ -34,7 +34,7 @@ function getBinaryPath(): string {
  */
 export function run(args: string[], options?: DifftasticOptions): Promise<DifftasticResult> {
     const binaryPath = getBinaryPath();
-    
+
     return new Promise((resolve, reject) => {
         const child = spawn(binaryPath, args, {
             stdio: ['pipe', 'pipe', 'pipe'],
@@ -42,8 +42,8 @@ export function run(args: string[], options?: DifftasticOptions): Promise<Diffta
             env: {
                 ...process.env,
                 // Force color output when needed
-                FORCE_COLOR: '1'
-            }
+                FORCE_COLOR: '1',
+            },
         });
 
         let stdout = '';
@@ -61,7 +61,7 @@ export function run(args: string[], options?: DifftasticOptions): Promise<Diffta
             resolve({
                 exitCode: code || 0,
                 stdout,
-                stderr
+                stderr,
             });
         });
 

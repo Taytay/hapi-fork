@@ -1,48 +1,58 @@
-import { EnhancedMode, PermissionMode } from "./loop";
-import { query, type QueryOptions as Options, type SDKMessage, type SDKSystemMessage, AbortError, SDKUserMessage } from '@/claude/sdk'
-import { claudeCheckSession } from "./utils/claudeCheckSession";
 import { join } from 'node:path';
-import { parseSpecialCommand } from "@/parsers/specialCommands";
-import { logger } from "@/lib";
-import { PushableAsyncIterable } from "@/utils/PushableAsyncIterable";
-import { getProjectPath } from "./utils/path";
-import { awaitFileExist } from "@/modules/watcher/awaitFileExist";
-import { systemPrompt } from "./utils/systemPrompt";
-import { PermissionResult } from "./sdk/types";
-import { getHapiBlobsDir } from "@/constants/uploadPaths";
+import {
+    AbortError,
+    type QueryOptions as Options,
+    query,
+    type SDKMessage,
+    type SDKSystemMessage,
+    type SDKUserMessage,
+} from '@/claude/sdk';
+import { getHapiBlobsDir } from '@/constants/uploadPaths';
+import { logger } from '@/lib';
+import { awaitFileExist } from '@/modules/watcher/awaitFileExist';
+import { parseSpecialCommand } from '@/parsers/specialCommands';
+import { PushableAsyncIterable } from '@/utils/PushableAsyncIterable';
+import type { EnhancedMode } from './loop';
+import type { PermissionResult } from './sdk/types';
+import { claudeCheckSession } from './utils/claudeCheckSession';
+import { getProjectPath } from './utils/path';
+import { systemPrompt } from './utils/systemPrompt';
 
 export async function claudeRemote(opts: {
-
     // Fixed parameters
-    sessionId: string | null,
-    path: string,
-    mcpServers?: Record<string, any>,
-    claudeEnvVars?: Record<string, string>,
-    claudeArgs?: string[],
-    allowedTools: string[],
-    hookSettingsPath: string,
-    signal?: AbortSignal,
-    canCallTool: (toolName: string, input: unknown, mode: EnhancedMode, options: { signal: AbortSignal }) => Promise<PermissionResult>,
+    sessionId: string | null;
+    path: string;
+    mcpServers?: Record<string, any>;
+    claudeEnvVars?: Record<string, string>;
+    claudeArgs?: string[];
+    allowedTools: string[];
+    hookSettingsPath: string;
+    signal?: AbortSignal;
+    canCallTool: (
+        toolName: string,
+        input: unknown,
+        mode: EnhancedMode,
+        options: { signal: AbortSignal },
+    ) => Promise<PermissionResult>;
 
     // Dynamic parameters
-    nextMessage: () => Promise<{ message: string, mode: EnhancedMode } | null>,
-    onReady: () => void,
-    isAborted: (toolCallId: string) => boolean,
+    nextMessage: () => Promise<{ message: string; mode: EnhancedMode } | null>;
+    onReady: () => void;
+    isAborted: (toolCallId: string) => boolean;
 
     // Callbacks
-    onSessionFound: (id: string) => void,
-    onThinkingChange?: (thinking: boolean) => void,
-    onMessage: (message: SDKMessage) => void,
-    onCompletionEvent?: (message: string) => void,
-    onSessionReset?: () => void
+    onSessionFound: (id: string) => void;
+    onThinkingChange?: (thinking: boolean) => void;
+    onMessage: (message: SDKMessage) => void;
+    onCompletionEvent?: (message: string) => void;
+    onSessionReset?: () => void;
 }) {
-
     // Check if session is valid
     let startFrom = opts.sessionId;
     if (opts.sessionId && !claudeCheckSession(opts.sessionId, opts.path)) {
         startFrom = null;
     }
-    
+
     // Extract --resume from claudeArgs if present (for first spawn)
     if (!startFrom && opts.claudeArgs) {
         for (let i = 0; i < opts.claudeArgs.length; i++) {
@@ -79,7 +89,8 @@ export async function claudeRemote(opts: {
 
     // Get initial message
     const initial = await opts.nextMessage();
-    if (!initial) { // No initial message - exit
+    if (!initial) {
+        // No initial message - exit
         return;
     }
 
@@ -116,16 +127,23 @@ export async function claudeRemote(opts: {
         permissionMode: initial.mode.permissionMode,
         model: initial.mode.model,
         fallbackModel: initial.mode.fallbackModel,
-        customSystemPrompt: initial.mode.customSystemPrompt ? initial.mode.customSystemPrompt + '\n\n' + systemPrompt : undefined,
-        appendSystemPrompt: initial.mode.appendSystemPrompt ? initial.mode.appendSystemPrompt + '\n\n' + systemPrompt : systemPrompt,
-        allowedTools: initial.mode.allowedTools ? initial.mode.allowedTools.concat(opts.allowedTools) : opts.allowedTools,
+        customSystemPrompt: initial.mode.customSystemPrompt
+            ? `${initial.mode.customSystemPrompt}\n\n${systemPrompt}`
+            : undefined,
+        appendSystemPrompt: initial.mode.appendSystemPrompt
+            ? `${initial.mode.appendSystemPrompt}\n\n${systemPrompt}`
+            : systemPrompt,
+        allowedTools: initial.mode.allowedTools
+            ? initial.mode.allowedTools.concat(opts.allowedTools)
+            : opts.allowedTools,
         disallowedTools: initial.mode.disallowedTools,
-        canCallTool: (toolName: string, input: unknown, options: { signal: AbortSignal }) => opts.canCallTool(toolName, input, mode, options),
+        canCallTool: (toolName: string, input: unknown, options: { signal: AbortSignal }) =>
+            opts.canCallTool(toolName, input, mode, options),
         abort: opts.signal,
         pathToClaudeCodeExecutable: 'claude',
         settingsPath: opts.hookSettingsPath,
         additionalDirectories: [getHapiBlobsDir()],
-    }
+    };
 
     // Track thinking state
     let thinking = false;
@@ -140,7 +158,7 @@ export async function claudeRemote(opts: {
     };
 
     // Push initial message
-    let messages = new PushableAsyncIterable<SDKUserMessage>();
+    const messages = new PushableAsyncIterable<SDKUserMessage>();
     messages.push({
         type: 'user',
         message: {
@@ -175,7 +193,9 @@ export async function claudeRemote(opts: {
                 // Session id is still in memory, wait until session file is written to disk
                 // Start a watcher for to detect the session id
                 if (systemInit.session_id) {
-                    logger.debug(`[claudeRemote] Waiting for session file to be written to disk: ${systemInit.session_id}`);
+                    logger.debug(
+                        `[claudeRemote] Waiting for session file to be written to disk: ${systemInit.session_id}`,
+                    );
                     const projectDir = getProjectPath(opts.path);
                     const found = await awaitFileExist(join(projectDir, `${systemInit.session_id}.jsonl`));
                     logger.debug(`[claudeRemote] Session file found: ${systemInit.session_id} ${found}`);
@@ -214,7 +234,7 @@ export async function claudeRemote(opts: {
             if (message.type === 'user') {
                 const msg = message as SDKUserMessage;
                 if (msg.message.role === 'user' && Array.isArray(msg.message.content)) {
-                    for (let c of msg.message.content) {
+                    for (const c of msg.message.content) {
                         if (c.type === 'tool_result' && c.tool_use_id && opts.isAborted(c.tool_use_id)) {
                             logger.debug('[claudeRemote] Tool aborted, exiting claudeRemote');
                             return;

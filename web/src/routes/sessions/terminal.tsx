@@ -1,23 +1,18 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { PointerEvent } from 'react'
-import { useParams } from '@tanstack/react-router'
-import type { Terminal } from '@xterm/xterm'
-import { useAppContext } from '@/lib/app-context'
-import { useAppGoBack } from '@/hooks/useAppGoBack'
-import { useSession } from '@/hooks/queries/useSession'
-import { useTerminalSocket } from '@/hooks/useTerminalSocket'
-import { useLongPress } from '@/hooks/useLongPress'
-import { useTranslation } from '@/lib/use-translation'
-import { TerminalView } from '@/components/Terminal/TerminalView'
-import { LoadingState } from '@/components/LoadingState'
-import { Button } from '@/components/ui/button'
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle
-} from '@/components/ui/dialog'
+import { useParams } from '@tanstack/react-router';
+import type { Terminal } from '@xterm/xterm';
+import type { PointerEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { LoadingState } from '@/components/LoadingState';
+import { TerminalView } from '@/components/Terminal/TerminalView';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useSession } from '@/hooks/queries/useSession';
+import { useAppGoBack } from '@/hooks/useAppGoBack';
+import { useLongPress } from '@/hooks/useLongPress';
+import { useTerminalSocket } from '@/hooks/useTerminalSocket';
+import { useAppContext } from '@/lib/app-context';
+import { useTranslation } from '@/lib/use-translation';
+
 function BackIcon() {
     return (
         <svg
@@ -33,62 +28,62 @@ function BackIcon() {
         >
             <polyline points="15 18 9 12 15 6" />
         </svg>
-    )
+    );
 }
 
 function ConnectionIndicator(props: { status: 'idle' | 'connecting' | 'connected' | 'error' }) {
-    const isConnected = props.status === 'connected'
-    const isConnecting = props.status === 'connecting'
-    const label = isConnected ? 'Connected' : isConnecting ? 'Connecting' : 'Offline'
+    const isConnected = props.status === 'connected';
+    const isConnecting = props.status === 'connecting';
+    const label = isConnected ? 'Connected' : isConnecting ? 'Connecting' : 'Offline';
     const colorClass = isConnected
         ? 'bg-emerald-500'
         : isConnecting
           ? 'bg-amber-400 animate-pulse'
-          : 'bg-[var(--app-hint)]'
+          : 'bg-[var(--app-hint)]';
 
     return (
         <div className="flex items-center" aria-label={label} title={label} role="status">
             <span className={`h-2.5 w-2.5 rounded-full ${colorClass}`} />
         </div>
-    )
+    );
 }
 
 type QuickInput = {
-    label: string
-    sequence?: string
-    description: string
-    modifier?: 'ctrl' | 'alt'
+    label: string;
+    sequence?: string;
+    description: string;
+    modifier?: 'ctrl' | 'alt';
     popup?: {
-        label: string
-        sequence: string
-        description: string
-    }
-}
+        label: string;
+        sequence: string;
+        description: string;
+    };
+};
 
 type ModifierState = {
-    ctrl: boolean
-    alt: boolean
-}
+    ctrl: boolean;
+    alt: boolean;
+};
 
 function applyModifierState(sequence: string, state: ModifierState): string {
-    let modified = sequence
+    let modified = sequence;
     if (state.alt) {
-        modified = `\u001b${modified}`
+        modified = `\u001b${modified}`;
     }
     if (state.ctrl && modified.length === 1) {
-        const code = modified.toUpperCase().charCodeAt(0)
+        const code = modified.toUpperCase().charCodeAt(0);
         if (code >= 64 && code <= 95) {
-            modified = String.fromCharCode(code - 64)
+            modified = String.fromCharCode(code - 64);
         }
     }
-    return modified
+    return modified;
 }
 
 function shouldResetModifiers(sequence: string, state: ModifierState): boolean {
     if (!sequence) {
-        return false
+        return false;
     }
-    return state.ctrl || state.alt
+    return state.ctrl || state.alt;
 }
 
 const QUICK_INPUT_ROWS: QuickInput[][] = [
@@ -120,45 +115,45 @@ const QUICK_INPUT_ROWS: QuickInput[][] = [
         { label: '→', sequence: '\u001b[C', description: 'Arrow right' },
         { label: 'PgDn', sequence: '\u001b[6~', description: 'Page down' },
     ],
-]
+];
 
 function QuickKeyButton(props: {
-    input: QuickInput
-    disabled: boolean
-    isActive: boolean
-    onPress: (sequence: string) => void
-    onToggleModifier: (modifier: 'ctrl' | 'alt') => void
+    input: QuickInput;
+    disabled: boolean;
+    isActive: boolean;
+    onPress: (sequence: string) => void;
+    onToggleModifier: (modifier: 'ctrl' | 'alt') => void;
 }) {
-    const { input, disabled, isActive, onPress, onToggleModifier } = props
-    const modifier = input.modifier
-    const popupSequence = input.popup?.sequence
-    const popupDescription = input.popup?.description
-    const hasPopup = Boolean(popupSequence)
-    const longPressDisabled = disabled || Boolean(modifier) || !hasPopup
+    const { input, disabled, isActive, onPress, onToggleModifier } = props;
+    const modifier = input.modifier;
+    const popupSequence = input.popup?.sequence;
+    const popupDescription = input.popup?.description;
+    const hasPopup = Boolean(popupSequence);
+    const longPressDisabled = disabled || Boolean(modifier) || !hasPopup;
 
     const handleClick = useCallback(() => {
         if (modifier) {
-            onToggleModifier(modifier)
-            return
+            onToggleModifier(modifier);
+            return;
         }
-        onPress(input.sequence ?? '')
-    }, [modifier, onToggleModifier, onPress, input.sequence])
+        onPress(input.sequence ?? '');
+    }, [modifier, onToggleModifier, onPress, input.sequence]);
 
     const handlePointerDown = useCallback((event: PointerEvent<HTMLButtonElement>) => {
         if (event.pointerType === 'touch') {
-            event.preventDefault()
+            event.preventDefault();
         }
-    }, [])
+    }, []);
 
     const longPressHandlers = useLongPress({
         onLongPress: () => {
             if (popupSequence && !modifier) {
-                onPress(popupSequence)
+                onPress(popupSequence);
             }
         },
         onClick: handleClick,
         disabled: longPressDisabled,
-    })
+    });
 
     return (
         <button
@@ -175,31 +170,31 @@ function QuickKeyButton(props: {
         >
             {input.label}
         </button>
-    )
+    );
 }
 
 export default function TerminalPage() {
-    const { t } = useTranslation()
-    const { sessionId } = useParams({ from: '/sessions/$sessionId/terminal' })
-    const { api, token, baseUrl } = useAppContext()
-    const goBack = useAppGoBack()
-    const { session } = useSession(api, sessionId)
+    const { t } = useTranslation();
+    const { sessionId } = useParams({ from: '/sessions/$sessionId/terminal' });
+    const { api, token, baseUrl } = useAppContext();
+    const goBack = useAppGoBack();
+    const { session } = useSession(api, sessionId);
     const terminalId = useMemo(() => {
         if (typeof crypto?.randomUUID === 'function') {
-            return crypto.randomUUID()
+            return crypto.randomUUID();
         }
-        return `${Date.now()}-${Math.random().toString(16).slice(2)}`
-    }, [sessionId])
-    const terminalRef = useRef<Terminal | null>(null)
-    const inputDisposableRef = useRef<{ dispose: () => void } | null>(null)
-    const connectOnceRef = useRef(false)
-    const lastSizeRef = useRef<{ cols: number; rows: number } | null>(null)
-    const modifierStateRef = useRef<ModifierState>({ ctrl: false, alt: false })
-    const [exitInfo, setExitInfo] = useState<{ code: number | null; signal: string | null } | null>(null)
-    const [ctrlActive, setCtrlActive] = useState(false)
-    const [altActive, setAltActive] = useState(false)
-    const [pasteDialogOpen, setPasteDialogOpen] = useState(false)
-    const [manualPasteText, setManualPasteText] = useState('')
+        return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }, []);
+    const terminalRef = useRef<Terminal | null>(null);
+    const inputDisposableRef = useRef<{ dispose: () => void } | null>(null);
+    const connectOnceRef = useRef(false);
+    const lastSizeRef = useRef<{ cols: number; rows: number } | null>(null);
+    const modifierStateRef = useRef<ModifierState>({ ctrl: false, alt: false });
+    const [exitInfo, setExitInfo] = useState<{ code: number | null; signal: string | null } | null>(null);
+    const [ctrlActive, setCtrlActive] = useState(false);
+    const [altActive, setAltActive] = useState(false);
+    const [pasteDialogOpen, setPasteDialogOpen] = useState(false);
+    const [manualPasteText, setManualPasteText] = useState('');
 
     const {
         state: terminalState,
@@ -213,199 +208,202 @@ export default function TerminalPage() {
         token,
         sessionId,
         terminalId,
-        baseUrl
-    })
+        baseUrl,
+    });
 
     useEffect(() => {
         onOutput((data) => {
-            terminalRef.current?.write(data)
-        })
-    }, [onOutput])
+            terminalRef.current?.write(data);
+        });
+    }, [onOutput]);
 
     useEffect(() => {
         onExit((code, signal) => {
-            setExitInfo({ code, signal })
-            terminalRef.current?.write(`\r\n[process exited${code !== null ? ` with code ${code}` : ''}]`)
-            connectOnceRef.current = false
-        })
-    }, [onExit])
+            setExitInfo({ code, signal });
+            terminalRef.current?.write(`\r\n[process exited${code !== null ? ` with code ${code}` : ''}]`);
+            connectOnceRef.current = false;
+        });
+    }, [onExit]);
 
     useEffect(() => {
-        modifierStateRef.current = { ctrl: ctrlActive, alt: altActive }
-    }, [ctrlActive, altActive])
+        modifierStateRef.current = { ctrl: ctrlActive, alt: altActive };
+    }, [ctrlActive, altActive]);
 
     const resetModifiers = useCallback(() => {
-        setCtrlActive(false)
-        setAltActive(false)
-    }, [])
+        setCtrlActive(false);
+        setAltActive(false);
+    }, []);
 
     const dispatchSequence = useCallback(
         (sequence: string, modifierState: ModifierState) => {
-            write(applyModifierState(sequence, modifierState))
+            write(applyModifierState(sequence, modifierState));
             if (shouldResetModifiers(sequence, modifierState)) {
-                resetModifiers()
+                resetModifiers();
             }
         },
-        [write, resetModifiers]
-    )
+        [write, resetModifiers],
+    );
 
     const handleTerminalMount = useCallback(
         (terminal: Terminal) => {
-            terminalRef.current = terminal
-            inputDisposableRef.current?.dispose()
+            terminalRef.current = terminal;
+            inputDisposableRef.current?.dispose();
             inputDisposableRef.current = terminal.onData((data) => {
-                const modifierState = modifierStateRef.current
-                dispatchSequence(data, modifierState)
-            })
+                const modifierState = modifierStateRef.current;
+                dispatchSequence(data, modifierState);
+            });
         },
-        [dispatchSequence]
-    )
+        [dispatchSequence],
+    );
 
     const handleResize = useCallback(
         (cols: number, rows: number) => {
-            lastSizeRef.current = { cols, rows }
+            lastSizeRef.current = { cols, rows };
             if (!session?.active) {
-                return
+                return;
             }
             if (!connectOnceRef.current) {
-                connectOnceRef.current = true
-                connect(cols, rows)
+                connectOnceRef.current = true;
+                connect(cols, rows);
             } else {
-                resize(cols, rows)
+                resize(cols, rows);
             }
         },
-        [session?.active, connect, resize]
-    )
+        [session?.active, connect, resize],
+    );
 
     useEffect(() => {
         if (!session?.active) {
-            return
+            return;
         }
         if (connectOnceRef.current) {
-            return
+            return;
         }
-        const size = lastSizeRef.current
+        const size = lastSizeRef.current;
         if (!size) {
-            return
+            return;
         }
-        connectOnceRef.current = true
-        connect(size.cols, size.rows)
-    }, [session?.active, connect])
+        connectOnceRef.current = true;
+        connect(size.cols, size.rows);
+    }, [session?.active, connect]);
 
     useEffect(() => {
-        connectOnceRef.current = false
-        setExitInfo(null)
-        disconnect()
-    }, [sessionId, disconnect])
+        connectOnceRef.current = false;
+        setExitInfo(null);
+        disconnect();
+    }, [disconnect]);
 
     useEffect(() => {
         return () => {
-            inputDisposableRef.current?.dispose()
-            connectOnceRef.current = false
-            disconnect()
-        }
-    }, [disconnect])
+            inputDisposableRef.current?.dispose();
+            connectOnceRef.current = false;
+            disconnect();
+        };
+    }, [disconnect]);
 
     useEffect(() => {
         if (session?.active === false) {
-            disconnect()
-            connectOnceRef.current = false
+            disconnect();
+            connectOnceRef.current = false;
         }
-    }, [session?.active, disconnect])
+    }, [session?.active, disconnect]);
 
     useEffect(() => {
         if (terminalState.status === 'error') {
-            connectOnceRef.current = false
-            return
+            connectOnceRef.current = false;
+            return;
         }
         if (terminalState.status === 'connecting' || terminalState.status === 'connected') {
-            setExitInfo(null)
+            setExitInfo(null);
         }
-    }, [terminalState.status])
+    }, [terminalState.status]);
 
-    const quickInputDisabled = !session?.active || terminalState.status !== 'connected'
-    const writePlainInput = useCallback((text: string) => {
-        if (!text || quickInputDisabled) {
-            return false
-        }
-        write(text)
-        resetModifiers()
-        terminalRef.current?.focus()
-        return true
-    }, [quickInputDisabled, write, resetModifiers])
+    const quickInputDisabled = !session?.active || terminalState.status !== 'connected';
+    const writePlainInput = useCallback(
+        (text: string) => {
+            if (!text || quickInputDisabled) {
+                return false;
+            }
+            write(text);
+            resetModifiers();
+            terminalRef.current?.focus();
+            return true;
+        },
+        [quickInputDisabled, write, resetModifiers],
+    );
 
     const handlePasteAction = useCallback(async () => {
         if (quickInputDisabled) {
-            return
+            return;
         }
-        const readClipboard = navigator.clipboard?.readText
+        const readClipboard = navigator.clipboard?.readText;
         if (readClipboard) {
             try {
-                const clipboardText = await readClipboard.call(navigator.clipboard)
+                const clipboardText = await readClipboard.call(navigator.clipboard);
                 if (!clipboardText) {
-                    return
+                    return;
                 }
                 if (writePlainInput(clipboardText)) {
-                    return
+                    return;
                 }
             } catch {
                 // Fall through to manual paste modal.
             }
         }
-        setManualPasteText('')
-        setPasteDialogOpen(true)
-    }, [quickInputDisabled, writePlainInput])
+        setManualPasteText('');
+        setPasteDialogOpen(true);
+    }, [quickInputDisabled, writePlainInput]);
 
     const handleManualPasteSubmit = useCallback(() => {
         if (!manualPasteText.trim()) {
-            return
+            return;
         }
         if (writePlainInput(manualPasteText)) {
-            setPasteDialogOpen(false)
-            setManualPasteText('')
+            setPasteDialogOpen(false);
+            setManualPasteText('');
         }
-    }, [manualPasteText, writePlainInput])
+    }, [manualPasteText, writePlainInput]);
 
     const handleQuickInput = useCallback(
         (sequence: string) => {
             if (quickInputDisabled) {
-                return
+                return;
             }
-            const modifierState = { ctrl: ctrlActive, alt: altActive }
-            dispatchSequence(sequence, modifierState)
-            terminalRef.current?.focus()
+            const modifierState = { ctrl: ctrlActive, alt: altActive };
+            dispatchSequence(sequence, modifierState);
+            terminalRef.current?.focus();
         },
-        [quickInputDisabled, ctrlActive, altActive, dispatchSequence]
-    )
+        [quickInputDisabled, ctrlActive, altActive, dispatchSequence],
+    );
 
     const handleModifierToggle = useCallback(
         (modifier: 'ctrl' | 'alt') => {
             if (quickInputDisabled) {
-                return
+                return;
             }
             if (modifier === 'ctrl') {
-                setCtrlActive((value) => !value)
-                setAltActive(false)
+                setCtrlActive((value) => !value);
+                setAltActive(false);
             } else {
-                setAltActive((value) => !value)
-                setCtrlActive(false)
+                setAltActive((value) => !value);
+                setCtrlActive(false);
             }
-            terminalRef.current?.focus()
+            terminalRef.current?.focus();
         },
-        [quickInputDisabled]
-    )
+        [quickInputDisabled],
+    );
 
     if (!session) {
         return (
             <div className="flex h-full items-center justify-center">
                 <LoadingState label="Loading session…" className="text-sm" />
             </div>
-        )
+        );
     }
 
-    const subtitle = session.metadata?.path ?? sessionId
-    const status = terminalState.status
-    const errorMessage = terminalState.status === 'error' ? terminalState.error : null
+    const subtitle = session.metadata?.path ?? sessionId;
+    const status = terminalState.status;
+    const errorMessage = terminalState.status === 'error' ? terminalState.error : null;
 
     return (
         <div className="flex h-full flex-col">
@@ -463,7 +461,7 @@ export default function TerminalPage() {
                         <button
                             type="button"
                             onClick={() => {
-                                void handlePasteAction()
+                                void handlePasteAction();
                             }}
                             disabled={quickInputDisabled}
                             className="w-full rounded-md border border-[var(--app-border)] bg-[var(--app-secondary-bg)] px-3 py-2 text-sm font-medium text-[var(--app-fg)] transition-colors hover:bg-[var(--app-subtle-bg)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-button)] disabled:cursor-not-allowed disabled:opacity-50"
@@ -476,10 +474,10 @@ export default function TerminalPage() {
                                 className="flex items-stretch overflow-hidden rounded-md bg-[var(--app-secondary-bg)]"
                             >
                                 {row.map((input) => {
-                                    const modifier = input.modifier
-                                    const isCtrl = modifier === 'ctrl'
-                                    const isAlt = modifier === 'alt'
-                                    const isActive = (isCtrl && ctrlActive) || (isAlt && altActive)
+                                    const modifier = input.modifier;
+                                    const isCtrl = modifier === 'ctrl';
+                                    const isAlt = modifier === 'alt';
+                                    const isActive = (isCtrl && ctrlActive) || (isAlt && altActive);
                                     return (
                                         <QuickKeyButton
                                             key={input.label}
@@ -489,7 +487,7 @@ export default function TerminalPage() {
                                             onPress={handleQuickInput}
                                             onToggleModifier={handleModifierToggle}
                                         />
-                                    )
+                                    );
                                 })}
                             </div>
                         ))}
@@ -500,18 +498,16 @@ export default function TerminalPage() {
             <Dialog
                 open={pasteDialogOpen}
                 onOpenChange={(open) => {
-                    setPasteDialogOpen(open)
+                    setPasteDialogOpen(open);
                     if (!open) {
-                        setManualPasteText('')
+                        setManualPasteText('');
                     }
                 }}
             >
                 <DialogContent className="max-w-md">
                     <DialogHeader>
                         <DialogTitle>{t('terminal.paste.fallbackTitle')}</DialogTitle>
-                        <DialogDescription>
-                            {t('terminal.paste.fallbackDescription')}
-                        </DialogDescription>
+                        <DialogDescription>{t('terminal.paste.fallbackDescription')}</DialogDescription>
                     </DialogHeader>
                     <textarea
                         value={manualPasteText}
@@ -526,22 +522,18 @@ export default function TerminalPage() {
                             type="button"
                             variant="secondary"
                             onClick={() => {
-                                setPasteDialogOpen(false)
-                                setManualPasteText('')
+                                setPasteDialogOpen(false);
+                                setManualPasteText('');
                             }}
                         >
                             {t('button.cancel')}
                         </Button>
-                        <Button
-                            type="button"
-                            onClick={handleManualPasteSubmit}
-                            disabled={!manualPasteText.trim()}
-                        >
+                        <Button type="button" onClick={handleManualPasteSubmit} disabled={!manualPasteText.trim()}>
                             {t('button.paste')}
                         </Button>
                     </div>
                 </DialogContent>
             </Dialog>
         </div>
-    )
+    );
 }

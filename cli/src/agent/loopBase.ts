@@ -20,7 +20,7 @@ export async function runLocalRemoteSession<TSession extends AgentSessionBase<an
         startingMode: opts.startingMode,
         logTag: opts.logTag,
         runLocal: opts.runLocal,
-        runRemote: opts.runRemote
+        runRemote: opts.runRemote,
     });
 }
 
@@ -55,7 +55,6 @@ export async function runLocalRemoteLoop<TSession extends AgentSessionBase<any>>
 
             mode = 'local';
             opts.session.onModeChange(mode);
-            continue;
         }
     }
 }

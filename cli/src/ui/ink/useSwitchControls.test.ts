@@ -1,8 +1,8 @@
-import React, { act, useEffect } from 'react';
 import { PassThrough } from 'node:stream';
-import { render, type Instance } from 'ink';
+import { type Instance, render } from 'ink';
+import React, { act, useEffect } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { useSwitchControls, type ConfirmationMode, type ActionInProgress } from './useSwitchControls';
+import { type ActionInProgress, type ConfirmationMode, useSwitchControls } from './useSwitchControls';
 
 type Key = {
     ctrl?: boolean;
@@ -23,7 +23,7 @@ vi.mock('ink', async () => {
         ...actual,
         useInput: (handler: (input: string, key: Key) => void | Promise<void>) => {
             inputHandler = handler;
-        }
+        },
     };
 });
 
@@ -60,15 +60,11 @@ const setActEnvironment = (value: boolean | undefined) => {
     (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = value;
 };
 
-function HookProbe(props: {
-    onExit?: () => void;
-    onSwitch?: () => void;
-    onState: (state: SwitchState) => void;
-}): null {
+function HookProbe(props: { onExit?: () => void; onSwitch?: () => void; onState: (state: SwitchState) => void }): null {
     const state = useSwitchControls({
         onExit: props.onExit,
         onSwitch: props.onSwitch,
-        confirmationTimeoutMs: 5000
+        confirmationTimeoutMs: 5000,
     });
 
     useEffect(() => {
@@ -91,15 +87,15 @@ describe('useSwitchControls', () => {
                     ...opts,
                     onState: (state) => {
                         latestState = state;
-                    }
+                    },
                 }),
                 {
                     stdout,
                     stderr,
                     stdin,
                     exitOnCtrlC: false,
-                    patchConsole: false
-                }
+                    patchConsole: false,
+                },
             );
         });
     };

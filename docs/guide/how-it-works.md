@@ -55,6 +55,7 @@ The CLI is a wrapper around AI coding agents (Claude Code, Codex, Gemini, OpenCo
 - Provides MCP (Model Context Protocol) tools
 
 **Key Commands:**
+
 ```bash
 hapi              # Start Claude Code session
 hapi codex        # Start OpenAI Codex session
@@ -150,6 +151,7 @@ User (Phone)                 Hub                     CLI
 ### CLI ↔ Hub: Socket.IO
 
 Real-time bidirectional communication for:
+
 - Session registration and heartbeat
 - Message relay (user input → agent)
 - Permission requests and responses
@@ -164,6 +166,7 @@ Real-time bidirectional communication for:
 ### External Access: Tunnel
 
 For remote access outside your local network:
+
 - **Cloudflare Tunnel** (recommended) - Free, secure, reliable
 - **Tailscale** - Mesh VPN for private networks
 - **ngrok** - Quick setup for testing
@@ -204,11 +207,13 @@ Switch to remote mode when you need to step away:
 ```
 
 **Local → Remote:**
+
 - Receive a message from phone/web
 - Session automatically switches to remote mode
 - Terminal shows "Remote mode - waiting for input"
 
 **Remote → Local:**
+
 - Press double-space in terminal
 - Instantly regain local control
 - Continue typing as if you never left

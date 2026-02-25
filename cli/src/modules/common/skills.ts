@@ -1,6 +1,6 @@
-import { readdir, readFile } from 'fs/promises';
-import { join, basename } from 'path';
-import { homedir } from 'os';
+import { readdir, readFile } from 'node:fs/promises';
+import { homedir } from 'node:os';
+import { basename, join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 
 export interface SkillSummary {
@@ -8,8 +8,7 @@ export interface SkillSummary {
     description?: string;
 }
 
-export interface ListSkillsRequest {
-}
+export type ListSkillsRequest = {};
 
 export interface ListSkillsResponse {
     success: boolean;
@@ -46,9 +45,8 @@ function extractSkillSummary(skillDir: string, fileContent: string): SkillSummar
         return null;
     }
 
-    const description = typeof parsed.frontmatter?.description === 'string'
-        ? parsed.frontmatter.description.trim()
-        : undefined;
+    const description =
+        typeof parsed.frontmatter?.description === 'string' ? parsed.frontmatter.description.trim() : undefined;
 
     return { name, description };
 }
@@ -95,18 +93,17 @@ export async function listSkills(): Promise<SkillSummary[]> {
         return [];
     }
 
-    const skills = await Promise.all(skillDirs.map(async (dir): Promise<SkillSummary | null> => {
-        const filePath = join(dir, 'SKILL.md');
-        try {
-            const fileContent = await readFile(filePath, 'utf-8');
-            return extractSkillSummary(dir, fileContent);
-        } catch {
-            return null;
-        }
-    }));
+    const skills = await Promise.all(
+        skillDirs.map(async (dir): Promise<SkillSummary | null> => {
+            const filePath = join(dir, 'SKILL.md');
+            try {
+                const fileContent = await readFile(filePath, 'utf-8');
+                return extractSkillSummary(dir, fileContent);
+            } catch {
+                return null;
+            }
+        }),
+    );
 
-    return skills
-        .filter((skill): skill is SkillSummary => skill !== null)
-        .sort((a, b) => a.name.localeCompare(b.name));
+    return skills.filter((skill): skill is SkillSummary => skill !== null).sort((a, b) => a.name.localeCompare(b.name));
 }
-

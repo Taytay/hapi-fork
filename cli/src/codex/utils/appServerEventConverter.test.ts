@@ -22,13 +22,23 @@ describe('AppServerEventConverter', () => {
         const started = converter.handleNotification('turn/started', { turn: { id: 'turn-1' } });
         expect(started).toEqual([{ type: 'task_started', turn_id: 'turn-1' }]);
 
-        const completed = converter.handleNotification('turn/completed', { turn: { id: 'turn-1' }, status: 'Completed' });
+        const completed = converter.handleNotification('turn/completed', {
+            turn: { id: 'turn-1' },
+            status: 'Completed',
+        });
         expect(completed).toEqual([{ type: 'task_complete', turn_id: 'turn-1' }]);
 
-        const interrupted = converter.handleNotification('turn/completed', { turn: { id: 'turn-1' }, status: 'Interrupted' });
+        const interrupted = converter.handleNotification('turn/completed', {
+            turn: { id: 'turn-1' },
+            status: 'Interrupted',
+        });
         expect(interrupted).toEqual([{ type: 'turn_aborted', turn_id: 'turn-1' }]);
 
-        const failed = converter.handleNotification('turn/completed', { turn: { id: 'turn-1' }, status: 'Failed', message: 'boom' });
+        const failed = converter.handleNotification('turn/completed', {
+            turn: { id: 'turn-1' },
+            status: 'Failed',
+            message: 'boom',
+        });
         expect(failed).toEqual([{ type: 'task_failed', turn_id: 'turn-1', error: 'boom' }]);
     });
 
@@ -38,7 +48,7 @@ describe('AppServerEventConverter', () => {
         converter.handleNotification('item/agentMessage/delta', { itemId: 'msg-1', delta: 'Hello' });
         converter.handleNotification('item/agentMessage/delta', { itemId: 'msg-1', delta: ' world' });
         const completed = converter.handleNotification('item/completed', {
-            item: { id: 'msg-1', type: 'agentMessage' }
+            item: { id: 'msg-1', type: 'agentMessage' },
         });
 
         expect(completed).toEqual([{ type: 'agent_message', message: 'Hello world' }]);
@@ -48,26 +58,30 @@ describe('AppServerEventConverter', () => {
         const converter = new AppServerEventConverter();
 
         const started = converter.handleNotification('item/started', {
-            item: { id: 'cmd-1', type: 'commandExecution', command: 'ls' }
+            item: { id: 'cmd-1', type: 'commandExecution', command: 'ls' },
         });
-        expect(started).toEqual([{
-            type: 'exec_command_begin',
-            call_id: 'cmd-1',
-            command: 'ls'
-        }]);
+        expect(started).toEqual([
+            {
+                type: 'exec_command_begin',
+                call_id: 'cmd-1',
+                command: 'ls',
+            },
+        ]);
 
         converter.handleNotification('item/commandExecution/outputDelta', { itemId: 'cmd-1', delta: 'ok' });
         const completed = converter.handleNotification('item/completed', {
-            item: { id: 'cmd-1', type: 'commandExecution', exitCode: 0 }
+            item: { id: 'cmd-1', type: 'commandExecution', exitCode: 0 },
         });
 
-        expect(completed).toEqual([{
-            type: 'exec_command_end',
-            call_id: 'cmd-1',
-            command: 'ls',
-            output: 'ok',
-            exit_code: 0
-        }]);
+        expect(completed).toEqual([
+            {
+                type: 'exec_command_end',
+                call_id: 'cmd-1',
+                command: 'ls',
+                output: 'ok',
+                exit_code: 0,
+            },
+        ]);
     });
 
     it('maps reasoning deltas', () => {

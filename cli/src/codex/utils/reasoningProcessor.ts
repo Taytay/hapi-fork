@@ -1,6 +1,6 @@
 /**
  * Reasoning Processor - Handles streaming reasoning deltas and identifies reasoning tools
- * 
+ *
  * This processor accumulates agent_reasoning_delta events and identifies when
  * reasoning sections start with **[Title]** format, treating them as tool calls.
  */
@@ -88,32 +88,31 @@ export class ReasoningProcessor {
         } else if (this.inTitleCapture) {
             // We're capturing the title
             this.titleBuffer = this.accumulator.substring(2); // Keep updating from start
-            
+
             // Check if we've found the closing **
             const titleEndIndex = this.titleBuffer.indexOf('**');
             if (titleEndIndex !== -1) {
                 // Found the end of title
                 const title = this.titleBuffer.substring(0, titleEndIndex);
                 const afterTitle = this.titleBuffer.substring(titleEndIndex + 2);
-                
+
                 this.hasTitle = true;
                 this.inTitleCapture = false;
                 this.currentTitle = title;
                 this.contentBuffer = afterTitle;
-                
+
                 // Generate a call ID for this reasoning section
                 this.currentCallId = randomUUID();
-                
+
                 logger.debug(`[ReasoningProcessor] Title captured: "${title}"`);
-                
+
                 // Send tool call immediately when title is detected
                 this.sendToolCallStart(title);
             }
         } else if (this.hasTitle) {
             // We have a title, accumulate content after title
             this.contentBuffer = this.accumulator.substring(
-                this.accumulator.indexOf('**') + 2 + 
-                this.currentTitle!.length + 2
+                this.accumulator.indexOf('**') + 2 + this.currentTitle!.length + 2,
             );
         } else {
             // Untitled reasoning, just accumulate
@@ -134,9 +133,9 @@ export class ReasoningProcessor {
             name: 'CodexReasoning',
             callId: this.currentCallId,
             input: {
-                title: title
+                title: title,
             },
-            id: randomUUID()
+            id: randomUUID(),
         };
 
         logger.debug(`[ReasoningProcessor] Sending tool call start for: "${title}"`);
@@ -151,7 +150,7 @@ export class ReasoningProcessor {
         // Extract title and content if present
         let title: string | undefined;
         let content: string = fullText;
-        
+
         if (fullText.startsWith('**')) {
             const titleEndIndex = fullText.indexOf('**', 2);
             if (titleEndIndex !== -1) {
@@ -161,7 +160,7 @@ export class ReasoningProcessor {
         }
 
         logger.debug(`[ReasoningProcessor] Complete reasoning - Title: "${title}", Has content: ${content.length > 0}`);
-        
+
         if (title && !this.toolCallStarted) {
             // If we have a title but haven't sent the tool call yet, send it now
             this.currentCallId = this.currentCallId || randomUUID();
@@ -175,9 +174,9 @@ export class ReasoningProcessor {
                 callId: this.currentCallId,
                 output: {
                     content: content,
-                    status: 'completed'
+                    status: 'completed',
                 },
-                id: randomUUID()
+                id: randomUUID(),
             };
             logger.debug('[ReasoningProcessor] Sending tool call result');
             this.onMessage?.(toolResult);
@@ -186,12 +185,12 @@ export class ReasoningProcessor {
             const reasoningMessage: ReasoningMessage = {
                 type: 'reasoning',
                 message: content,
-                id: randomUUID()
+                id: randomUUID(),
             };
             logger.debug('[ReasoningProcessor] Sending reasoning message');
             this.onMessage?.(reasoningMessage);
         }
-        
+
         // Reset state after completion
         this.resetState();
     }
@@ -224,9 +223,9 @@ export class ReasoningProcessor {
                 callId: this.currentCallId,
                 output: {
                     content: this.contentBuffer || '',
-                    status: status
+                    status: status,
                 },
-                id: randomUUID()
+                id: randomUUID(),
             };
             logger.debug(`[ReasoningProcessor] Sending tool call result with status: ${status}`);
             this.onMessage?.(toolResult);

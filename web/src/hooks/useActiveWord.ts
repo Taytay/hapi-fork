@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { findActiveWord } from '@/utils/findActiveWord'
+import { useMemo } from 'react';
+import { findActiveWord } from '@/utils/findActiveWord';
 
 /**
  * Hook that detects the active word at the cursor position
@@ -8,13 +8,13 @@ import { findActiveWord } from '@/utils/findActiveWord'
 export function useActiveWord(
     text: string,
     selection: { start: number; end: number },
-    prefixes: string[] = ['@', '/']
+    prefixes: string[] = ['@', '/'],
 ) {
     return useMemo(() => {
-        const w = findActiveWord(text, selection, prefixes)
+        const w = findActiveWord(text, selection, prefixes);
         if (w) {
-            return w.activeWord
+            return w.activeWord;
         }
-        return null
-    }, [text, selection.start, selection.end, prefixes])
+        return null;
+    }, [text, selection.start, selection.end, prefixes, selection]);
 }

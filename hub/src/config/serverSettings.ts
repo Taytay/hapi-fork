@@ -8,28 +8,28 @@
  * it will be saved to settings.json for future use
  */
 
-import { getSettingsFile, readSettings, writeSettings } from './settings'
+import { getSettingsFile, readSettings, writeSettings } from './settings';
 
 export interface ServerSettings {
-    telegramBotToken: string | null
-    telegramNotification: boolean
-    listenHost: string
-    listenPort: number
-    publicUrl: string
-    corsOrigins: string[]
+    telegramBotToken: string | null;
+    telegramNotification: boolean;
+    listenHost: string;
+    listenPort: number;
+    publicUrl: string;
+    corsOrigins: string[];
 }
 
 export interface ServerSettingsResult {
-    settings: ServerSettings
+    settings: ServerSettings;
     sources: {
-        telegramBotToken: 'env' | 'file' | 'default'
-        telegramNotification: 'env' | 'file' | 'default'
-        listenHost: 'env' | 'file' | 'default'
-        listenPort: 'env' | 'file' | 'default'
-        publicUrl: 'env' | 'file' | 'default'
-        corsOrigins: 'env' | 'file' | 'default'
-    }
-    savedToFile: boolean
+        telegramBotToken: 'env' | 'file' | 'default';
+        telegramNotification: 'env' | 'file' | 'default';
+        listenHost: 'env' | 'file' | 'default';
+        listenPort: 'env' | 'file' | 'default';
+        publicUrl: 'env' | 'file' | 'default';
+        corsOrigins: 'env' | 'file' | 'default';
+    };
+    savedToFile: boolean;
 }
 
 /**
@@ -38,23 +38,23 @@ export interface ServerSettingsResult {
 function parseCorsOrigins(str: string): string[] {
     const entries = str
         .split(',')
-        .map(origin => origin.trim())
-        .filter(Boolean)
+        .map((origin) => origin.trim())
+        .filter(Boolean);
 
     if (entries.includes('*')) {
-        return ['*']
+        return ['*'];
     }
 
-    const normalized: string[] = []
+    const normalized: string[] = [];
     for (const entry of entries) {
         try {
-            normalized.push(new URL(entry).origin)
+            normalized.push(new URL(entry).origin);
         } catch {
             // Keep raw value if it's already an origin-like string
-            normalized.push(entry)
+            normalized.push(entry);
         }
     }
-    return normalized
+    return normalized;
 }
 
 /**
@@ -62,9 +62,9 @@ function parseCorsOrigins(str: string): string[] {
  */
 function deriveCorsOrigins(publicUrl: string): string[] {
     try {
-        return [new URL(publicUrl).origin]
+        return [new URL(publicUrl).origin];
     } catch {
-        return []
+        return [];
     }
 }
 
@@ -73,17 +73,15 @@ function deriveCorsOrigins(publicUrl: string): string[] {
  * Saves new env values to file when not already present
  */
 export async function loadServerSettings(dataDir: string): Promise<ServerSettingsResult> {
-    const settingsFile = getSettingsFile(dataDir)
-    const settings = await readSettings(settingsFile)
+    const settingsFile = getSettingsFile(dataDir);
+    const settings = await readSettings(settingsFile);
 
     // If settings file exists but couldn't be parsed, fail fast
     if (settings === null) {
-        throw new Error(
-            `Cannot read ${settingsFile}. Please fix or remove the file and restart.`
-        )
+        throw new Error(`Cannot read ${settingsFile}. Please fix or remove the file and restart.`);
     }
 
-    let needsSave = false
+    let needsSave = false;
     const sources: ServerSettingsResult['sources'] = {
         telegramBotToken: 'default',
         telegramNotification: 'default',
@@ -91,121 +89,121 @@ export async function loadServerSettings(dataDir: string): Promise<ServerSetting
         listenPort: 'default',
         publicUrl: 'default',
         corsOrigins: 'default',
-    }
+    };
     // telegramBotToken: env > file > null
-    let telegramBotToken: string | null = null
+    let telegramBotToken: string | null = null;
     if (process.env.TELEGRAM_BOT_TOKEN) {
-        telegramBotToken = process.env.TELEGRAM_BOT_TOKEN
-        sources.telegramBotToken = 'env'
+        telegramBotToken = process.env.TELEGRAM_BOT_TOKEN;
+        sources.telegramBotToken = 'env';
         if (settings.telegramBotToken === undefined) {
-            settings.telegramBotToken = telegramBotToken
-            needsSave = true
+            settings.telegramBotToken = telegramBotToken;
+            needsSave = true;
         }
     } else if (settings.telegramBotToken !== undefined) {
-        telegramBotToken = settings.telegramBotToken
-        sources.telegramBotToken = 'file'
+        telegramBotToken = settings.telegramBotToken;
+        sources.telegramBotToken = 'file';
     }
 
     // telegramNotification: env > file > true (default enabled for backward compatibility)
-    let telegramNotification = true
+    let telegramNotification = true;
     if (process.env.TELEGRAM_NOTIFICATION !== undefined) {
-        telegramNotification = process.env.TELEGRAM_NOTIFICATION === 'true'
-        sources.telegramNotification = 'env'
+        telegramNotification = process.env.TELEGRAM_NOTIFICATION === 'true';
+        sources.telegramNotification = 'env';
         if (settings.telegramNotification === undefined) {
-            settings.telegramNotification = telegramNotification
-            needsSave = true
+            settings.telegramNotification = telegramNotification;
+            needsSave = true;
         }
     } else if (settings.telegramNotification !== undefined) {
-        telegramNotification = settings.telegramNotification
-        sources.telegramNotification = 'file'
+        telegramNotification = settings.telegramNotification;
+        sources.telegramNotification = 'file';
     }
 
     // listenHost: env > file (new or old name) > default
-    let listenHost = '127.0.0.1'
+    let listenHost = '127.0.0.1';
     if (process.env.HAPI_LISTEN_HOST) {
-        listenHost = process.env.HAPI_LISTEN_HOST
-        sources.listenHost = 'env'
+        listenHost = process.env.HAPI_LISTEN_HOST;
+        sources.listenHost = 'env';
         if (settings.listenHost === undefined) {
-            settings.listenHost = listenHost
-            needsSave = true
+            settings.listenHost = listenHost;
+            needsSave = true;
         }
     } else if (settings.listenHost !== undefined) {
-        listenHost = settings.listenHost
-        sources.listenHost = 'file'
+        listenHost = settings.listenHost;
+        sources.listenHost = 'file';
     } else if (settings.webappHost !== undefined) {
         // Migrate from old field name
-        listenHost = settings.webappHost
-        sources.listenHost = 'file'
-        settings.listenHost = listenHost
-        delete settings.webappHost
-        needsSave = true
+        listenHost = settings.webappHost;
+        sources.listenHost = 'file';
+        settings.listenHost = listenHost;
+        delete settings.webappHost;
+        needsSave = true;
     }
 
     // listenPort: env > file (new or old name) > default
-    let listenPort = 3006
+    let listenPort = 3006;
     if (process.env.HAPI_LISTEN_PORT) {
-        const parsed = parseInt(process.env.HAPI_LISTEN_PORT, 10)
+        const parsed = parseInt(process.env.HAPI_LISTEN_PORT, 10);
         if (!Number.isFinite(parsed) || parsed <= 0) {
-            throw new Error('HAPI_LISTEN_PORT must be a valid port number')
+            throw new Error('HAPI_LISTEN_PORT must be a valid port number');
         }
-        listenPort = parsed
-        sources.listenPort = 'env'
+        listenPort = parsed;
+        sources.listenPort = 'env';
         if (settings.listenPort === undefined) {
-            settings.listenPort = listenPort
-            needsSave = true
+            settings.listenPort = listenPort;
+            needsSave = true;
         }
     } else if (settings.listenPort !== undefined) {
-        listenPort = settings.listenPort
-        sources.listenPort = 'file'
+        listenPort = settings.listenPort;
+        sources.listenPort = 'file';
     } else if (settings.webappPort !== undefined) {
         // Migrate from old field name
-        listenPort = settings.webappPort
-        sources.listenPort = 'file'
-        settings.listenPort = listenPort
-        delete settings.webappPort
-        needsSave = true
+        listenPort = settings.webappPort;
+        sources.listenPort = 'file';
+        settings.listenPort = listenPort;
+        delete settings.webappPort;
+        needsSave = true;
     }
 
     // publicUrl: env > file (new or old name) > default
-    let publicUrl = `http://localhost:${listenPort}`
+    let publicUrl = `http://localhost:${listenPort}`;
     if (process.env.HAPI_PUBLIC_URL) {
-        publicUrl = process.env.HAPI_PUBLIC_URL
-        sources.publicUrl = 'env'
+        publicUrl = process.env.HAPI_PUBLIC_URL;
+        sources.publicUrl = 'env';
         if (settings.publicUrl === undefined) {
-            settings.publicUrl = publicUrl
-            needsSave = true
+            settings.publicUrl = publicUrl;
+            needsSave = true;
         }
     } else if (settings.publicUrl !== undefined) {
-        publicUrl = settings.publicUrl
-        sources.publicUrl = 'file'
+        publicUrl = settings.publicUrl;
+        sources.publicUrl = 'file';
     } else if (settings.webappUrl !== undefined) {
         // Migrate from old field name
-        publicUrl = settings.webappUrl
-        sources.publicUrl = 'file'
-        settings.publicUrl = publicUrl
-        delete settings.webappUrl
-        needsSave = true
+        publicUrl = settings.webappUrl;
+        sources.publicUrl = 'file';
+        settings.publicUrl = publicUrl;
+        delete settings.webappUrl;
+        needsSave = true;
     }
 
     // corsOrigins: env > file > derived from publicUrl
-    let corsOrigins: string[]
+    let corsOrigins: string[];
     if (process.env.CORS_ORIGINS) {
-        corsOrigins = parseCorsOrigins(process.env.CORS_ORIGINS)
-        sources.corsOrigins = 'env'
+        corsOrigins = parseCorsOrigins(process.env.CORS_ORIGINS);
+        sources.corsOrigins = 'env';
         if (settings.corsOrigins === undefined) {
-            settings.corsOrigins = corsOrigins
-            needsSave = true
+            settings.corsOrigins = corsOrigins;
+            needsSave = true;
         }
     } else if (settings.corsOrigins !== undefined) {
-        corsOrigins = settings.corsOrigins
-        sources.corsOrigins = 'file'
+        corsOrigins = settings.corsOrigins;
+        sources.corsOrigins = 'file';
     } else {
-        corsOrigins = deriveCorsOrigins(publicUrl)
+        corsOrigins = deriveCorsOrigins(publicUrl);
     }
 
     // Save settings if any new values were added
     if (needsSave) {
-        await writeSettings(settingsFile, settings)
+        await writeSettings(settingsFile, settings);
     }
 
     return {
@@ -219,5 +217,5 @@ export async function loadServerSettings(dataDir: string): Promise<ServerSetting
         },
         sources,
         savedToFile: needsSave,
-    }
+    };
 }

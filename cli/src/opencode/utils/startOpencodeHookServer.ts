@@ -1,5 +1,5 @@
-import { createServer, type IncomingMessage, type ServerResponse, type Server } from 'node:http';
 import { randomBytes } from 'node:crypto';
+import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { logger } from '@/ui/logger';
 import type { OpencodeHookEvent } from '../types';
 
@@ -121,7 +121,7 @@ export async function startOpencodeHookServer(options: OpencodeHookServerOptions
                 stop: () => {
                     server.close();
                     logger.debug('[opencode-hook] Stopped');
-                }
+                },
             });
         });
 

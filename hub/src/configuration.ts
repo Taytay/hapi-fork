@@ -21,101 +21,101 @@
  * - DB_PATH: SQLite database path (default: {HAPI_HOME}/hapi.db)
  */
 
-import { existsSync, mkdirSync } from 'node:fs'
-import { homedir } from 'node:os'
-import { join } from 'node:path'
-import { getOrCreateCliApiToken } from './config/cliApiToken'
-import { getSettingsFile } from './config/settings'
-import { loadServerSettings, type ServerSettings, type ServerSettingsResult } from './config/serverSettings'
+import { existsSync, mkdirSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+import { getOrCreateCliApiToken } from './config/cliApiToken';
+import { loadServerSettings, type ServerSettings, type ServerSettingsResult } from './config/serverSettings';
+import { getSettingsFile } from './config/settings';
 
-export type ConfigSource = 'env' | 'file' | 'default'
+export type ConfigSource = 'env' | 'file' | 'default';
 
 export interface ConfigSources {
-    telegramBotToken: ConfigSource
-    telegramNotification: ConfigSource
-    listenHost: ConfigSource
-    listenPort: ConfigSource
-    publicUrl: ConfigSource
-    corsOrigins: ConfigSource
-    cliApiToken: 'env' | 'file' | 'generated'
+    telegramBotToken: ConfigSource;
+    telegramNotification: ConfigSource;
+    listenHost: ConfigSource;
+    listenPort: ConfigSource;
+    publicUrl: ConfigSource;
+    corsOrigins: ConfigSource;
+    cliApiToken: 'env' | 'file' | 'generated';
 }
 
 class Configuration {
     /** Telegram Bot API token */
-    public readonly telegramBotToken: string | null
+    public readonly telegramBotToken: string | null;
 
     /** Telegram bot enabled status (token present) */
-    public readonly telegramEnabled: boolean
+    public readonly telegramEnabled: boolean;
 
     /** Telegram notifications enabled */
-    public readonly telegramNotification: boolean
+    public readonly telegramNotification: boolean;
 
     /** CLI auth token (shared secret) */
-    public cliApiToken: string
+    public cliApiToken: string;
 
     /** Source of CLI API token */
-    public cliApiTokenSource: 'env' | 'file' | 'generated' | ''
+    public cliApiTokenSource: 'env' | 'file' | 'generated' | '';
 
     /** Whether CLI API token was newly generated (for first-run display) */
-    public cliApiTokenIsNew: boolean
+    public cliApiTokenIsNew: boolean;
 
     /** Path to settings.json file */
-    public readonly settingsFile: string
+    public readonly settingsFile: string;
 
     /** Data directory for credentials and state */
-    public readonly dataDir: string
+    public readonly dataDir: string;
 
     /** SQLite DB path */
-    public readonly dbPath: string
+    public readonly dbPath: string;
 
     /** Port for the HTTP service */
-    public readonly listenPort: number
+    public readonly listenPort: number;
 
     /** Host/IP to bind the HTTP service to */
-    public readonly listenHost: string
+    public readonly listenHost: string;
 
     /** Public URL for external access (e.g., Telegram Mini App) */
-    public readonly publicUrl: string
+    public readonly publicUrl: string;
 
     /** Allowed CORS origins for Mini App + Socket.IO (comma-separated env override) */
-    public readonly corsOrigins: string[]
+    public readonly corsOrigins: string[];
 
     /** Sources of each configuration value */
-    public readonly sources: ConfigSources
+    public readonly sources: ConfigSources;
 
     /** Private constructor - use createConfiguration() instead */
     private constructor(
         dataDir: string,
         dbPath: string,
         serverSettings: ServerSettings,
-        sources: ServerSettingsResult['sources']
+        sources: ServerSettingsResult['sources'],
     ) {
-        this.dataDir = dataDir
-        this.dbPath = dbPath
-        this.settingsFile = getSettingsFile(dataDir)
+        this.dataDir = dataDir;
+        this.dbPath = dbPath;
+        this.settingsFile = getSettingsFile(dataDir);
 
         // Apply server settings
-        this.telegramBotToken = serverSettings.telegramBotToken
-        this.telegramEnabled = Boolean(this.telegramBotToken)
-        this.telegramNotification = serverSettings.telegramNotification
-        this.listenHost = serverSettings.listenHost
-        this.listenPort = serverSettings.listenPort
-        this.publicUrl = serverSettings.publicUrl
-        this.corsOrigins = serverSettings.corsOrigins
+        this.telegramBotToken = serverSettings.telegramBotToken;
+        this.telegramEnabled = Boolean(this.telegramBotToken);
+        this.telegramNotification = serverSettings.telegramNotification;
+        this.listenHost = serverSettings.listenHost;
+        this.listenPort = serverSettings.listenPort;
+        this.publicUrl = serverSettings.publicUrl;
+        this.corsOrigins = serverSettings.corsOrigins;
 
         // CLI API token - will be set by _setCliApiToken() before create() returns
-        this.cliApiToken = ''
-        this.cliApiTokenSource = ''
-        this.cliApiTokenIsNew = false
+        this.cliApiToken = '';
+        this.cliApiTokenSource = '';
+        this.cliApiTokenIsNew = false;
 
         // Store sources for logging (cliApiToken will be set by _setCliApiToken)
         this.sources = {
             ...sources,
-        } as ConfigSources
+        } as ConfigSources;
 
         // Ensure data directory exists
         if (!existsSync(this.dataDir)) {
-            mkdirSync(this.dataDir, { recursive: true })
+            mkdirSync(this.dataDir, { recursive: true });
         }
     }
 
@@ -124,51 +124,44 @@ class Configuration {
         // 1. Determine data directory (env only - not persisted)
         const dataDir = process.env.HAPI_HOME
             ? process.env.HAPI_HOME.replace(/^~/, homedir())
-            : join(homedir(), '.hapi')
+            : join(homedir(), '.hapi');
 
         // Ensure data directory exists before loading settings
         if (!existsSync(dataDir)) {
-            mkdirSync(dataDir, { recursive: true })
+            mkdirSync(dataDir, { recursive: true });
         }
 
         // 2. Determine DB path (env only - not persisted)
-        const dbPath = process.env.DB_PATH
-            ? process.env.DB_PATH.replace(/^~/, homedir())
-            : join(dataDir, 'hapi.db')
+        const dbPath = process.env.DB_PATH ? process.env.DB_PATH.replace(/^~/, homedir()) : join(dataDir, 'hapi.db');
 
         // 3. Load hub settings (with persistence)
-        const settingsResult = await loadServerSettings(dataDir)
+        const settingsResult = await loadServerSettings(dataDir);
 
         if (settingsResult.savedToFile) {
-            console.log(`[Hub] Configuration saved to ${getSettingsFile(dataDir)}`)
+            console.log(`[Hub] Configuration saved to ${getSettingsFile(dataDir)}`);
         }
 
         // 4. Create configuration instance
-        const config = new Configuration(
-            dataDir,
-            dbPath,
-            settingsResult.settings,
-            settingsResult.sources
-        )
+        const config = new Configuration(dataDir, dbPath, settingsResult.settings, settingsResult.sources);
 
         // 5. Load CLI API token
-        const tokenResult = await getOrCreateCliApiToken(dataDir)
-        config._setCliApiToken(tokenResult.token, tokenResult.source, tokenResult.isNew)
+        const tokenResult = await getOrCreateCliApiToken(dataDir);
+        config._setCliApiToken(tokenResult.token, tokenResult.source, tokenResult.isNew);
 
-        return config
+        return config;
     }
 
     /** Set CLI API token (called during async initialization) */
     _setCliApiToken(token: string, source: 'env' | 'file' | 'generated', isNew: boolean): void {
-        this.cliApiToken = token
-        this.cliApiTokenSource = source
-        this.cliApiTokenIsNew = isNew
-        ;(this.sources as { cliApiToken: string }).cliApiToken = source
+        this.cliApiToken = token;
+        this.cliApiTokenSource = source;
+        this.cliApiTokenIsNew = isNew;
+        (this.sources as { cliApiToken: string }).cliApiToken = source;
     }
 }
 
 // Singleton instance (set by createConfiguration)
-let _configuration: Configuration | null = null
+let _configuration: Configuration | null = null;
 
 /**
  * Create and initialize configuration asynchronously.
@@ -176,10 +169,10 @@ let _configuration: Configuration | null = null
  */
 export async function createConfiguration(): Promise<Configuration> {
     if (_configuration) {
-        return _configuration
+        return _configuration;
     }
-    _configuration = await Configuration.create()
-    return _configuration
+    _configuration = await Configuration.create();
+    return _configuration;
 }
 
 /**
@@ -188,14 +181,14 @@ export async function createConfiguration(): Promise<Configuration> {
  */
 export function getConfiguration(): Configuration {
     if (!_configuration) {
-        throw new Error('Configuration not initialized. Call createConfiguration() first.')
+        throw new Error('Configuration not initialized. Call createConfiguration() first.');
     }
-    return _configuration
+    return _configuration;
 }
 
 // For compatibility - throws on access if not configured
 export const configuration = new Proxy({} as Configuration, {
     get(_, prop) {
-        return getConfiguration()[prop as keyof Configuration]
-    }
-})
+        return getConfiguration()[prop as keyof Configuration];
+    },
+});

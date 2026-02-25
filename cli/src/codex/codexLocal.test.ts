@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { filterResumeSubcommand } from './codexLocal';
 
 describe('filterResumeSubcommand', () => {
@@ -13,14 +13,12 @@ describe('filterResumeSubcommand', () => {
 
     it('filters resume subcommand with session ID', () => {
         expect(filterResumeSubcommand(['resume', 'abc-123'])).toEqual([]);
-        expect(filterResumeSubcommand(['resume', 'abc-123', '--model', 'gpt-4']))
-            .toEqual(['--model', 'gpt-4']);
+        expect(filterResumeSubcommand(['resume', 'abc-123', '--model', 'gpt-4'])).toEqual(['--model', 'gpt-4']);
     });
 
     it('filters resume subcommand without session ID', () => {
         expect(filterResumeSubcommand(['resume'])).toEqual([]);
-        expect(filterResumeSubcommand(['resume', '--model', 'gpt-4']))
-            .toEqual(['--model', 'gpt-4']);
+        expect(filterResumeSubcommand(['resume', '--model', 'gpt-4'])).toEqual(['--model', 'gpt-4']);
     });
 
     it('does not filter resume when it appears as flag value', () => {
@@ -30,7 +28,11 @@ describe('filterResumeSubcommand', () => {
 
     it('does not filter resume in middle of args', () => {
         // If resume appears after flags, it's not the subcommand position
-        expect(filterResumeSubcommand(['--model', 'gpt-4', 'resume', '123']))
-            .toEqual(['--model', 'gpt-4', 'resume', '123']);
+        expect(filterResumeSubcommand(['--model', 'gpt-4', 'resume', '123'])).toEqual([
+            '--model',
+            'gpt-4',
+            'resume',
+            '123',
+        ]);
     });
 });

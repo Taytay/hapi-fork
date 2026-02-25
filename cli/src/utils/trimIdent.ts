@@ -20,7 +20,7 @@ export function trimIdent(text: string): string {
     }, Infinity);
 
     // Remove the common leading spaces from each line
-    const trimmedLines = lines.map(line => line.slice(minSpaces));
+    const trimmedLines = lines.map((line) => line.slice(minSpaces));
 
     // Join the trimmed lines back into a single string
     return trimmedLines.join('\n');

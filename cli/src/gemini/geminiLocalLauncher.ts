@@ -1,9 +1,9 @@
-import { geminiLocal } from './geminiLocal';
-import { GeminiSession } from './session';
-import { createGeminiSessionScanner } from './utils/sessionScanner';
-import type { PermissionMode } from './types';
 import { randomUUID } from 'node:crypto';
 import { BaseLocalLauncher } from '@/modules/common/launcher/BaseLocalLauncher';
+import { geminiLocal } from './geminiLocal';
+import type { GeminiSession } from './session';
+import type { PermissionMode } from './types';
+import { createGeminiSessionScanner } from './utils/sessionScanner';
 
 type GeminiScannerHandle = Awaited<ReturnType<typeof createGeminiSessionScanner>>;
 
@@ -23,7 +23,7 @@ export async function geminiLocalLauncher(
         model?: string;
         allowedTools?: string[];
         hookSettingsPath?: string;
-    }
+    },
 ): Promise<'switch' | 'exit'> {
     const launcher = new BaseLocalLauncher({
         label: 'gemini-local',
@@ -40,7 +40,7 @@ export async function geminiLocalLauncher(
                 model: opts.model,
                 approvalMode: mapApprovalMode(session.getPermissionMode() as PermissionMode | undefined),
                 allowedTools: opts.allowedTools,
-                hookSettingsPath: opts.hookSettingsPath
+                hookSettingsPath: opts.hookSettingsPath,
             });
         },
         sendFailureMessage: (message) => {
@@ -48,7 +48,7 @@ export async function geminiLocalLauncher(
         },
         recordLocalLaunchFailure: (message, exitReason) => {
             session.recordLocalLaunchFailure(message, exitReason);
-        }
+        },
     });
 
     let scanner: GeminiScannerHandle | null = null;
@@ -62,7 +62,7 @@ export async function geminiLocalLauncher(
             session.sendCodexMessage({
                 type: 'message',
                 message: message.content,
-                id: randomUUID()
+                id: randomUUID(),
             });
         }
     };
@@ -75,7 +75,7 @@ export async function geminiLocalLauncher(
         scanner = await createGeminiSessionScanner({
             transcriptPath,
             onMessage: handleTranscriptMessage,
-            onSessionId: (sessionId) => session.onSessionFound(sessionId)
+            onSessionId: (sessionId) => session.onSessionFound(sessionId),
         });
     };
 

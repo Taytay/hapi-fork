@@ -1,5 +1,7 @@
 # HAPI
 
+This is a "Semantic fork" of Hapi using the help of Coding agents like Claude Code to implement changes. Some of the changes are opinionated/personal, and might or might not be incorporated into the upstream at the discretion of Hapi's original (awesome) author: github.com/tiann/
+
 Run official Claude Code / Codex / Gemini / OpenCode sessions locally and control them remotely through a Web / PWA / Telegram Mini App.
 
 > **Why HAPI?** HAPI is a local-first alternative to Happy. See [Why Not Happy?](docs/guide/why-hapi.md) for the key differences.

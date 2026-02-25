@@ -1,17 +1,17 @@
-import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process';
+import { type ChildProcessWithoutNullStreams, spawn } from 'node:child_process';
 import { logger } from '@/ui/logger';
 import { killProcessByChildProcess } from '@/utils/process';
 import type {
     InitializeParams,
     InitializeResponse,
-    ThreadStartParams,
-    ThreadStartResponse,
     ThreadResumeParams,
     ThreadResumeResponse,
+    ThreadStartParams,
+    ThreadStartResponse,
+    TurnInterruptParams,
+    TurnInterruptResponse,
     TurnStartParams,
     TurnStartResponse,
-    TurnInterruptParams,
-    TurnInterruptResponse
 } from './appServerTypes';
 
 type JsonRpcLiteRequest = {
@@ -74,13 +74,16 @@ export class CodexAppServerClient {
         }
 
         this.process = spawn('codex', ['app-server'], {
-            env: Object.keys(process.env).reduce((acc, key) => {
-                const value = process.env[key];
-                if (typeof value === 'string') acc[key] = value;
-                return acc;
-            }, {} as Record<string, string>),
+            env: Object.keys(process.env).reduce(
+                (acc, key) => {
+                    const value = process.env[key];
+                    if (typeof value === 'string') acc[key] = value;
+                    return acc;
+                },
+                {} as Record<string, string>,
+            ),
             stdio: ['pipe', 'pipe', 'pipe'],
-            shell: process.platform === 'win32'
+            shell: process.platform === 'win32',
         });
 
         this.process.stdout.setEncoding('utf8');
@@ -106,10 +109,11 @@ export class CodexAppServerClient {
         this.process.on('error', (error) => {
             logger.debug('[CodexAppServer] Process error', error);
             const message = error instanceof Error ? error.message : String(error);
-            this.rejectAllPending(new Error(
-                `Failed to spawn codex app-server: ${message}. Is it installed and on PATH?`,
-                { cause: error }
-            ));
+            this.rejectAllPending(
+                new Error(`Failed to spawn codex app-server: ${message}. Is it installed and on PATH?`, {
+                    cause: error,
+                }),
+            );
             this.connected = false;
             this.resetParserState();
             this.process = null;
@@ -136,7 +140,7 @@ export class CodexAppServerClient {
     async startThread(params: ThreadStartParams, options?: { signal?: AbortSignal }): Promise<ThreadStartResponse> {
         const response = await this.sendRequest('thread/start', params, {
             signal: options?.signal,
-            timeoutMs: CodexAppServerClient.DEFAULT_TIMEOUT_MS
+            timeoutMs: CodexAppServerClient.DEFAULT_TIMEOUT_MS,
         });
         return response as ThreadStartResponse;
     }
@@ -144,7 +148,7 @@ export class CodexAppServerClient {
     async resumeThread(params: ThreadResumeParams, options?: { signal?: AbortSignal }): Promise<ThreadResumeResponse> {
         const response = await this.sendRequest('thread/resume', params, {
             signal: options?.signal,
-            timeoutMs: CodexAppServerClient.DEFAULT_TIMEOUT_MS
+            timeoutMs: CodexAppServerClient.DEFAULT_TIMEOUT_MS,
         });
         return response as ThreadResumeResponse;
     }
@@ -152,14 +156,14 @@ export class CodexAppServerClient {
     async startTurn(params: TurnStartParams, options?: { signal?: AbortSignal }): Promise<TurnStartResponse> {
         const response = await this.sendRequest('turn/start', params, {
             signal: options?.signal,
-            timeoutMs: CodexAppServerClient.DEFAULT_TIMEOUT_MS
+            timeoutMs: CodexAppServerClient.DEFAULT_TIMEOUT_MS,
         });
         return response as TurnStartResponse;
     }
 
     async interruptTurn(params: TurnInterruptParams): Promise<TurnInterruptResponse> {
         const response = await this.sendRequest('turn/interrupt', params, {
-            timeoutMs: 30_000
+            timeoutMs: 30_000,
         });
         return response as TurnInterruptResponse;
     }
@@ -191,7 +195,7 @@ export class CodexAppServerClient {
     private async sendRequest(
         method: string,
         params?: unknown,
-        options?: { signal?: AbortSignal; timeoutMs?: number }
+        options?: { signal?: AbortSignal; timeoutMs?: number },
     ): Promise<unknown> {
         if (!this.connected) {
             await this.connect();
@@ -201,7 +205,7 @@ export class CodexAppServerClient {
         const payload: JsonRpcLiteRequest = {
             id,
             method,
-            params
+            params,
         };
 
         const timeoutMs = options?.timeoutMs ?? CodexAppServerClient.DEFAULT_TIMEOUT_MS;
@@ -255,7 +259,7 @@ export class CodexAppServerClient {
                     cleanup();
                     reject(error);
                 },
-                cleanup
+                cleanup,
             });
 
             this.writePayload(payload);
@@ -314,7 +318,7 @@ export class CodexAppServerClient {
                 void this.handleIncomingRequest({
                     id: requestId,
                     method,
-                    params
+                    params,
                 });
                 return;
             }
@@ -329,9 +333,7 @@ export class CodexAppServerClient {
     }
 
     private async handleIncomingRequest(request: { id: unknown; method: string; params?: unknown }): Promise<void> {
-        const responseId = typeof request.id === 'number' || typeof request.id === 'string'
-            ? request.id
-            : null;
+        const responseId = typeof request.id === 'number' || typeof request.id === 'string' ? request.id : null;
         const handler = this.requestHandlers.get(request.method);
 
         if (!handler) {
@@ -339,8 +341,8 @@ export class CodexAppServerClient {
                 id: responseId,
                 error: {
                     code: -32601,
-                    message: `Method not found: ${request.method}`
-                }
+                    message: `Method not found: ${request.method}`,
+                },
             } satisfies JsonRpcLiteResponse);
             return;
         }
@@ -349,15 +351,15 @@ export class CodexAppServerClient {
             const result = await handler(request.params ?? null);
             this.writePayload({
                 id: responseId,
-                result
+                result,
             } satisfies JsonRpcLiteResponse);
         } catch (error) {
             this.writePayload({
                 id: responseId,
                 error: {
                     code: -32603,
-                    message: error instanceof Error ? error.message : 'Internal error'
-                }
+                    message: error instanceof Error ? error.message : 'Internal error',
+                },
             } satisfies JsonRpcLiteResponse);
         }
     }

@@ -1,22 +1,22 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { useParams, useSearch } from '@tanstack/react-router'
-import type { GitCommandResponse } from '@/types/api'
-import { FileIcon } from '@/components/FileIcon'
-import { CopyIcon, CheckIcon } from '@/components/icons'
-import { useAppContext } from '@/lib/app-context'
-import { useAppGoBack } from '@/hooks/useAppGoBack'
-import { useCopyToClipboard } from '@/hooks/useCopyToClipboard'
-import { queryKeys } from '@/lib/query-keys'
-import { langAlias, useShikiHighlighter } from '@/lib/shiki'
-import { decodeBase64 } from '@/lib/utils'
+import { useQuery } from '@tanstack/react-query';
+import { useParams, useSearch } from '@tanstack/react-router';
+import { useEffect, useMemo, useState } from 'react';
+import { FileIcon } from '@/components/FileIcon';
+import { CheckIcon, CopyIcon } from '@/components/icons';
+import { useAppGoBack } from '@/hooks/useAppGoBack';
+import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
+import { useAppContext } from '@/lib/app-context';
+import { queryKeys } from '@/lib/query-keys';
+import { langAlias, useShikiHighlighter } from '@/lib/shiki';
+import { decodeBase64 } from '@/lib/utils';
+import type { GitCommandResponse } from '@/types/api';
 
-const MAX_COPYABLE_FILE_BYTES = 1_000_000
+const MAX_COPYABLE_FILE_BYTES = 1_000_000;
 
 function decodePath(value: string): string {
-    if (!value) return ''
-    const decoded = decodeBase64(value)
-    return decoded.ok ? decoded.text : value
+    if (!value) return '';
+    const decoded = decodeBase64(value);
+    return decoded.ok ? decoded.text : value;
 }
 
 function BackIcon(props: { className?: string }) {
@@ -35,165 +35,166 @@ function BackIcon(props: { className?: string }) {
         >
             <polyline points="15 18 9 12 15 6" />
         </svg>
-    )
+    );
 }
 
 function DiffDisplay(props: { diffContent: string }) {
-    const lines = props.diffContent.split('\n')
+    const lines = props.diffContent.split('\n');
 
     return (
         <div className="overflow-hidden rounded-md border border-[var(--app-border)] bg-[var(--app-bg)]">
             {lines.map((line, index) => {
-                const isAdd = line.startsWith('+') && !line.startsWith('+++')
-                const isRemove = line.startsWith('-') && !line.startsWith('---')
-                const isHunk = line.startsWith('@@')
-                const isHeader = line.startsWith('+++') || line.startsWith('---')
+                const isAdd = line.startsWith('+') && !line.startsWith('+++');
+                const isRemove = line.startsWith('-') && !line.startsWith('---');
+                const isHunk = line.startsWith('@@');
+                const isHeader = line.startsWith('+++') || line.startsWith('---');
 
                 const className = [
                     'whitespace-pre-wrap px-3 py-0.5 text-xs font-mono',
                     isAdd ? 'bg-[var(--app-diff-added-bg)] text-[var(--app-diff-added-text)]' : '',
                     isRemove ? 'bg-[var(--app-diff-removed-bg)] text-[var(--app-diff-removed-text)]' : '',
                     isHunk ? 'bg-[var(--app-subtle-bg)] text-[var(--app-hint)] font-semibold' : '',
-                    isHeader ? 'text-[var(--app-hint)] font-semibold' : ''
-                ].filter(Boolean).join(' ')
+                    isHeader ? 'text-[var(--app-hint)] font-semibold' : '',
+                ]
+                    .filter(Boolean)
+                    .join(' ');
 
                 const style = isAdd
                     ? { borderLeft: '2px solid var(--app-git-staged-color)' }
                     : isRemove
-                        ? { borderLeft: '2px solid var(--app-git-deleted-color)' }
-                        : undefined
+                      ? { borderLeft: '2px solid var(--app-git-deleted-color)' }
+                      : undefined;
 
                 return (
                     <div key={`${index}-${line}`} className={className} style={style}>
                         {line || ' '}
                     </div>
-                )
+                );
             })}
         </div>
-    )
+    );
 }
 
 function FileContentSkeleton() {
-    const widths = ['w-full', 'w-11/12', 'w-5/6', 'w-3/4', 'w-2/3', 'w-4/5']
+    const widths = ['w-full', 'w-11/12', 'w-5/6', 'w-3/4', 'w-2/3', 'w-4/5'];
 
     return (
         <div role="status" aria-live="polite">
             <span className="sr-only">Loading file…</span>
             <div className="animate-pulse space-y-2 rounded-md border border-[var(--app-border)] bg-[var(--app-code-bg)] p-3">
                 {Array.from({ length: 12 }).map((_, index) => (
-                    <div key={`file-skeleton-${index}`} className={`h-3 ${widths[index % widths.length]} rounded bg-[var(--app-subtle-bg)]`} />
+                    <div
+                        key={`file-skeleton-${index}`}
+                        className={`h-3 ${widths[index % widths.length]} rounded bg-[var(--app-subtle-bg)]`}
+                    />
                 ))}
             </div>
         </div>
-    )
+    );
 }
 
 function resolveLanguage(path: string): string | undefined {
-    const parts = path.split('.')
-    if (parts.length <= 1) return undefined
-    const ext = parts[parts.length - 1]?.toLowerCase()
-    if (!ext) return undefined
-    return langAlias[ext] ?? ext
+    const parts = path.split('.');
+    if (parts.length <= 1) return undefined;
+    const ext = parts[parts.length - 1]?.toLowerCase();
+    if (!ext) return undefined;
+    return langAlias[ext] ?? ext;
 }
 
 function getUtf8ByteLength(value: string): number {
-    return new TextEncoder().encode(value).length
+    return new TextEncoder().encode(value).length;
 }
 
 function isBinaryContent(content: string): boolean {
-    if (!content) return false
-    if (content.includes('\0')) return true
+    if (!content) return false;
+    if (content.includes('\0')) return true;
     const nonPrintable = content.split('').filter((char) => {
-        const code = char.charCodeAt(0)
-        return code < 32 && code !== 9 && code !== 10 && code !== 13
-    }).length
-    return nonPrintable / content.length > 0.1
+        const code = char.charCodeAt(0);
+        return code < 32 && code !== 9 && code !== 10 && code !== 13;
+    }).length;
+    return nonPrintable / content.length > 0.1;
 }
 
 function extractCommandError(result: GitCommandResponse | undefined): string | null {
-    if (!result) return null
-    if (result.success) return null
-    return result.error ?? result.stderr ?? 'Failed to load diff'
+    if (!result) return null;
+    if (result.success) return null;
+    return result.error ?? result.stderr ?? 'Failed to load diff';
 }
 
 export default function FilePage() {
-    const { api } = useAppContext()
-    const { copied: pathCopied, copy: copyPath } = useCopyToClipboard()
-    const { copied: contentCopied, copy: copyContent } = useCopyToClipboard()
-    const goBack = useAppGoBack()
-    const { sessionId } = useParams({ from: '/sessions/$sessionId/file' })
-    const search = useSearch({ from: '/sessions/$sessionId/file' })
-    const encodedPath = typeof search.path === 'string' ? search.path : ''
-    const staged = search.staged
+    const { api } = useAppContext();
+    const { copied: pathCopied, copy: copyPath } = useCopyToClipboard();
+    const { copied: contentCopied, copy: copyContent } = useCopyToClipboard();
+    const goBack = useAppGoBack();
+    const { sessionId } = useParams({ from: '/sessions/$sessionId/file' });
+    const search = useSearch({ from: '/sessions/$sessionId/file' });
+    const encodedPath = typeof search.path === 'string' ? search.path : '';
+    const staged = search.staged;
 
-    const filePath = useMemo(() => decodePath(encodedPath), [encodedPath])
-    const fileName = filePath.split('/').pop() || filePath || 'File'
+    const filePath = useMemo(() => decodePath(encodedPath), [encodedPath]);
+    const fileName = filePath.split('/').pop() || filePath || 'File';
 
     const diffQuery = useQuery({
         queryKey: queryKeys.gitFileDiff(sessionId, filePath, staged),
         queryFn: async () => {
             if (!api || !sessionId || !filePath) {
-                throw new Error('Missing session or path')
+                throw new Error('Missing session or path');
             }
-            return await api.getGitDiffFile(sessionId, filePath, staged)
+            return await api.getGitDiffFile(sessionId, filePath, staged);
         },
-        enabled: Boolean(api && sessionId && filePath)
-    })
+        enabled: Boolean(api && sessionId && filePath),
+    });
 
     const fileQuery = useQuery({
         queryKey: queryKeys.sessionFile(sessionId, filePath),
         queryFn: async () => {
             if (!api || !sessionId || !filePath) {
-                throw new Error('Missing session or path')
+                throw new Error('Missing session or path');
             }
-            return await api.readSessionFile(sessionId, filePath)
+            return await api.readSessionFile(sessionId, filePath);
         },
-        enabled: Boolean(api && sessionId && filePath)
-    })
+        enabled: Boolean(api && sessionId && filePath),
+    });
 
-    const diffContent = diffQuery.data?.success ? (diffQuery.data.stdout ?? '') : ''
-    const diffError = extractCommandError(diffQuery.data)
-    const diffSuccess = diffQuery.data?.success === true
-    const diffFailed = diffQuery.data?.success === false
+    const diffContent = diffQuery.data?.success ? (diffQuery.data.stdout ?? '') : '';
+    const diffError = extractCommandError(diffQuery.data);
+    const diffSuccess = diffQuery.data?.success === true;
+    const diffFailed = diffQuery.data?.success === false;
 
-    const fileContentResult = fileQuery.data
-    const decodedContentResult = fileContentResult?.success && fileContentResult.content
-        ? decodeBase64(fileContentResult.content)
-        : { text: '', ok: true }
-    const decodedContent = decodedContentResult.text
-    const binaryFile = fileContentResult?.success
-        ? !decodedContentResult.ok || isBinaryContent(decodedContent)
-        : false
+    const fileContentResult = fileQuery.data;
+    const decodedContentResult =
+        fileContentResult?.success && fileContentResult.content
+            ? decodeBase64(fileContentResult.content)
+            : { text: '', ok: true };
+    const decodedContent = decodedContentResult.text;
+    const binaryFile = fileContentResult?.success ? !decodedContentResult.ok || isBinaryContent(decodedContent) : false;
 
-    const language = useMemo(() => resolveLanguage(filePath), [filePath])
-    const highlighted = useShikiHighlighter(decodedContent, language)
-    const contentSizeBytes = useMemo(
-        () => (decodedContent ? getUtf8ByteLength(decodedContent) : 0),
-        [decodedContent]
-    )
-    const canCopyContent = fileContentResult?.success === true
-        && !binaryFile
-        && decodedContent.length > 0
-        && contentSizeBytes <= MAX_COPYABLE_FILE_BYTES
+    const language = useMemo(() => resolveLanguage(filePath), [filePath]);
+    const highlighted = useShikiHighlighter(decodedContent, language);
+    const contentSizeBytes = useMemo(() => (decodedContent ? getUtf8ByteLength(decodedContent) : 0), [decodedContent]);
+    const canCopyContent =
+        fileContentResult?.success === true &&
+        !binaryFile &&
+        decodedContent.length > 0 &&
+        contentSizeBytes <= MAX_COPYABLE_FILE_BYTES;
 
-    const [displayMode, setDisplayMode] = useState<'diff' | 'file'>('diff')
+    const [displayMode, setDisplayMode] = useState<'diff' | 'file'>('diff');
 
     useEffect(() => {
         if (diffSuccess && !diffContent) {
-            setDisplayMode('file')
-            return
+            setDisplayMode('file');
+            return;
         }
         if (diffFailed) {
-            setDisplayMode('file')
+            setDisplayMode('file');
         }
-    }, [diffSuccess, diffFailed, diffContent])
+    }, [diffSuccess, diffFailed, diffContent]);
 
-    const loading = diffQuery.isLoading || fileQuery.isLoading
-    const fileError = fileContentResult && !fileContentResult.success
-        ? (fileContentResult.error ?? 'Failed to read file')
-        : null
-    const missingPath = !filePath
-    const diffErrorMessage = diffError ? `Diff unavailable: ${diffError}` : null
+    const loading = diffQuery.isLoading || fileQuery.isLoading;
+    const fileError =
+        fileContentResult && !fileContentResult.success ? (fileContentResult.error ?? 'Failed to read file') : null;
+    const missingPath = !filePath;
+    const diffErrorMessage = diffError ? `Diff unavailable: ${diffError}` : null;
 
     return (
         <div className="flex h-full flex-col">
@@ -280,7 +281,11 @@ export default function FilePage() {
                                         className="absolute right-2 top-2 z-10 rounded p-1 text-[var(--app-hint)] hover:bg-[var(--app-subtle-bg)] hover:text-[var(--app-fg)] transition-colors"
                                         title="Copy file content"
                                     >
-                                        {contentCopied ? <CheckIcon className="h-3.5 w-3.5" /> : <CopyIcon className="h-3.5 w-3.5" />}
+                                        {contentCopied ? (
+                                            <CheckIcon className="h-3.5 w-3.5" />
+                                        ) : (
+                                            <CopyIcon className="h-3.5 w-3.5" />
+                                        )}
                                     </button>
                                 ) : null}
                                 <pre className="shiki overflow-auto rounded-md bg-[var(--app-code-bg)] p-3 pr-8 text-xs font-mono">
@@ -296,5 +301,5 @@ export default function FilePage() {
                 </div>
             </div>
         </div>
-    )
+    );
 }

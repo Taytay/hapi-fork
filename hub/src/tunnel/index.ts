@@ -1,1 +1,1 @@
-export { TunnelManager, type TunnelConfig } from './tunnelManager'
+export { type TunnelConfig, TunnelManager } from './tunnelManager';

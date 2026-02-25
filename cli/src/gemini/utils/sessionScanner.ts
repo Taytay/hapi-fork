@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
-import { logger } from '@/ui/logger';
 import {
     BaseSessionScanner,
-    SessionFileScanEntry,
-    SessionFileScanResult,
-    SessionFileScanStats
+    type SessionFileScanEntry,
+    type SessionFileScanResult,
+    type SessionFileScanStats,
 } from '@/modules/common/session/BaseSessionScanner';
+import { logger } from '@/ui/logger';
 
 type GeminiTranscriptMessage = {
     id?: string;
@@ -28,7 +28,7 @@ export async function createGeminiSessionScanner(opts: {
     const scanner = new GeminiSessionScanner({
         transcriptPath: opts.transcriptPath,
         onMessage: opts.onMessage,
-        onSessionId: opts.onSessionId
+        onSessionId: opts.onSessionId,
     });
 
     await scanner.start();
@@ -39,7 +39,7 @@ export async function createGeminiSessionScanner(opts: {
         },
         onNewSession: (transcriptPath: string) => {
             void scanner.setTranscriptPath(transcriptPath);
-        }
+        },
     };
 }
 
@@ -86,7 +86,10 @@ class GeminiSessionScanner extends BaseSessionScanner<GeminiTranscriptMessage> {
         return Boolean(this.transcriptPath && filePath === this.transcriptPath);
     }
 
-    protected async parseSessionFile(filePath: string, cursor: number): Promise<SessionFileScanResult<GeminiTranscriptMessage>> {
+    protected async parseSessionFile(
+        filePath: string,
+        cursor: number,
+    ): Promise<SessionFileScanResult<GeminiTranscriptMessage>> {
         const transcript = await readTranscript(filePath);
         if (!transcript) {
             return { events: [], nextCursor: cursor };
@@ -107,11 +110,14 @@ class GeminiSessionScanner extends BaseSessionScanner<GeminiTranscriptMessage> {
 
         return {
             events,
-            nextCursor: messages.length
+            nextCursor: messages.length,
         };
     }
 
-    protected generateEventKey(event: GeminiTranscriptMessage, context: { filePath: string; lineIndex?: number }): string {
+    protected generateEventKey(
+        event: GeminiTranscriptMessage,
+        context: { filePath: string; lineIndex?: number },
+    ): string {
         if (event.id && event.id.length > 0) {
             return `${context.filePath}:${event.id}`;
         }
@@ -162,12 +168,14 @@ async function readTranscript(filePath: string): Promise<GeminiTranscript | null
         }
         const record = parsed as Record<string, unknown>;
         const messages = Array.isArray(record.messages)
-            ? record.messages.filter((value): value is GeminiTranscriptMessage => Boolean(value && typeof value === 'object'))
+            ? record.messages.filter((value): value is GeminiTranscriptMessage =>
+                  Boolean(value && typeof value === 'object'),
+              )
             : [];
         const sessionId = typeof record.sessionId === 'string' ? record.sessionId : undefined;
         return {
             sessionId,
-            messages
+            messages,
         };
     } catch (error) {
         logger.debug(`[gemini-session-scanner] Failed to read transcript ${filePath}: ${error}`);

@@ -1,11 +1,10 @@
-import { ApiClient, ApiSessionClient } from '@/lib';
-import { MessageQueue2 } from '@/utils/MessageQueue2';
-import { logger } from '@/ui/logger';
+import type { LocalLaunchExitReason } from '@/agent/localLaunchPolicy';
 import { AgentSessionBase } from '@/agent/sessionBase';
 import type { SessionModelMode } from '@/api/types';
-import type { EnhancedMode } from './loop';
-import type { PermissionMode } from './loop';
-import type { LocalLaunchExitReason } from '@/agent/localLaunchPolicy';
+import type { ApiClient, ApiSessionClient } from '@/lib';
+import { logger } from '@/ui/logger';
+import type { MessageQueue2 } from '@/utils/MessageQueue2';
+import type { EnhancedMode, PermissionMode } from './loop';
 
 type LocalLaunchFailure = {
     message: string;
@@ -54,10 +53,10 @@ export class Session extends AgentSessionBase<EnhancedMode> {
             sessionIdLabel: 'Claude Code',
             applySessionIdToMetadata: (metadata, sessionId) => ({
                 ...metadata,
-                claudeSessionId: sessionId
+                claudeSessionId: sessionId,
             }),
             permissionMode: opts.permissionMode,
-            modelMode: opts.modelMode
+            modelMode: opts.modelMode,
         });
 
         this.claudeEnvVars = opts.claudeEnvVars;

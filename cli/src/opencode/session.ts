@@ -1,8 +1,8 @@
-import { ApiClient, ApiSessionClient } from '@/lib';
-import { MessageQueue2 } from '@/utils/MessageQueue2';
-import { AgentSessionBase } from '@/agent/sessionBase';
-import type { OpencodeHookEvent, OpencodeMode, PermissionMode } from './types';
 import type { LocalLaunchExitReason } from '@/agent/localLaunchPolicy';
+import { AgentSessionBase } from '@/agent/sessionBase';
+import type { ApiClient, ApiSessionClient } from '@/lib';
+import type { MessageQueue2 } from '@/utils/MessageQueue2';
+import type { OpencodeHookEvent, OpencodeMode, PermissionMode } from './types';
 
 type LocalLaunchFailure = {
     message: string;
@@ -42,9 +42,9 @@ export class OpencodeSession extends AgentSessionBase<OpencodeMode> {
             sessionIdLabel: 'OpenCode',
             applySessionIdToMetadata: (metadata, sessionId) => ({
                 ...metadata,
-                opencodeSessionId: sessionId
+                opencodeSessionId: sessionId,
             }),
-            permissionMode: opts.permissionMode
+            permissionMode: opts.permissionMode,
         });
 
         this.startedBy = opts.startedBy;

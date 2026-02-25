@@ -70,33 +70,23 @@ export function readGeminiLocalConfig(): GeminiLocalConfig {
     const oauthFile = readJsonFile(OAUTH_PATH);
 
     const model = settingsFile ? extractModel(settingsFile) : undefined;
-    const token = oauthFile
-        ? extractToken(oauthFile)
-        : configFile
-            ? extractToken(configFile)
-            : undefined;
+    const token = oauthFile ? extractToken(oauthFile) : configFile ? extractToken(configFile) : undefined;
 
     return {
         model,
-        token
+        token,
     };
 }
 
-export function resolveGeminiRuntimeConfig(opts: {
-    model?: string;
+export function resolveGeminiRuntimeConfig(opts: { model?: string; token?: string } = {}): {
+    model: string;
     token?: string;
-} = {}): { model: string; token?: string } {
+} {
     const local = readGeminiLocalConfig();
 
-    const model = opts.model
-        ?? process.env[GEMINI_MODEL_ENV]
-        ?? local.model
-        ?? DEFAULT_GEMINI_MODEL;
+    const model = opts.model ?? process.env[GEMINI_MODEL_ENV] ?? local.model ?? DEFAULT_GEMINI_MODEL;
 
-    const token = opts.token
-        ?? process.env[GEMINI_API_KEY_ENV]
-        ?? process.env[GOOGLE_API_KEY_ENV]
-        ?? local.token;
+    const token = opts.token ?? process.env[GEMINI_API_KEY_ENV] ?? process.env[GOOGLE_API_KEY_ENV] ?? local.token;
 
     return { model, token };
 }
@@ -108,7 +98,7 @@ export function buildGeminiEnv(opts: {
     cwd?: string;
 }): NodeJS.ProcessEnv {
     const env: NodeJS.ProcessEnv = {
-        ...process.env
+        ...process.env,
     };
 
     if (opts.model) {

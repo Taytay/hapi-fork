@@ -16,7 +16,7 @@ export class AsyncLock {
             this.permits = this.permits - 1;
             return;
         }
-        await new Promise<boolean>(resolve => this.promiseResolverQueue.push(resolve));
+        await new Promise<boolean>((resolve) => this.promiseResolverQueue.push(resolve));
     }
 
     private unlock() {

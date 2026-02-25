@@ -1,6 +1,4 @@
-import type { Database } from 'bun:sqlite'
-
-import type { StoredSession, VersionedUpdateResult } from './types'
+import type { Database } from 'bun:sqlite';
 import {
     deleteSession,
     getOrCreateSession,
@@ -10,18 +8,19 @@ import {
     getSessionsByNamespace,
     setSessionTodos,
     updateSessionAgentState,
-    updateSessionMetadata
-} from './sessions'
+    updateSessionMetadata,
+} from './sessions';
+import type { StoredSession, VersionedUpdateResult } from './types';
 
 export class SessionStore {
-    private readonly db: Database
+    private readonly db: Database;
 
     constructor(db: Database) {
-        this.db = db
+        this.db = db;
     }
 
     getOrCreateSession(tag: string, metadata: unknown, agentState: unknown, namespace: string): StoredSession {
-        return getOrCreateSession(this.db, tag, metadata, agentState, namespace)
+        return getOrCreateSession(this.db, tag, metadata, agentState, namespace);
     }
 
     updateSessionMetadata(
@@ -29,41 +28,41 @@ export class SessionStore {
         metadata: unknown,
         expectedVersion: number,
         namespace: string,
-        options?: { touchUpdatedAt?: boolean }
+        options?: { touchUpdatedAt?: boolean },
     ): VersionedUpdateResult<unknown | null> {
-        return updateSessionMetadata(this.db, id, metadata, expectedVersion, namespace, options)
+        return updateSessionMetadata(this.db, id, metadata, expectedVersion, namespace, options);
     }
 
     updateSessionAgentState(
         id: string,
         agentState: unknown,
         expectedVersion: number,
-        namespace: string
+        namespace: string,
     ): VersionedUpdateResult<unknown | null> {
-        return updateSessionAgentState(this.db, id, agentState, expectedVersion, namespace)
+        return updateSessionAgentState(this.db, id, agentState, expectedVersion, namespace);
     }
 
     setSessionTodos(id: string, todos: unknown, todosUpdatedAt: number, namespace: string): boolean {
-        return setSessionTodos(this.db, id, todos, todosUpdatedAt, namespace)
+        return setSessionTodos(this.db, id, todos, todosUpdatedAt, namespace);
     }
 
     getSession(id: string): StoredSession | null {
-        return getSession(this.db, id)
+        return getSession(this.db, id);
     }
 
     getSessionByNamespace(id: string, namespace: string): StoredSession | null {
-        return getSessionByNamespace(this.db, id, namespace)
+        return getSessionByNamespace(this.db, id, namespace);
     }
 
     getSessions(): StoredSession[] {
-        return getSessions(this.db)
+        return getSessions(this.db);
     }
 
     getSessionsByNamespace(namespace: string): StoredSession[] {
-        return getSessionsByNamespace(this.db, namespace)
+        return getSessionsByNamespace(this.db, namespace);
     }
 
     deleteSession(id: string, namespace: string): boolean {
-        return deleteSession(this.db, id, namespace)
+        return deleteSession(this.db, id, namespace);
     }
 }

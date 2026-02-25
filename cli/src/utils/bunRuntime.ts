@@ -16,7 +16,7 @@ function stripBunBeBun(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
 
 export function withBunRuntimeEnv(
     env: NodeJS.ProcessEnv = process.env,
-    options: BunRuntimeEnvOptions = {}
+    options: BunRuntimeEnvOptions = {},
 ): NodeJS.ProcessEnv {
     if (!isBunCompiled()) {
         return env;
@@ -28,6 +28,6 @@ export function withBunRuntimeEnv(
 
     return {
         ...env,
-        BUN_BE_BUN: '1'
+        BUN_BE_BUN: '1',
     };
 }

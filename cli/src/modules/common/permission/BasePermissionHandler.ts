@@ -1,10 +1,10 @@
-import type { AgentState } from "@/api/types";
-import type { PermissionMode } from "@hapi/protocol/types";
+import type { PermissionMode } from '@hapi/protocol/types';
+import type { AgentState } from '@/api/types';
 
 type RpcHandlerManagerLike = {
     registerHandler<TRequest = unknown, TResponse = unknown>(
         method: string,
-        handler: (params: TRequest) => Promise<TResponse> | TResponse
+        handler: (params: TRequest) => Promise<TResponse> | TResponse,
     ): void;
 };
 
@@ -19,11 +19,11 @@ type AutoApprovalRuleSet = {
 const AUTO_APPROVE_TOOL_NAME_HINTS = [
     'change_title',
     'happy__change_title',
-    'hapi_change_title',  // OpenCode MCP tool pattern
+    'hapi_change_title', // OpenCode MCP tool pattern
     'geminireasoning',
     'codexreasoning',
     'think',
-    'save_memory'
+    'save_memory',
 ];
 const AUTO_APPROVE_TOOL_ID_HINTS = ['change_title', 'save_memory'];
 const AUTO_APPROVE_WRITE_TOOL_HINTS = ['write', 'edit', 'create', 'delete', 'patch', 'fs-edit'];
@@ -66,27 +66,25 @@ export abstract class BasePermissionHandler<TResponse extends { id: string }, TR
 
     protected abstract handlePermissionResponse(
         response: TResponse,
-        pending: PendingPermissionRequest<TResult>
+        pending: PendingPermissionRequest<TResult>,
     ): Promise<PermissionCompletion>;
 
     protected abstract handleMissingPendingResponse(response: TResponse): void;
 
-    protected onRequestRegistered(_id: string, _toolName: string, _input: unknown): void {
-    }
+    protected onRequestRegistered(_id: string, _toolName: string, _input: unknown): void {}
 
-    protected onResponseReceived(_response: TResponse): void {
-    }
+    protected onResponseReceived(_response: TResponse): void {}
 
     protected resolveAutoApprovalDecision(
         mode: PermissionMode | undefined,
         toolName: string,
         toolCallId: string,
-        ruleOverrides?: AutoApprovalRuleSet
+        ruleOverrides?: AutoApprovalRuleSet,
     ): AutoApprovalDecision | null {
         const rules = {
             alwaysToolNameHints: ruleOverrides?.alwaysToolNameHints ?? AUTO_APPROVE_TOOL_NAME_HINTS,
             alwaysToolIdHints: ruleOverrides?.alwaysToolIdHints ?? AUTO_APPROVE_TOOL_ID_HINTS,
-            writeToolNameHints: ruleOverrides?.writeToolNameHints ?? AUTO_APPROVE_WRITE_TOOL_HINTS
+            writeToolNameHints: ruleOverrides?.writeToolNameHints ?? AUTO_APPROVE_WRITE_TOOL_HINTS,
         };
 
         const lowerTool = toolName.toLowerCase();
@@ -121,7 +119,7 @@ export abstract class BasePermissionHandler<TResponse extends { id: string }, TR
         id: string,
         toolName: string,
         input: unknown,
-        handlers: { resolve: (value: TResult) => void; reject: (error: Error) => void }
+        handlers: { resolve: (value: TResult) => void; reject: (error: Error) => void },
     ): void {
         this.pendingRequests.set(id, { ...handlers, toolName, input });
         this.onRequestRegistered(id, toolName, input);
@@ -132,9 +130,9 @@ export abstract class BasePermissionHandler<TResponse extends { id: string }, TR
                 [id]: {
                     tool: toolName,
                     arguments: input,
-                    createdAt: Date.now()
-                }
-            }
+                    createdAt: Date.now(),
+                },
+            },
         }));
     }
 
@@ -159,9 +157,9 @@ export abstract class BasePermissionHandler<TResponse extends { id: string }, TR
                         mode: completion.mode,
                         decision: completion.decision,
                         allowTools: completion.allowTools,
-                        answers: completion.answers
-                    }
-                }
+                        answers: completion.answers,
+                    },
+                },
             };
         });
     }
@@ -182,14 +180,14 @@ export abstract class BasePermissionHandler<TResponse extends { id: string }, TR
                     completedAt: Date.now(),
                     status: 'canceled',
                     reason: options.completedReason,
-                    decision: options.decision
+                    decision: options.decision,
                 };
             }
 
             return {
                 ...currentState,
                 requests: {},
-                completedRequests
+                completedRequests,
             };
         });
     }

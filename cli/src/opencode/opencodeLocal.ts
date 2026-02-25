@@ -28,7 +28,7 @@ export async function opencodeLocal(opts: {
             spawnName: 'opencode',
             installHint: 'OpenCode CLI',
             includeCause: true,
-            logExit: true
+            logExit: true,
         });
     } finally {
         process.stdin.resume();

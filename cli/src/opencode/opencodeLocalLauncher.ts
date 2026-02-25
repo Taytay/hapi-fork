@@ -1,21 +1,21 @@
-import { logger } from '@/ui/logger';
-import { opencodeLocal } from './opencodeLocal';
-import { OpencodeSession } from './session';
-import { ensureOpencodeHookPlugin } from './utils/hookPlugin';
-import { buildOpencodeEnv } from './utils/config';
-import { ensureOpencodeConfig } from './utils/opencodeConfig';
-import { TITLE_INSTRUCTION } from './utils/systemPrompt';
-import { buildHapiMcpBridge } from '@/codex/utils/buildHapiMcpBridge';
-import type { OpencodeHookEvent } from './types';
-import type { OpencodeHookServer } from './utils/startOpencodeHookServer';
-import { createOpencodeStorageScanner, type OpencodeStorageScannerHandle } from './utils/opencodeStorageScanner';
 import { randomUUID } from 'node:crypto';
-import { isObject } from '@hapi/protocol';
 import { join } from 'node:path';
+import { isObject } from '@hapi/protocol';
+import { buildHapiMcpBridge } from '@/codex/utils/buildHapiMcpBridge';
 import { configuration } from '@/configuration';
-import type { PermissionCompletion } from '@/modules/common/permission/BasePermissionHandler';
-import { hashObject } from '@/utils/deterministicJson';
 import { BaseLocalLauncher } from '@/modules/common/launcher/BaseLocalLauncher';
+import type { PermissionCompletion } from '@/modules/common/permission/BasePermissionHandler';
+import { logger } from '@/ui/logger';
+import { hashObject } from '@/utils/deterministicJson';
+import { opencodeLocal } from './opencodeLocal';
+import type { OpencodeSession } from './session';
+import type { OpencodeHookEvent } from './types';
+import { buildOpencodeEnv } from './utils/config';
+import { ensureOpencodeHookPlugin } from './utils/hookPlugin';
+import { ensureOpencodeConfig } from './utils/opencodeConfig';
+import { createOpencodeStorageScanner, type OpencodeStorageScannerHandle } from './utils/opencodeStorageScanner';
+import type { OpencodeHookServer } from './utils/startOpencodeHookServer';
+import { TITLE_INSTRUCTION } from './utils/systemPrompt';
 
 type OpencodeLocalLauncherOptions = {
     hookServer: OpencodeHookServer;
@@ -114,10 +114,11 @@ function extractSessionId(value: unknown): string | null {
         return null;
     }
     const record = value as Record<string, unknown>;
-    const direct = getString(record.sessionId)
-        || getString(record.sessionID)
-        || getString(record.session_id)
-        || (isObject(record.session) ? getString((record.session as Record<string, unknown>).id) : null);
+    const direct =
+        getString(record.sessionId) ||
+        getString(record.sessionID) ||
+        getString(record.session_id) ||
+        (isObject(record.session) ? getString((record.session as Record<string, unknown>).id) : null);
     if (direct) {
         return direct;
     }
@@ -167,11 +168,12 @@ function parseToolCall(part: unknown): ParsedToolCall | null {
     }
     const record = part as Record<string, unknown>;
     const name = getString(record.tool) || getString(record.name);
-    const callId = getString(record.callID)
-        || getString(record.callId)
-        || getString(record.id)
-        || getString(record.tool_call_id)
-        || getString(record.toolCallId);
+    const callId =
+        getString(record.callID) ||
+        getString(record.callId) ||
+        getString(record.id) ||
+        getString(record.tool_call_id) ||
+        getString(record.toolCallId);
     if (!name || !callId) {
         return null;
     }
@@ -193,11 +195,12 @@ function parseToolResult(part: unknown): ParsedToolResult | null {
         return null;
     }
     const record = part as Record<string, unknown>;
-    const callId = getString(record.callID)
-        || getString(record.callId)
-        || getString(record.tool_call_id)
-        || getString(record.toolCallId)
-        || getString(record.id);
+    const callId =
+        getString(record.callID) ||
+        getString(record.callId) ||
+        getString(record.tool_call_id) ||
+        getString(record.toolCallId) ||
+        getString(record.id);
     if (!callId) {
         return null;
     }
@@ -209,14 +212,14 @@ function parseToolResult(part: unknown): ParsedToolResult | null {
                 content: state.output ?? state.title,
                 metadata: state.metadata,
                 title: state.title,
-                attachments: state.attachments
+                attachments: state.attachments,
             };
             return { callId, output };
         }
         if (status === 'error') {
             const output = {
                 content: state.error,
-                isError: true
+                isError: true,
             };
             return { callId, output };
         }
@@ -225,7 +228,7 @@ function parseToolResult(part: unknown): ParsedToolResult | null {
     const output = {
         content: record.content,
         metadata: record.metadata,
-        isError: record.is_error
+        isError: record.is_error,
     };
     return { callId, output };
 }
@@ -255,7 +258,7 @@ function resolveOpencodeConfigDir(session: OpencodeSession): string {
 
 export async function opencodeLocalLauncher(
     session: OpencodeSession,
-    opts: OpencodeLocalLauncherOptions
+    opts: OpencodeLocalLauncherOptions,
 ): Promise<'switch' | 'exit'> {
     const hookUrl = opts.hookUrl;
 
@@ -299,7 +302,7 @@ export async function opencodeLocalLauncher(
                 path: session.path,
                 abort: abortSignal,
                 env,
-                sessionId: session.sessionId ?? undefined
+                sessionId: session.sessionId ?? undefined,
             });
         },
         sendFailureMessage: (message) => {
@@ -307,7 +310,7 @@ export async function opencodeLocalLauncher(
         },
         recordLocalLaunchFailure: (message, exitReason) => {
             session.recordLocalLaunchFailure(message, exitReason);
-        }
+        },
     });
 
     let storageScanner: OpencodeStorageScannerHandle | null = null;
@@ -321,10 +324,11 @@ export async function opencodeLocalLauncher(
     const handleHookEvent = (event: OpencodeHookEvent) => {
         const payload = event.payload;
         const eventType = event.event;
-        const payloadRecord = isObject(payload) ? payload as Record<string, unknown> : null;
-        const sessionId = event.sessionId
-            || extractSessionId(payload)
-            || (payloadRecord ? extractSessionId(payloadRecord.info) : null);
+        const payloadRecord = isObject(payload) ? (payload as Record<string, unknown>) : null;
+        const sessionId =
+            event.sessionId ||
+            extractSessionId(payload) ||
+            (payloadRecord ? extractSessionId(payloadRecord.info) : null);
         if (sessionId) {
             session.onSessionFound(sessionId);
             storageScanner?.onNewSession(sessionId);
@@ -332,7 +336,9 @@ export async function opencodeLocalLauncher(
 
         if (eventType === 'session.created' || eventType === 'session.updated') {
             if (payloadRecord) {
-                const info = isObject(payloadRecord.info) ? payloadRecord.info as Record<string, unknown> : payloadRecord;
+                const info = isObject(payloadRecord.info)
+                    ? (payloadRecord.info as Record<string, unknown>)
+                    : payloadRecord;
                 const sessionIdValue = extractSessionId(info) || getString(info.id);
                 if (sessionIdValue) {
                     session.onSessionFound(sessionIdValue);
@@ -362,9 +368,10 @@ export async function opencodeLocalLauncher(
             }
             const partType = getString(part.type);
             const partId = getString(part.id);
-            const messageId = getString(part.messageID)
-                || getString(part.messageId)
-                || (payloadRecord ? getString(payloadRecord.messageID) || getString(payloadRecord.messageId) : null);
+            const messageId =
+                getString(part.messageID) ||
+                getString(part.messageId) ||
+                (payloadRecord ? getString(payloadRecord.messageID) || getString(payloadRecord.messageId) : null);
             const delta = getTextDelta(payloadRecord);
 
             if (partType === 'text') {
@@ -373,7 +380,7 @@ export async function opencodeLocalLauncher(
                 }
                 const role = (messageId && messageRoles.get(messageId)) ?? 'assistant';
                 const key = partId ?? messageId;
-                const bufferValue = key ? textBuffers.get(key) ?? '' : '';
+                const bufferValue = key ? (textBuffers.get(key) ?? '') : '';
                 const textFromPart = getString(part.text);
                 const nextBuffer = delta ? bufferValue + delta : bufferValue;
 
@@ -381,12 +388,10 @@ export async function opencodeLocalLauncher(
                     textBuffers.set(key, textFromPart ?? nextBuffer);
                 }
 
-                const time = isObject(part.time) ? part.time as Record<string, unknown> : null;
+                const time = isObject(part.time) ? (part.time as Record<string, unknown>) : null;
                 const hasEnd = time ? getNumber(time.end) !== null : false;
-                const shouldFlush = role === 'user'
-                    || part.synthetic === true
-                    || hasEnd
-                    || (!delta && Boolean(textFromPart));
+                const shouldFlush =
+                    role === 'user' || part.synthetic === true || hasEnd || (!delta && Boolean(textFromPart));
                 const text = textFromPart ?? (key ? textBuffers.get(key) : null);
                 if (shouldFlush && text) {
                     if (role === 'user') {
@@ -411,7 +416,7 @@ export async function opencodeLocalLauncher(
                     type: 'tool-call',
                     name: toolCall.name,
                     callId: toolCall.callId,
-                    input: toolCall.input
+                    input: toolCall.input,
                 });
             }
 
@@ -421,7 +426,7 @@ export async function opencodeLocalLauncher(
                 session.sendCodexMessage({
                     type: 'tool-call-result',
                     callId: toolResult.callId,
-                    output: toolResult.output
+                    output: toolResult.output,
                 });
             }
             return;
@@ -432,7 +437,7 @@ export async function opencodeLocalLauncher(
                 return;
             }
             const record = payload as Record<string, unknown>;
-            const tool = isObject(record.tool) ? record.tool as Record<string, unknown> : record;
+            const tool = isObject(record.tool) ? (record.tool as Record<string, unknown>) : record;
             const name = getString(tool.name) || getString(record.name);
             if (!name) {
                 return;
@@ -440,18 +445,16 @@ export async function opencodeLocalLauncher(
             const toolInput = parseMaybeJson(tool.input ?? tool.args ?? record.input ?? record.args);
             const signature = buildToolSignature(name, toolInput);
             const fallbackSignature = buildToolSignature(name, null);
-            const existingId = getString(tool.id)
-                || getString(tool.tool_call_id)
-                || getString(tool.toolCallId);
+            const existingId = getString(tool.id) || getString(tool.tool_call_id) || getString(tool.toolCallId);
             const isBefore = eventType === 'tool.execute.before';
             let callId = existingId;
 
             if (!callId) {
                 callId = isBefore
                     ? randomUUID()
-                    : shiftQueue(toolExecutionQueues, signature)
-                        ?? shiftQueue(toolExecutionQueues, fallbackSignature)
-                        ?? randomUUID();
+                    : (shiftQueue(toolExecutionQueues, signature) ??
+                      shiftQueue(toolExecutionQueues, fallbackSignature) ??
+                      randomUUID());
             }
 
             if (isBefore) {
@@ -471,7 +474,7 @@ export async function opencodeLocalLauncher(
                     type: 'tool-call',
                     name,
                     callId,
-                    input: toolInput
+                    input: toolInput,
                 });
                 return;
             }
@@ -483,8 +486,8 @@ export async function opencodeLocalLauncher(
                     output: {
                         content: tool.content ?? record.content ?? record.output,
                         metadata: tool.metadata ?? record.metadata,
-                        isError: tool.is_error ?? record.is_error
-                    }
+                        isError: tool.is_error ?? record.is_error,
+                    },
                 });
                 return;
             }
@@ -495,25 +498,24 @@ export async function opencodeLocalLauncher(
                 return;
             }
             const record = payload as Record<string, unknown>;
-            const metadata = isObject(record.metadata) ? record.metadata as Record<string, unknown> : undefined;
-            const id = getString(record.id)
-                || getString(record.permissionID)
-                || getString(record.permissionId)
-                || getString(record.requestID)
-                || getString(record.requestId);
+            const metadata = isObject(record.metadata) ? (record.metadata as Record<string, unknown>) : undefined;
+            const id =
+                getString(record.id) ||
+                getString(record.permissionID) ||
+                getString(record.permissionId) ||
+                getString(record.requestID) ||
+                getString(record.requestId);
             if (!id) {
                 return;
             }
 
-            const toolName = getString(record.permission)
-                || getString(record.type)
-                || (metadata ? getString(metadata.tool) : null)
-                || 'Permission';
+            const toolName =
+                getString(record.permission) ||
+                getString(record.type) ||
+                (metadata ? getString(metadata.tool) : null) ||
+                'Permission';
 
-            const toolInput = metadata?.input
-                ?? record.pattern
-                ?? record.message
-                ?? record.metadata;
+            const toolInput = metadata?.input ?? record.pattern ?? record.message ?? record.metadata;
 
             session.client.updateAgentState((currentState) => ({
                 ...currentState,
@@ -522,9 +524,9 @@ export async function opencodeLocalLauncher(
                     [id]: {
                         tool: toolName,
                         arguments: toolInput,
-                        createdAt: Date.now()
-                    }
-                }
+                        createdAt: Date.now(),
+                    },
+                },
             }));
             return;
         }
@@ -534,39 +536,35 @@ export async function opencodeLocalLauncher(
                 return;
             }
             const record = payload as Record<string, unknown>;
-            const metadata = isObject(record.metadata) ? record.metadata as Record<string, unknown> : undefined;
-            const id = getString(record.permissionID)
-                || getString(record.permissionId)
-                || getString(record.requestID)
-                || getString(record.requestId)
-                || getString(record.id);
+            const metadata = isObject(record.metadata) ? (record.metadata as Record<string, unknown>) : undefined;
+            const id =
+                getString(record.permissionID) ||
+                getString(record.permissionId) ||
+                getString(record.requestID) ||
+                getString(record.requestId) ||
+                getString(record.id);
             if (!id) {
                 return;
             }
 
-            const toolName = getString(record.permission)
-                || getString(record.type)
-                || (metadata ? getString(metadata.tool) : null)
-                || 'Permission';
+            const toolName =
+                getString(record.permission) ||
+                getString(record.type) ||
+                (metadata ? getString(metadata.tool) : null) ||
+                'Permission';
 
-            const toolInput = metadata?.input
-                ?? record.pattern
-                ?? record.message
-                ?? record.metadata;
+            const toolInput = metadata?.input ?? record.pattern ?? record.message ?? record.metadata;
 
-            const response = getString(record.response)
-                || getString(record.reply)
-                || getString(record.decision);
-            const approved = record.approved === true
-                || response === 'once'
-                || response === 'always'
-                || response === 'approved';
+            const response = getString(record.response) || getString(record.reply) || getString(record.decision);
+            const approved =
+                record.approved === true || response === 'once' || response === 'always' || response === 'approved';
             const decision = normalizeDecision(response, approved);
-            const status = decision === 'approved' || decision === 'approved_for_session'
-                ? 'approved'
-                : decision === 'abort'
-                    ? 'canceled'
-                    : 'denied';
+            const status =
+                decision === 'approved' || decision === 'approved_for_session'
+                    ? 'approved'
+                    : decision === 'abort'
+                      ? 'canceled'
+                      : 'denied';
             const reason = getString(record.reason) ?? undefined;
             const allowTools = Array.isArray(record.allowTools) ? record.allowTools : undefined;
 
@@ -574,7 +572,7 @@ export async function opencodeLocalLauncher(
                 const request = currentState.requests?.[id] ?? {
                     tool: toolName,
                     arguments: toolInput,
-                    createdAt: Date.now()
+                    createdAt: Date.now(),
                 };
                 const nextRequests = { ...(currentState.requests || {}) };
                 delete nextRequests[id];
@@ -589,9 +587,9 @@ export async function opencodeLocalLauncher(
                             status,
                             decision,
                             reason,
-                            allowTools
-                        }
-                    }
+                            allowTools,
+                        },
+                    },
                 };
             });
             return;
@@ -611,7 +609,7 @@ export async function opencodeLocalLauncher(
                 },
                 onSessionMatchFailed: (message) => {
                     session.sendSessionEvent({ type: 'message', message });
-                }
+                },
             });
         } catch (error) {
             logger.debug('[opencode-local]: Failed to start storage scanner', error);

@@ -1,5 +1,5 @@
-import { dirname, extname, join, relative, sep } from 'node:path';
 import { existsSync, readdirSync, writeFileSync } from 'node:fs';
+import { dirname, extname, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const MIME_TYPES: Record<string, string> = {
@@ -23,7 +23,7 @@ const MIME_TYPES: Record<string, string> = {
     '.webp': 'image/webp',
     '.woff': 'font/woff',
     '.woff2': 'font/woff2',
-    '.xml': 'application/xml; charset=utf-8'
+    '.xml': 'application/xml; charset=utf-8',
 };
 
 function toPosixPath(filePath: string): string {
@@ -103,7 +103,7 @@ function main(): void {
         'export const embeddedAssets: EmbeddedWebAsset[] = [',
         ...manifestLines,
         '];',
-        ''
+        '',
     ].join('\n');
 
     writeFileSync(outputPath, output, 'utf-8');

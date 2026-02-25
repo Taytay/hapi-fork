@@ -1,10 +1,10 @@
+import { BaseLocalLauncher } from '@/modules/common/launcher/BaseLocalLauncher';
 import { logger } from '@/ui/logger';
 import { codexLocal } from './codexLocal';
-import { CodexSession } from './session';
-import { createCodexSessionScanner } from './utils/codexSessionScanner';
-import { convertCodexEvent } from './utils/codexEventConverter';
+import type { CodexSession } from './session';
 import { buildHapiMcpBridge } from './utils/buildHapiMcpBridge';
-import { BaseLocalLauncher } from '@/modules/common/launcher/BaseLocalLauncher';
+import { convertCodexEvent } from './utils/codexEventConverter';
+import { createCodexSessionScanner } from './utils/codexSessionScanner';
 
 export async function codexLocalLauncher(session: CodexSession): Promise<'switch' | 'exit'> {
     const resumeSessionId = session.sessionId;
@@ -33,7 +33,7 @@ export async function codexLocalLauncher(session: CodexSession): Promise<'switch
                 onSessionFound: handleSessionFound,
                 abort: abortSignal,
                 codexArgs: session.codexArgs,
-                mcpServers
+                mcpServers,
             });
         },
         sendFailureMessage: (message) => {
@@ -43,7 +43,7 @@ export async function codexLocalLauncher(session: CodexSession): Promise<'switch
             session.recordLocalLaunchFailure(message, exitReason);
         },
         abortLogMessage: 'doAbort',
-        switchLogMessage: 'doSwitch'
+        switchLogMessage: 'doSwitch',
     });
 
     const handleSessionMatchFailed = (message: string) => {
@@ -72,7 +72,7 @@ export async function codexLocalLauncher(session: CodexSession): Promise<'switch
             if (converted?.message) {
                 session.sendCodexMessage(converted.message);
             }
-        }
+        },
     });
 
     try {
