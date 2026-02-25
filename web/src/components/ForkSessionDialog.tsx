@@ -26,7 +26,17 @@ type ForkSessionDialogProps = {
 
 export function ForkSessionDialog(props: ForkSessionDialogProps) {
     const { t } = useTranslation();
-    const { isOpen, onClose, sessionName, sessionId, directory: defaultDirectory, agent: defaultAgent, model: defaultModel, onFork, isPending } = props;
+    const {
+        isOpen,
+        onClose,
+        sessionName,
+        sessionId,
+        directory: defaultDirectory,
+        agent: defaultAgent,
+        model: defaultModel,
+        onFork,
+        isPending,
+    } = props;
 
     const [directory, setDirectory] = useState(defaultDirectory);
     const [agent, setAgent] = useState<AgentType>(defaultAgent);
@@ -106,9 +116,7 @@ export function ForkSessionDialog(props: ForkSessionDialogProps) {
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-medium text-[var(--app-hint)]">
-                            {t('dialog.fork.agent')}
-                        </label>
+                        <label className="text-xs font-medium text-[var(--app-hint)]">{t('dialog.fork.agent')}</label>
                         <div className="flex gap-3">
                             {(['claude', 'codex', 'gemini', 'opencode'] as const).map((agentType) => (
                                 <label key={agentType} className="flex items-center gap-1.5 cursor-pointer">

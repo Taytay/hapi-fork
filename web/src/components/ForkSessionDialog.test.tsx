@@ -77,13 +77,13 @@ describe('ForkSessionDialog', () => {
         const onFork = vi.fn().mockResolvedValue(undefined);
         renderWithProviders(<ForkSessionDialog {...defaultProps} onFork={onFork} />);
 
-        // Toggle resume checkbox
-        const resumeCheckbox = screen.getByRole('checkbox', { name: '' });
-        // There are two checkboxes - yolo and resume. Find by the label text nearby
+        // Toggle resume checkbox - find by the label text nearby
         const resumeLabel = screen.getByText('Resume conversation');
         const resumeToggle = resumeLabel.closest('div')?.parentElement?.querySelector('input[type="checkbox"]');
         expect(resumeToggle).toBeTruthy();
-        fireEvent.click(resumeToggle!);
+        if (resumeToggle) {
+            fireEvent.click(resumeToggle);
+        }
 
         fireEvent.click(screen.getByRole('button', { name: 'Fork' }));
 
