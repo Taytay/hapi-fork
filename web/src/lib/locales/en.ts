@@ -55,6 +55,9 @@ export default {
   'session.time.hoursAgo': '{n}h ago',
   'session.time.daysAgo': '{n}d ago',
 
+  // Session groups
+  'session.group.archived': 'Archived',
+
   // Session header
   'session.title': 'Files',
   'session.more': 'More actions',

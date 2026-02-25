@@ -10,6 +10,7 @@ import { MessageStatusIndicator } from '@/components/AssistantChat/messages/Mess
 import { ToolCard } from '@/components/ToolCard/ToolCard'
 import { useHappyChatContext } from '@/components/AssistantChat/context'
 import { CliOutputBlock } from '@/components/CliOutputBlock'
+import { UnknownEventCard } from '@/components/UnknownEventCard'
 
 function isToolCallBlock(value: unknown): value is ToolCallBlock {
     if (!isObject(value)) return false
@@ -96,6 +97,13 @@ function HappyNestedBlockList(props: {
 
                 if (block.kind === 'agent-event') {
                     const presentation = getEventPresentation(block.event)
+                    if (presentation.isUnknown) {
+                        return (
+                            <div key={`event:${block.id}`} className="py-1">
+                                <UnknownEventCard title={presentation.text} rawJson={presentation.rawJson} />
+                            </div>
+                        )
+                    }
                     return (
                         <div key={`event:${block.id}`} className="py-1">
                             <div className="mx-auto w-fit max-w-[92%] px-2 text-center text-xs text-[var(--app-hint)] opacity-80">

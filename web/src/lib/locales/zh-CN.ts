@@ -55,6 +55,9 @@ export default {
   'session.time.hoursAgo': '{n} 小时前',
   'session.time.daysAgo': '{n} 天前',
 
+  // Session groups
+  'session.group.archived': '已归档',
+
   // Session header
   'session.title': '文件',
   'session.more': '更多操作',

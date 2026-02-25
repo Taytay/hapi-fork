@@ -1,6 +1,7 @@
 import { useAssistantState } from '@assistant-ui/react'
 import { getEventPresentation } from '@/chat/presentation'
 import type { HappyChatMessageMetadata } from '@/lib/assistant-runtime'
+import { UnknownEventCard } from '@/components/UnknownEventCard'
 
 export function HappySystemMessage() {
     const role = useAssistantState(({ message }) => message.role)
@@ -14,8 +15,25 @@ export function HappySystemMessage() {
         const event = custom?.kind === 'event' ? custom.event : undefined
         return event ? getEventPresentation(event).icon : null
     })
+    const unknownEventData = useAssistantState(({ message }) => {
+        if (message.role !== 'system') return null
+        const custom = message.metadata.custom as Partial<HappyChatMessageMetadata> | undefined
+        const event = custom?.kind === 'event' ? custom.event : undefined
+        if (!event) return null
+        const presentation = getEventPresentation(event)
+        if (!presentation.isUnknown) return null
+        return { title: presentation.text, rawJson: presentation.rawJson }
+    })
 
     if (role !== 'system') return null
+
+    if (unknownEventData) {
+        return (
+            <div className="py-1 mx-auto w-full max-w-[92%]">
+                <UnknownEventCard title={unknownEventData.title} rawJson={unknownEventData.rawJson} />
+            </div>
+        )
+    }
 
     return (
         <div className="py-1">

@@ -13,6 +13,8 @@ type SessionGroup = {
     directory: string
     displayName: string
     sessions: SessionSummary[]
+    activeSessions: SessionSummary[]
+    archivedSessions: SessionSummary[]
     latestUpdatedAt: number
     hasActiveSession: boolean
 }
@@ -51,7 +53,10 @@ function groupSessionsByDirectory(sessions: SessionSummary[]): SessionGroup[] {
             const hasActiveSession = groupSessions.some(s => s.active)
             const displayName = getGroupDisplayName(directory)
 
-            return { directory, displayName, sessions: sortedSessions, latestUpdatedAt, hasActiveSession }
+            const activeSessions = sortedSessions.filter(s => s.active)
+            const archivedSessions = sortedSessions.filter(s => !s.active)
+
+            return { directory, displayName, sessions: sortedSessions, activeSessions, archivedSessions, latestUpdatedAt, hasActiveSession }
         })
         .sort((a, b) => {
             if (a.hasActiveSession !== b.hasActiveSession) {
@@ -206,7 +211,7 @@ function SessionItem(props: {
             <button
                 type="button"
                 {...longPressHandlers}
-                className={`session-list-item flex w-full flex-col gap-1.5 px-3 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-link)] select-none ${selected ? 'bg-[var(--app-secondary-bg)]' : ''}`}
+                className={`session-list-item flex w-full flex-col gap-1.5 pl-8 pr-3 py-3 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-link)] select-none ${selected ? 'bg-[var(--app-secondary-bg)]' : ''}`}
                 style={{ WebkitTouchCallout: 'none' }}
                 aria-current={selected ? 'page' : undefined}
             >
@@ -330,10 +335,18 @@ export function SessionList(props: {
     const [collapseOverrides, setCollapseOverrides] = useState<Map<string, boolean>>(
         () => new Map()
     )
+    const [archivedCollapseOverrides, setArchivedCollapseOverrides] = useState<Map<string, boolean>>(
+        () => new Map()
+    )
     const isGroupCollapsed = (group: SessionGroup): boolean => {
         const override = collapseOverrides.get(group.directory)
         if (override !== undefined) return override
         return !group.hasActiveSession
+    }
+    const isArchivedCollapsed = (group: SessionGroup): boolean => {
+        const override = archivedCollapseOverrides.get(group.directory)
+        if (override !== undefined) return override
+        return true
     }
 
     const toggleGroup = (directory: string, isCollapsed: boolean) => {
@@ -343,12 +356,31 @@ export function SessionList(props: {
             return next
         })
     }
+    const toggleArchived = (directory: string, isCollapsed: boolean) => {
+        setArchivedCollapseOverrides(prev => {
+            const next = new Map(prev)
+            next.set(directory, !isCollapsed)
+            return next
+        })
+    }
 
     useEffect(() => {
+        const knownGroups = new Set(groups.map(group => group.directory))
         setCollapseOverrides(prev => {
             if (prev.size === 0) return prev
             const next = new Map(prev)
-            const knownGroups = new Set(groups.map(group => group.directory))
+            let changed = false
+            for (const directory of next.keys()) {
+                if (!knownGroups.has(directory)) {
+                    next.delete(directory)
+                    changed = true
+                }
+            }
+            return changed ? next : prev
+        })
+        setArchivedCollapseOverrides(prev => {
+            if (prev.size === 0) return prev
+            const next = new Map(prev)
             let changed = false
             for (const directory of next.keys()) {
                 if (!knownGroups.has(directory)) {
@@ -397,22 +429,62 @@ export function SessionList(props: {
                                         {group.displayName}
                                     </span>
                                     <span className="shrink-0 text-xs text-[var(--app-hint)]">
-                                        ({group.sessions.length})
+                                        ({group.activeSessions.length > 0
+                                            ? `${group.activeSessions.length} active`
+                                            : `${group.archivedSessions.length} archived`})
                                     </span>
                                 </div>
                             </button>
                             {!isCollapsed ? (
-                                <div className="flex flex-col divide-y divide-[var(--app-divider)] border-b border-[var(--app-divider)]">
-                                    {group.sessions.map((s) => (
-                                        <SessionItem
-                                            key={s.id}
-                                            session={s}
-                                            onSelect={props.onSelect}
-                                            showPath={false}
-                                            api={api}
-                                            selected={s.id === selectedSessionId}
-                                        />
-                                    ))}
+                                <div className="flex flex-col border-b border-[var(--app-divider)]">
+                                    {group.activeSessions.length > 0 ? (
+                                        <div className="flex flex-col divide-y divide-[var(--app-divider)]">
+                                            {group.activeSessions.map((s) => (
+                                                <SessionItem
+                                                    key={s.id}
+                                                    session={s}
+                                                    onSelect={props.onSelect}
+                                                    showPath={false}
+                                                    api={api}
+                                                    selected={s.id === selectedSessionId}
+                                                />
+                                            ))}
+                                        </div>
+                                    ) : null}
+                                    {group.archivedSessions.length > 0 ? (() => {
+                                        const archCollapsed = isArchivedCollapsed(group)
+                                        return (
+                                            <div className="border-t border-[var(--app-divider)]">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => toggleArchived(group.directory, archCollapsed)}
+                                                    className="flex w-full items-center gap-2 pl-6 pr-3 py-1.5 text-left text-xs text-[var(--app-hint)] hover:bg-[var(--app-secondary-bg)] transition-colors"
+                                                >
+                                                    <ChevronIcon
+                                                        className="h-3 w-3 text-[var(--app-hint)]"
+                                                        collapsed={archCollapsed}
+                                                    />
+                                                    <span>
+                                                        {t('session.group.archived')} ({group.archivedSessions.length})
+                                                    </span>
+                                                </button>
+                                                {!archCollapsed ? (
+                                                    <div className="flex flex-col divide-y divide-[var(--app-divider)]">
+                                                        {group.archivedSessions.map((s) => (
+                                                            <SessionItem
+                                                                key={s.id}
+                                                                session={s}
+                                                                onSelect={props.onSelect}
+                                                                showPath={false}
+                                                                api={api}
+                                                                selected={s.id === selectedSessionId}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                ) : null}
+                                            </div>
+                                        )
+                                    })() : null}
                                 </div>
                             ) : null}
                         </div>

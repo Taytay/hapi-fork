@@ -18,6 +18,8 @@ function formatDuration(ms: number): string {
 export type EventPresentation = {
     icon: string | null
     text: string
+    isUnknown?: boolean
+    rawJson?: string
 }
 
 export function getEventPresentation(event: AgentEvent): EventPresentation {
@@ -67,9 +69,9 @@ export function getEventPresentation(event: AgentEvent): EventPresentation {
         return { icon: '📦', text: 'Conversation compacted' }
     }
     try {
-        return { icon: null, text: JSON.stringify(event) }
+        return { icon: null, text: `Event: ${event.type}`, isUnknown: true, rawJson: JSON.stringify(event, null, 2) }
     } catch {
-        return { icon: null, text: String(event.type) }
+        return { icon: null, text: `Event: ${event.type}`, isUnknown: true }
     }
 }
 
