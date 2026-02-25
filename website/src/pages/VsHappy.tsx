@@ -1,6 +1,3 @@
-import Layout from "@/components/Layout";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ArrowRight,
   Check,
@@ -10,9 +7,11 @@ import {
   Lock,
   Server,
   Shield,
-  User,
   Users,
 } from "lucide-react";
+import Layout from "@/components/Layout";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function VsHappy() {
   return (

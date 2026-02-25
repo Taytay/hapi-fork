@@ -1,7 +1,7 @@
-import { claudeLocal } from './claudeLocal'
-import { Session } from './session'
-import { createSessionScanner } from './utils/sessionScanner'
-import { BaseLocalLauncher } from '@/modules/common/launcher/BaseLocalLauncher'
+import { BaseLocalLauncher } from '@/modules/common/launcher/BaseLocalLauncher';
+import { claudeLocal } from './claudeLocal';
+import type { Session } from './session';
+import { createSessionScanner } from './utils/sessionScanner';
 
 export async function claudeLocalLauncher(session: Session): Promise<'switch' | 'exit'> {
     // Create scanner
@@ -11,15 +11,15 @@ export async function claudeLocalLauncher(session: Session): Promise<'switch' | 
         onMessage: (message) => {
             // Block SDK summary messages - we generate our own
             if (message.type !== 'summary') {
-                session.client.sendClaudeSessionMessage(message)
+                session.client.sendClaudeSessionMessage(message);
             }
         },
-    })
+    });
 
     const handleSessionFound = (sessionId: string) => {
-        scanner.onNewSession(sessionId)
-    }
-    session.addSessionFoundCallback(handleSessionFound)
+        scanner.onNewSession(sessionId);
+    };
+    session.addSessionFoundCallback(handleSessionFound);
 
     const launcher = new BaseLocalLauncher({
         label: 'local',
@@ -38,25 +38,25 @@ export async function claudeLocalLauncher(session: Session): Promise<'switch' | 
                 mcpServers: session.mcpServers,
                 allowedTools: session.allowedTools,
                 hookSettingsPath: session.hookSettingsPath,
-            })
+            });
         },
         onLaunchSuccess: () => {
-            session.consumeOneTimeFlags()
+            session.consumeOneTimeFlags();
         },
         sendFailureMessage: (message) => {
-            session.client.sendSessionEvent({ type: 'message', message })
+            session.client.sendSessionEvent({ type: 'message', message });
         },
         recordLocalLaunchFailure: (message, exitReason) => {
-            session.recordLocalLaunchFailure(message, exitReason)
+            session.recordLocalLaunchFailure(message, exitReason);
         },
         abortLogMessage: 'doAbort',
         switchLogMessage: 'doSwitch',
-    })
+    });
     try {
-        return await launcher.run()
+        return await launcher.run();
     } finally {
         // Cleanup
-        session.removeSessionFoundCallback(handleSessionFound)
-        await scanner.cleanup()
+        session.removeSessionFoundCallback(handleSessionFound);
+        await scanner.cleanup();
     }
 }

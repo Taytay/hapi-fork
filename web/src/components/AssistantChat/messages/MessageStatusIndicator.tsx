@@ -1,4 +1,4 @@
-import type { MessageStatus } from '@/types/api'
+import type { MessageStatus } from '@/types/api';
 
 function ErrorIcon() {
     return (
@@ -7,12 +7,12 @@ function ErrorIcon() {
             <path d="M8 5v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
             <circle cx="8" cy="11" r="0.75" fill="currentColor" />
         </svg>
-    )
+    );
 }
 
 export function MessageStatusIndicator(props: { status?: MessageStatus; onRetry?: () => void }) {
     if (props.status !== 'failed') {
-        return null
+        return null;
     }
 
     return (
@@ -26,5 +26,5 @@ export function MessageStatusIndicator(props: { status?: MessageStatus; onRetry?
                 </button>
             ) : null}
         </span>
-    )
+    );
 }

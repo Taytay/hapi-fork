@@ -1,5 +1,5 @@
-import { diffLines } from 'diff'
-import { useMemo } from 'react'
+import { diffLines } from 'diff';
+import { useMemo } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -7,38 +7,38 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from '@/components/ui/dialog'
-import { usePointerFocusRing } from '@/hooks/usePointerFocusRing'
-import { cn } from '@/lib/utils'
-import { useTranslation } from '@/lib/use-translation'
+} from '@/components/ui/dialog';
+import { usePointerFocusRing } from '@/hooks/usePointerFocusRing';
+import { useTranslation } from '@/lib/use-translation';
+import { cn } from '@/lib/utils';
 
 export function DiffView(props: {
-    oldString: string
-    newString: string
-    filePath?: string
-    variant?: 'preview' | 'inline'
+    oldString: string;
+    newString: string;
+    filePath?: string;
+    variant?: 'preview' | 'inline';
 }) {
-    const { t } = useTranslation()
-    const variant = props.variant ?? 'preview'
-    const { suppressFocusRing, onTriggerPointerDown, onTriggerKeyDown, onTriggerBlur } = usePointerFocusRing()
+    const { t } = useTranslation();
+    const variant = props.variant ?? 'preview';
+    const { suppressFocusRing, onTriggerPointerDown, onTriggerKeyDown, onTriggerBlur } = usePointerFocusRing();
 
     const stats = useMemo(() => {
-        const oldChars = props.oldString.length
-        const newChars = props.newString.length
-        const oldLabel = `${oldChars.toLocaleString()} chars`
-        const newLabel = `${newChars.toLocaleString()} chars`
-        return { oldChars, newChars, label: `old: ${oldLabel} → new: ${newLabel}` }
-    }, [props.oldString.length, props.newString.length])
+        const oldChars = props.oldString.length;
+        const newChars = props.newString.length;
+        const oldLabel = `${oldChars.toLocaleString()} chars`;
+        const newLabel = `${newChars.toLocaleString()} chars`;
+        return { oldChars, newChars, label: `old: ${oldLabel} → new: ${newLabel}` };
+    }, [props.oldString.length, props.newString.length]);
 
-    const title = props.filePath ? props.filePath : t('diff.title')
-    const subtitle = props.filePath ? stats.label : `${t('diff.title')} • ${stats.label}`
+    const title = props.filePath ? props.filePath : t('diff.title');
+    const subtitle = props.filePath ? stats.label : `${t('diff.title')} • ${stats.label}`;
 
     const DiffInline = (
         <DiffInlineView oldString={props.oldString} newString={props.newString} filePath={props.filePath} />
-    )
+    );
 
     if (variant === 'inline') {
-        return DiffInline
+        return DiffInline;
     }
 
     return (
@@ -48,7 +48,7 @@ export function DiffView(props: {
                     type="button"
                     className={cn(
                         'w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-link)]',
-                        suppressFocusRing && 'focus-visible:ring-0'
+                        suppressFocusRing && 'focus-visible:ring-0',
                     )}
                     onPointerDown={onTriggerPointerDown}
                     onKeyDown={onTriggerKeyDown}
@@ -79,11 +79,11 @@ export function DiffView(props: {
                 <div className="mt-3 max-h-[75vh] overflow-auto">{DiffInline}</div>
             </DialogContent>
         </Dialog>
-    )
+    );
 }
 
 function DiffInlineView(props: { oldString: string; newString: string; filePath?: string }) {
-    const diff = useMemo(() => diffLines(props.oldString, props.newString), [props.oldString, props.newString])
+    const diff = useMemo(() => diffLines(props.oldString, props.newString), [props.oldString, props.newString]);
 
     return (
         <div className="overflow-hidden rounded-md border border-[var(--app-border)] bg-[var(--app-subtle-bg)]">
@@ -95,16 +95,16 @@ function DiffInlineView(props: { oldString: string; newString: string; filePath?
 
             <div className="font-mono text-xs">
                 {diff.map((part, i) => {
-                    const lines = part.value.split('\n')
+                    const lines = part.value.split('\n');
                     if (lines.length > 0 && lines[lines.length - 1] === '') {
-                        lines.pop()
+                        lines.pop();
                     }
 
-                    const prefix = part.added ? '+' : part.removed ? '-' : ' '
+                    const prefix = part.added ? '+' : part.removed ? '-' : ' ';
                     const className = cn(
                         part.added && 'bg-[var(--app-diff-added-bg)] text-[var(--app-diff-added-text)]',
-                        part.removed && 'bg-[var(--app-diff-removed-bg)] text-[var(--app-diff-removed-text)]'
-                    )
+                        part.removed && 'bg-[var(--app-diff-removed-bg)] text-[var(--app-diff-removed-text)]',
+                    );
 
                     return (
                         <div key={i} className={className}>
@@ -114,9 +114,9 @@ function DiffInlineView(props: { oldString: string; newString: string; filePath?
                                 </div>
                             ))}
                         </div>
-                    )
+                    );
                 })}
             </div>
         </div>
-    )
+    );
 }

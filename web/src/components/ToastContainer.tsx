@@ -1,13 +1,13 @@
-import { useNavigate } from '@tanstack/react-router'
-import { Toast } from '@/components/ui/Toast'
-import { useToast } from '@/lib/toast-context'
+import { useNavigate } from '@tanstack/react-router';
+import { Toast } from '@/components/ui/Toast';
+import { useToast } from '@/lib/toast-context';
 
 export function ToastContainer() {
-    const navigate = useNavigate()
-    const { toasts, removeToast } = useToast()
+    const navigate = useNavigate();
+    const { toasts, removeToast } = useToast();
 
     if (toasts.length === 0) {
-        return null
+        return null;
     }
 
     return (
@@ -22,21 +22,21 @@ export function ToastContainer() {
                     body={toast.body}
                     className="cursor-pointer"
                     onClick={() => {
-                        removeToast(toast.id)
+                        removeToast(toast.id);
                         if (toast.sessionId) {
                             void navigate({
                                 to: '/sessions/$sessionId',
                                 params: { sessionId: toast.sessionId },
-                            })
-                            return
+                            });
+                            return;
                         }
                         if (toast.url) {
-                            void navigate({ to: toast.url })
+                            void navigate({ to: toast.url });
                         }
                     }}
                     onClose={() => removeToast(toast.id)}
                 />
             ))}
         </div>
-    )
+    );
 }

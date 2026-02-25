@@ -1,16 +1,16 @@
-import { Spinner } from '@/components/Spinner'
-import { cn } from '@/lib/utils'
-import { useTranslation } from '@/lib/use-translation'
+import { Spinner } from '@/components/Spinner';
+import { useTranslation } from '@/lib/use-translation';
+import { cn } from '@/lib/utils';
 
 type LoadingStateProps = {
-    label?: string
-    className?: string
-    spinnerSize?: 'sm' | 'md' | 'lg'
-}
+    label?: string;
+    className?: string;
+    spinnerSize?: 'sm' | 'md' | 'lg';
+};
 
 export function LoadingState({ label, className, spinnerSize = 'md' }: LoadingStateProps) {
-    const { t } = useTranslation()
-    const displayLabel = label ?? t('loading')
+    const { t } = useTranslation();
+    const displayLabel = label ?? t('loading');
 
     return (
         <div
@@ -21,5 +21,5 @@ export function LoadingState({ label, className, spinnerSize = 'md' }: LoadingSt
             <Spinner size={spinnerSize} label={null} />
             <span>{displayLabel}</span>
         </div>
-    )
+    );
 }

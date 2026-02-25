@@ -1,69 +1,68 @@
-import type { ToolCallMessagePartProps } from '@assistant-ui/react'
-import type { ChatBlock } from '@/chat/types'
-import type { ToolCallBlock } from '@/chat/types'
-import { isObject, safeStringify } from '@hapi/protocol'
-import { getEventPresentation } from '@/chat/presentation'
-import { CodeBlock } from '@/components/CodeBlock'
-import { MarkdownRenderer } from '@/components/MarkdownRenderer'
-import { LazyRainbowText } from '@/components/LazyRainbowText'
-import { MessageStatusIndicator } from '@/components/AssistantChat/messages/MessageStatusIndicator'
-import { ToolCard } from '@/components/ToolCard/ToolCard'
-import { useHappyChatContext } from '@/components/AssistantChat/context'
-import { CliOutputBlock } from '@/components/CliOutputBlock'
+import type { ToolCallMessagePartProps } from '@assistant-ui/react';
+import { isObject, safeStringify } from '@hapi/protocol';
+import { getEventPresentation } from '@/chat/presentation';
+import type { ChatBlock, ToolCallBlock } from '@/chat/types';
+import { useHappyChatContext } from '@/components/AssistantChat/context';
+import { MessageStatusIndicator } from '@/components/AssistantChat/messages/MessageStatusIndicator';
+import { CliOutputBlock } from '@/components/CliOutputBlock';
+import { CodeBlock } from '@/components/CodeBlock';
+import { LazyRainbowText } from '@/components/LazyRainbowText';
+import { MarkdownRenderer } from '@/components/MarkdownRenderer';
+import { ToolCard } from '@/components/ToolCard/ToolCard';
 
 function isToolCallBlock(value: unknown): value is ToolCallBlock {
-    if (!isObject(value)) return false
-    if (value.kind !== 'tool-call') return false
-    if (typeof value.id !== 'string') return false
-    if (value.localId !== null && typeof value.localId !== 'string') return false
-    if (typeof value.createdAt !== 'number') return false
-    if (!Array.isArray(value.children)) return false
-    if (!isObject(value.tool)) return false
-    if (typeof value.tool.name !== 'string') return false
-    if (!('input' in value.tool)) return false
-    if (value.tool.description !== null && typeof value.tool.description !== 'string') return false
+    if (!isObject(value)) return false;
+    if (value.kind !== 'tool-call') return false;
+    if (typeof value.id !== 'string') return false;
+    if (value.localId !== null && typeof value.localId !== 'string') return false;
+    if (typeof value.createdAt !== 'number') return false;
+    if (!Array.isArray(value.children)) return false;
+    if (!isObject(value.tool)) return false;
+    if (typeof value.tool.name !== 'string') return false;
+    if (!('input' in value.tool)) return false;
+    if (value.tool.description !== null && typeof value.tool.description !== 'string') return false;
     if (
         value.tool.state !== 'pending' &&
         value.tool.state !== 'running' &&
         value.tool.state !== 'completed' &&
         value.tool.state !== 'error'
     )
-        return false
-    return true
+        return false;
+    return true;
 }
 
 function isPendingPermissionBlock(block: ChatBlock): boolean {
-    return block.kind === 'tool-call' && block.tool.permission?.status === 'pending'
+    return block.kind === 'tool-call' && block.tool.permission?.status === 'pending';
 }
 
 function splitTaskChildren(block: ToolCallBlock): { pending: ChatBlock[]; rest: ChatBlock[] } {
-    const pending: ChatBlock[] = []
-    const rest: ChatBlock[] = []
+    const pending: ChatBlock[] = [];
+    const rest: ChatBlock[] = [];
 
     for (const child of block.children) {
         if (isPendingPermissionBlock(child)) {
-            pending.push(child)
+            pending.push(child);
         } else {
-            rest.push(child)
+            rest.push(child);
         }
     }
 
-    return { pending, rest }
+    return { pending, rest };
 }
 
 function HappyNestedBlockList(props: { blocks: ChatBlock[] }) {
-    const ctx = useHappyChatContext()
+    const ctx = useHappyChatContext();
 
     return (
         <div className="flex flex-col gap-3">
             {props.blocks.map((block) => {
                 if (block.kind === 'user-text') {
                     const userBubbleClass =
-                        'w-fit max-w-[92%] ml-auto rounded-xl bg-[var(--app-secondary-bg)] px-3 py-2 text-[var(--app-fg)] shadow-sm'
-                    const status = block.status
+                        'w-fit max-w-[92%] ml-auto rounded-xl bg-[var(--app-secondary-bg)] px-3 py-2 text-[var(--app-fg)] shadow-sm';
+                    const status = block.status;
                     const canRetry =
-                        status === 'failed' && typeof block.localId === 'string' && Boolean(ctx.onRetryMessage)
-                    const onRetry = canRetry ? () => ctx.onRetryMessage!(block.localId!) : undefined
+                        status === 'failed' && typeof block.localId === 'string' && Boolean(ctx.onRetryMessage);
+                    const onRetry = canRetry ? () => ctx.onRetryMessage?.(block.localId!) : undefined;
 
                     return (
                         <div key={`user:${block.id}`} className={userBubbleClass}>
@@ -78,7 +77,7 @@ function HappyNestedBlockList(props: { blocks: ChatBlock[] }) {
                                 ) : null}
                             </div>
                         </div>
-                    )
+                    );
                 }
 
                 if (block.kind === 'agent-text') {
@@ -86,22 +85,22 @@ function HappyNestedBlockList(props: { blocks: ChatBlock[] }) {
                         <div key={`agent:${block.id}`} className="px-1">
                             <MarkdownRenderer content={block.text} />
                         </div>
-                    )
+                    );
                 }
 
                 if (block.kind === 'cli-output') {
-                    const alignClass = block.source === 'user' ? 'ml-auto w-full max-w-[92%]' : ''
+                    const alignClass = block.source === 'user' ? 'ml-auto w-full max-w-[92%]' : '';
                     return (
                         <div key={`cli:${block.id}`} className="px-1 min-w-0 max-w-full overflow-x-hidden">
                             <div className={alignClass}>
                                 <CliOutputBlock text={block.text} />
                             </div>
                         </div>
-                    )
+                    );
                 }
 
                 if (block.kind === 'agent-event') {
-                    const presentation = getEventPresentation(block.event)
+                    const presentation = getEventPresentation(block.event);
                     return (
                         <div key={`event:${block.id}`} className="py-1">
                             <div className="mx-auto w-fit max-w-[92%] px-2 text-center text-xs text-[var(--app-hint)] opacity-80">
@@ -111,12 +110,12 @@ function HappyNestedBlockList(props: { blocks: ChatBlock[] }) {
                                 </span>
                             </div>
                         </div>
-                    )
+                    );
                 }
 
                 if (block.kind === 'tool-call') {
-                    const isTask = block.tool.name === 'Task'
-                    const taskChildren = isTask ? splitTaskChildren(block) : null
+                    const isTask = block.tool.name === 'Task';
+                    const taskChildren = isTask ? splitTaskChildren(block) : null;
 
                     return (
                         <div key={`tool:${block.id}`} className="py-1">
@@ -154,24 +153,24 @@ function HappyNestedBlockList(props: { blocks: ChatBlock[] }) {
                                 )
                             ) : null}
                         </div>
-                    )
+                    );
                 }
 
-                return null
+                return null;
             })}
         </div>
-    )
+    );
 }
 
 export function HappyToolMessage(props: ToolCallMessagePartProps) {
-    const ctx = useHappyChatContext()
-    const artifact = props.artifact
+    const ctx = useHappyChatContext();
+    const artifact = props.artifact;
 
     if (!isToolCallBlock(artifact)) {
-        const argsText = typeof props.argsText === 'string' ? props.argsText.trim() : ''
-        const hasArgsText = argsText.length > 0
-        const hasResult = props.result !== undefined
-        const resultText = hasResult ? safeStringify(props.result) : ''
+        const argsText = typeof props.argsText === 'string' ? props.argsText.trim() : '';
+        const hasArgsText = argsText.length > 0;
+        const hasResult = props.result !== undefined;
+        const resultText = hasResult ? safeStringify(props.result) : '';
 
         return (
             <div className="py-1 min-w-0 max-w-full overflow-x-hidden">
@@ -200,12 +199,12 @@ export function HappyToolMessage(props: ToolCallMessagePartProps) {
                     ) : null}
                 </div>
             </div>
-        )
+        );
     }
 
-    const block = artifact
-    const isTask = block.tool.name === 'Task'
-    const taskChildren = isTask ? splitTaskChildren(block) : null
+    const block = artifact;
+    const isTask = block.tool.name === 'Task';
+    const taskChildren = isTask ? splitTaskChildren(block) : null;
 
     return (
         <div className="py-1 min-w-0 max-w-full overflow-x-hidden">
@@ -243,5 +242,5 @@ export function HappyToolMessage(props: ToolCallMessagePartProps) {
                 )
             ) : null}
         </div>
-    )
+    );
 }

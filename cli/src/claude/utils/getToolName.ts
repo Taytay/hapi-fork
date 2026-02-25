@@ -36,7 +36,7 @@ const STANDARD_TOOLS: Record<string, string> = {
     // Special cases
     exit_plan_mode: 'Execute Plan',
     ExitPlanMode: 'Execute Plan',
-}
+};
 
 /**
  * Converts snake_case or camelCase to Title Case
@@ -50,7 +50,7 @@ function toTitleCase(str: string): string {
             .replace(/_/g, ' ')
             // Capitalize first letter of each word
             .replace(/\b\w/g, (char) => char.toUpperCase())
-    )
+    );
 }
 
 /**
@@ -59,19 +59,19 @@ function toTitleCase(str: string): string {
 export function getToolName(toolName: string): string {
     // Check if it's a standard tool
     if (STANDARD_TOOLS[toolName]) {
-        return STANDARD_TOOLS[toolName]
+        return STANDARD_TOOLS[toolName];
     }
 
     // Check if it's an MCP tool (format: mcp__server__action)
     if (toolName.startsWith('mcp__')) {
-        const parts = toolName.split('__')
+        const parts = toolName.split('__');
         if (parts.length >= 3) {
-            const server = toTitleCase(parts[1])
-            const action = toTitleCase(parts.slice(2).join('_'))
-            return `${server}: ${action}`
+            const server = toTitleCase(parts[1]);
+            const action = toTitleCase(parts.slice(2).join('_'));
+            return `${server}: ${action}`;
         }
     }
 
     // For unknown tools, try to make them more readable
-    return toTitleCase(toolName)
+    return toTitleCase(toolName);
 }

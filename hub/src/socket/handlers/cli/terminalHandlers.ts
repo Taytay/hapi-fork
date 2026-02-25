@@ -3,113 +3,113 @@ import {
     TerminalExitPayloadSchema,
     TerminalOutputPayloadSchema,
     TerminalReadyPayloadSchema,
-} from '@hapi/protocol'
-import type { StoredSession } from '../../../store'
-import type { TerminalRegistry } from '../../terminalRegistry'
-import type { CliSocketWithData, SocketServer } from '../../socketTypes'
-import type { AccessErrorReason, AccessResult } from './types'
+} from '@hapi/protocol';
+import type { StoredSession } from '../../../store';
+import type { CliSocketWithData, SocketServer } from '../../socketTypes';
+import type { TerminalRegistry } from '../../terminalRegistry';
+import type { AccessErrorReason, AccessResult } from './types';
 
-type ResolveSessionAccess = (sessionId: string) => AccessResult<StoredSession>
+type ResolveSessionAccess = (sessionId: string) => AccessResult<StoredSession>;
 
-type EmitAccessError = (scope: 'session' | 'machine', id: string, reason: AccessErrorReason) => void
+type EmitAccessError = (scope: 'session' | 'machine', id: string, reason: AccessErrorReason) => void;
 
-type SocketNamespace = ReturnType<SocketServer['of']>
+type SocketNamespace = ReturnType<SocketServer['of']>;
 
-const terminalReadySchema = TerminalReadyPayloadSchema
-const terminalOutputSchema = TerminalOutputPayloadSchema
-const terminalExitSchema = TerminalExitPayloadSchema
-const terminalErrorSchema = TerminalErrorPayloadSchema
+const terminalReadySchema = TerminalReadyPayloadSchema;
+const terminalOutputSchema = TerminalOutputPayloadSchema;
+const terminalExitSchema = TerminalExitPayloadSchema;
+const terminalErrorSchema = TerminalErrorPayloadSchema;
 
 export type TerminalHandlersDeps = {
-    terminalRegistry: TerminalRegistry
-    terminalNamespace: SocketNamespace
-    resolveSessionAccess: ResolveSessionAccess
-    emitAccessError: EmitAccessError
-}
+    terminalRegistry: TerminalRegistry;
+    terminalNamespace: SocketNamespace;
+    resolveSessionAccess: ResolveSessionAccess;
+    emitAccessError: EmitAccessError;
+};
 
 export function registerTerminalHandlers(socket: CliSocketWithData, deps: TerminalHandlersDeps): void {
-    const { terminalRegistry, terminalNamespace, resolveSessionAccess, emitAccessError } = deps
+    const { terminalRegistry, terminalNamespace, resolveSessionAccess, emitAccessError } = deps;
 
     const forwardTerminalEvent = (
         event: string,
-        payload: { sessionId: string; terminalId: string } & Record<string, unknown>
+        payload: { sessionId: string; terminalId: string } & Record<string, unknown>,
     ) => {
-        const entry = terminalRegistry.get(payload.terminalId)
+        const entry = terminalRegistry.get(payload.terminalId);
         if (!entry) {
-            return
+            return;
         }
         if (entry.cliSocketId !== socket.id) {
-            return
+            return;
         }
         if (payload.sessionId !== entry.sessionId) {
-            return
+            return;
         }
-        const sessionAccess = resolveSessionAccess(payload.sessionId)
+        const sessionAccess = resolveSessionAccess(payload.sessionId);
         if (!sessionAccess.ok) {
-            emitAccessError('session', payload.sessionId, sessionAccess.reason)
-            return
+            emitAccessError('session', payload.sessionId, sessionAccess.reason);
+            return;
         }
-        const terminalSocket = terminalNamespace.sockets.get(entry.socketId)
+        const terminalSocket = terminalNamespace.sockets.get(entry.socketId);
         if (!terminalSocket) {
-            return
+            return;
         }
-        terminalSocket.emit(event, payload)
-    }
+        terminalSocket.emit(event, payload);
+    };
 
     socket.on('terminal:ready', (data: unknown) => {
-        const parsed = terminalReadySchema.safeParse(data)
+        const parsed = terminalReadySchema.safeParse(data);
         if (!parsed.success) {
-            return
+            return;
         }
-        terminalRegistry.markActivity(parsed.data.terminalId)
-        forwardTerminalEvent('terminal:ready', parsed.data)
-    })
+        terminalRegistry.markActivity(parsed.data.terminalId);
+        forwardTerminalEvent('terminal:ready', parsed.data);
+    });
 
     socket.on('terminal:output', (data: unknown) => {
-        const parsed = terminalOutputSchema.safeParse(data)
+        const parsed = terminalOutputSchema.safeParse(data);
         if (!parsed.success) {
-            return
+            return;
         }
-        terminalRegistry.markActivity(parsed.data.terminalId)
-        forwardTerminalEvent('terminal:output', parsed.data)
-    })
+        terminalRegistry.markActivity(parsed.data.terminalId);
+        forwardTerminalEvent('terminal:output', parsed.data);
+    });
 
     socket.on('terminal:exit', (data: unknown) => {
-        const parsed = terminalExitSchema.safeParse(data)
+        const parsed = terminalExitSchema.safeParse(data);
         if (!parsed.success) {
-            return
+            return;
         }
-        const entry = terminalRegistry.get(parsed.data.terminalId)
+        const entry = terminalRegistry.get(parsed.data.terminalId);
         if (!entry || entry.sessionId !== parsed.data.sessionId || entry.cliSocketId !== socket.id) {
-            return
+            return;
         }
-        terminalRegistry.remove(parsed.data.terminalId)
-        const terminalSocket = terminalNamespace.sockets.get(entry.socketId)
+        terminalRegistry.remove(parsed.data.terminalId);
+        const terminalSocket = terminalNamespace.sockets.get(entry.socketId);
         if (!terminalSocket) {
-            return
+            return;
         }
-        terminalSocket.emit('terminal:exit', parsed.data)
-    })
+        terminalSocket.emit('terminal:exit', parsed.data);
+    });
 
     socket.on('terminal:error', (data: unknown) => {
-        const parsed = terminalErrorSchema.safeParse(data)
+        const parsed = terminalErrorSchema.safeParse(data);
         if (!parsed.success) {
-            return
+            return;
         }
-        forwardTerminalEvent('terminal:error', parsed.data)
-    })
+        forwardTerminalEvent('terminal:error', parsed.data);
+    });
 }
 
 export function cleanupTerminalHandlers(
     socket: CliSocketWithData,
-    deps: { terminalRegistry: TerminalRegistry; terminalNamespace: SocketNamespace }
+    deps: { terminalRegistry: TerminalRegistry; terminalNamespace: SocketNamespace },
 ): void {
-    const removed = deps.terminalRegistry.removeByCliSocket(socket.id)
+    const removed = deps.terminalRegistry.removeByCliSocket(socket.id);
     for (const entry of removed) {
-        const terminalSocket = deps.terminalNamespace.sockets.get(entry.socketId)
+        const terminalSocket = deps.terminalNamespace.sockets.get(entry.socketId);
         terminalSocket?.emit('terminal:error', {
             terminalId: entry.terminalId,
             message: 'CLI disconnected.',
-        })
+        });
     }
 }

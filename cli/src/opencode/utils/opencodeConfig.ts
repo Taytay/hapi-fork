@@ -5,28 +5,28 @@
  * for the hapi change_title tool.
  */
 
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 
-const CONFIG_FILENAME = 'opencode.json'
-const INSTRUCTIONS_FILENAME = 'hapi-instructions.md'
+const CONFIG_FILENAME = 'opencode.json';
+const INSTRUCTIONS_FILENAME = 'hapi-instructions.md';
 
 interface McpServerEntry {
-    command: string
-    args: string[]
+    command: string;
+    args: string[];
 }
 
 interface OpencodeConfig {
-    $schema: string
+    $schema: string;
     mcp: Record<
         string,
         {
-            type: string
-            command: string[]
-            enabled: boolean
+            type: string;
+            command: string[];
+            enabled: boolean;
         }
-    >
-    instructions: string[]
+    >;
+    instructions: string[];
 }
 
 /**
@@ -39,13 +39,13 @@ interface OpencodeConfig {
 export function ensureOpencodeConfig(
     rootPath: string,
     mcpServer: McpServerEntry,
-    instructions: string
+    instructions: string,
 ): { configPath: string; instructionsPath: string } {
-    mkdirSync(rootPath, { recursive: true })
+    mkdirSync(rootPath, { recursive: true });
 
     // Write instructions file
-    const instructionsPath = join(rootPath, INSTRUCTIONS_FILENAME)
-    writeFileSafe(instructionsPath, instructions)
+    const instructionsPath = join(rootPath, INSTRUCTIONS_FILENAME);
+    writeFileSafe(instructionsPath, instructions);
 
     // Build opencode.json config
     // Use absolute path for instructions since OpenCode resolves paths relative to project root
@@ -59,13 +59,13 @@ export function ensureOpencodeConfig(
             },
         },
         instructions: [instructionsPath],
-    }
+    };
 
-    const configPath = join(rootPath, CONFIG_FILENAME)
-    const configJson = JSON.stringify(config, null, 2)
-    writeFileSafe(configPath, configJson)
+    const configPath = join(rootPath, CONFIG_FILENAME);
+    const configJson = JSON.stringify(config, null, 2);
+    writeFileSafe(configPath, configJson);
 
-    return { configPath, instructionsPath }
+    return { configPath, instructionsPath };
 }
 
 /**
@@ -73,12 +73,12 @@ export function ensureOpencodeConfig(
  */
 function writeFileSafe(filePath: string, content: string): void {
     try {
-        const current = readFileSync(filePath, 'utf-8')
+        const current = readFileSync(filePath, 'utf-8');
         if (current === content) {
-            return
+            return;
         }
     } catch {
         // Ignore missing or unreadable file
     }
-    writeFileSync(filePath, content, 'utf-8')
+    writeFileSync(filePath, content, 'utf-8');
 }

@@ -1,5 +1,5 @@
-import { getPermissionModeOptionsForFlavor, MODEL_MODE_LABELS, MODEL_MODES } from '@hapi/protocol'
-import { ComposerPrimitive, useAssistantApi, useAssistantState } from '@assistant-ui/react'
+import { ComposerPrimitive, useAssistantApi, useAssistantState } from '@assistant-ui/react';
+import { getPermissionModeOptionsForFlavor, MODEL_MODE_LABELS, MODEL_MODES } from '@hapi/protocol';
 import {
     type ChangeEvent as ReactChangeEvent,
     type ClipboardEvent as ReactClipboardEvent,
@@ -11,55 +11,55 @@ import {
     useMemo,
     useRef,
     useState,
-} from 'react'
-import type { AgentState, ModelMode, PermissionMode } from '@/types/api'
-import type { Suggestion } from '@/hooks/useActiveSuggestions'
-import type { ConversationStatus } from '@/realtime/types'
-import { useActiveWord } from '@/hooks/useActiveWord'
-import { useActiveSuggestions } from '@/hooks/useActiveSuggestions'
-import { applySuggestion } from '@/utils/applySuggestion'
-import { usePlatform } from '@/hooks/usePlatform'
-import { usePWAInstall } from '@/hooks/usePWAInstall'
-import { isCodexFamilyFlavor } from '@/lib/agentFlavorUtils'
-import { markSkillUsed } from '@/lib/recent-skills'
-import { FloatingOverlay } from '@/components/ChatInput/FloatingOverlay'
-import { Autocomplete } from '@/components/ChatInput/Autocomplete'
-import { StatusBar } from '@/components/AssistantChat/StatusBar'
-import { ComposerButtons } from '@/components/AssistantChat/ComposerButtons'
-import { AttachmentItem } from '@/components/AssistantChat/AttachmentItem'
-import { useTranslation } from '@/lib/use-translation'
+} from 'react';
+import { AttachmentItem } from '@/components/AssistantChat/AttachmentItem';
+import { ComposerButtons } from '@/components/AssistantChat/ComposerButtons';
+import { StatusBar } from '@/components/AssistantChat/StatusBar';
+import { Autocomplete } from '@/components/ChatInput/Autocomplete';
+import { FloatingOverlay } from '@/components/ChatInput/FloatingOverlay';
+import type { Suggestion } from '@/hooks/useActiveSuggestions';
+import { useActiveSuggestions } from '@/hooks/useActiveSuggestions';
+import { useActiveWord } from '@/hooks/useActiveWord';
+import { usePlatform } from '@/hooks/usePlatform';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { isCodexFamilyFlavor } from '@/lib/agentFlavorUtils';
+import { markSkillUsed } from '@/lib/recent-skills';
+import { useTranslation } from '@/lib/use-translation';
+import type { ConversationStatus } from '@/realtime/types';
+import type { AgentState, ModelMode, PermissionMode } from '@/types/api';
+import { applySuggestion } from '@/utils/applySuggestion';
 
 export interface TextInputState {
-    text: string
-    selection: { start: number; end: number }
+    text: string;
+    selection: { start: number; end: number };
 }
 
-const defaultSuggestionHandler = async (): Promise<Suggestion[]> => []
+const defaultSuggestionHandler = async (): Promise<Suggestion[]> => [];
 
 export function HappyComposer(props: {
-    disabled?: boolean
-    permissionMode?: PermissionMode
-    modelMode?: ModelMode
-    active?: boolean
-    allowSendWhenInactive?: boolean
-    thinking?: boolean
-    agentState?: AgentState | null
-    contextSize?: number
-    controlledByUser?: boolean
-    agentFlavor?: string | null
-    onPermissionModeChange?: (mode: PermissionMode) => void
-    onModelModeChange?: (mode: ModelMode) => void
-    onSwitchToRemote?: () => void
-    onTerminal?: () => void
-    autocompletePrefixes?: string[]
-    autocompleteSuggestions?: (query: string) => Promise<Suggestion[]>
+    disabled?: boolean;
+    permissionMode?: PermissionMode;
+    modelMode?: ModelMode;
+    active?: boolean;
+    allowSendWhenInactive?: boolean;
+    thinking?: boolean;
+    agentState?: AgentState | null;
+    contextSize?: number;
+    controlledByUser?: boolean;
+    agentFlavor?: string | null;
+    onPermissionModeChange?: (mode: PermissionMode) => void;
+    onModelModeChange?: (mode: ModelMode) => void;
+    onSwitchToRemote?: () => void;
+    onTerminal?: () => void;
+    autocompletePrefixes?: string[];
+    autocompleteSuggestions?: (query: string) => Promise<Suggestion[]>;
     // Voice assistant props
-    voiceStatus?: ConversationStatus
-    voiceMicMuted?: boolean
-    onVoiceToggle?: () => void
-    onVoiceMicToggle?: () => void
+    voiceStatus?: ConversationStatus;
+    voiceMicMuted?: boolean;
+    onVoiceToggle?: () => void;
+    onVoiceMicToggle?: () => void;
 }) {
-    const { t } = useTranslation()
+    const { t } = useTranslation();
     const {
         disabled = false,
         permissionMode: rawPermissionMode,
@@ -81,107 +81,107 @@ export function HappyComposer(props: {
         voiceMicMuted = false,
         onVoiceToggle,
         onVoiceMicToggle,
-    } = props
+    } = props;
 
     // Use ?? so missing values fall back to default (destructuring defaults only handle undefined)
-    const permissionMode = rawPermissionMode ?? 'default'
-    const modelMode = rawModelMode ?? 'default'
+    const permissionMode = rawPermissionMode ?? 'default';
+    const modelMode = rawModelMode ?? 'default';
 
-    const api = useAssistantApi()
-    const composerText = useAssistantState(({ composer }) => composer.text)
-    const attachments = useAssistantState(({ composer }) => composer.attachments)
-    const threadIsRunning = useAssistantState(({ thread }) => thread.isRunning)
-    const threadIsDisabled = useAssistantState(({ thread }) => thread.isDisabled)
+    const api = useAssistantApi();
+    const composerText = useAssistantState(({ composer }) => composer.text);
+    const attachments = useAssistantState(({ composer }) => composer.attachments);
+    const threadIsRunning = useAssistantState(({ thread }) => thread.isRunning);
+    const threadIsDisabled = useAssistantState(({ thread }) => thread.isDisabled);
 
-    const controlsDisabled = disabled || (!active && !allowSendWhenInactive) || threadIsDisabled
-    const trimmed = composerText.trim()
-    const hasText = trimmed.length > 0
-    const hasAttachments = attachments.length > 0
+    const controlsDisabled = disabled || (!active && !allowSendWhenInactive) || threadIsDisabled;
+    const trimmed = composerText.trim();
+    const hasText = trimmed.length > 0;
+    const hasAttachments = attachments.length > 0;
     const attachmentsReady =
         !hasAttachments ||
         attachments.every((attachment) => {
             if (attachment.status.type === 'complete') {
-                return true
+                return true;
             }
             if (attachment.status.type !== 'requires-action') {
-                return false
+                return false;
             }
-            const path = (attachment as { path?: string }).path
-            return typeof path === 'string' && path.length > 0
-        })
-    const canSend = (hasText || hasAttachments) && attachmentsReady && !controlsDisabled && !threadIsRunning
+            const path = (attachment as { path?: string }).path;
+            return typeof path === 'string' && path.length > 0;
+        });
+    const canSend = (hasText || hasAttachments) && attachmentsReady && !controlsDisabled && !threadIsRunning;
 
     const [inputState, setInputState] = useState<TextInputState>({
         text: '',
         selection: { start: 0, end: 0 },
-    })
-    const [showSettings, setShowSettings] = useState(false)
-    const [isAborting, setIsAborting] = useState(false)
-    const [isSwitching, setIsSwitching] = useState(false)
-    const [showContinueHint, setShowContinueHint] = useState(false)
+    });
+    const [showSettings, setShowSettings] = useState(false);
+    const [isAborting, setIsAborting] = useState(false);
+    const [isSwitching, setIsSwitching] = useState(false);
+    const [showContinueHint, setShowContinueHint] = useState(false);
 
-    const textareaRef = useRef<HTMLTextAreaElement>(null)
-    const prevControlledByUser = useRef(controlledByUser)
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const prevControlledByUser = useRef(controlledByUser);
 
     useEffect(() => {
         setInputState((prev) => {
-            if (prev.text === composerText) return prev
+            if (prev.text === composerText) return prev;
             // When syncing from composerText, update selection to end of text
             // This ensures activeWord detection works correctly
-            const newPos = composerText.length
-            return { text: composerText, selection: { start: newPos, end: newPos } }
-        })
-    }, [composerText])
+            const newPos = composerText.length;
+            return { text: composerText, selection: { start: newPos, end: newPos } };
+        });
+    }, [composerText]);
 
     // Track one-time "continue" hint after switching from local to remote.
     useEffect(() => {
         if (prevControlledByUser.current === true && controlledByUser === false) {
-            setShowContinueHint(true)
+            setShowContinueHint(true);
         }
         if (controlledByUser) {
-            setShowContinueHint(false)
+            setShowContinueHint(false);
         }
-        prevControlledByUser.current = controlledByUser
-    }, [controlledByUser])
+        prevControlledByUser.current = controlledByUser;
+    }, [controlledByUser]);
 
-    const { haptic: platformHaptic, isTouch } = usePlatform()
-    const { isStandalone, isIOS } = usePWAInstall()
-    const isIOSPWA = isIOS && isStandalone
-    const bottomPaddingClass = isIOSPWA ? 'pb-0' : 'pb-3'
-    const activeWord = useActiveWord(inputState.text, inputState.selection, autocompletePrefixes)
+    const { haptic: platformHaptic, isTouch } = usePlatform();
+    const { isStandalone, isIOS } = usePWAInstall();
+    const isIOSPWA = isIOS && isStandalone;
+    const bottomPaddingClass = isIOSPWA ? 'pb-0' : 'pb-3';
+    const activeWord = useActiveWord(inputState.text, inputState.selection, autocompletePrefixes);
     const [suggestions, selectedIndex, moveUp, moveDown, clearSuggestions] = useActiveSuggestions(
         activeWord,
         autocompleteSuggestions,
-        { clampSelection: true, wrapAround: true }
-    )
+        { clampSelection: true, wrapAround: true },
+    );
 
     const haptic = useCallback(
         (type: 'light' | 'success' | 'error' = 'light') => {
             if (type === 'light') {
-                platformHaptic.impact('light')
+                platformHaptic.impact('light');
             } else if (type === 'success') {
-                platformHaptic.notification('success')
+                platformHaptic.notification('success');
             } else {
-                platformHaptic.notification('error')
+                platformHaptic.notification('error');
             }
         },
-        [platformHaptic]
-    )
+        [platformHaptic],
+    );
 
     const handleSuggestionSelect = useCallback(
         (index: number) => {
-            const suggestion = suggestions[index]
-            if (!suggestion || !textareaRef.current) return
+            const suggestion = suggestions[index];
+            if (!suggestion || !textareaRef.current) return;
             if (suggestion.text.startsWith('$')) {
-                markSkillUsed(suggestion.text.slice(1))
+                markSkillUsed(suggestion.text.slice(1));
             }
 
             // For Codex user prompts with content, expand the content instead of command name
-            let textToInsert = suggestion.text
-            let addSpace = true
+            let textToInsert = suggestion.text;
+            let addSpace = true;
             if (agentFlavor === 'codex' && suggestion.source === 'user' && suggestion.content) {
-                textToInsert = suggestion.content
-                addSpace = false
+                textToInsert = suggestion.content;
+                addSpace = false;
             }
 
             const result = applySuggestion(
@@ -189,115 +189,115 @@ export function HappyComposer(props: {
                 inputState.selection,
                 textToInsert,
                 autocompletePrefixes,
-                addSpace
-            )
+                addSpace,
+            );
 
-            api.composer().setText(result.text)
+            api.composer().setText(result.text);
             setInputState({
                 text: result.text,
                 selection: { start: result.cursorPosition, end: result.cursorPosition },
-            })
+            });
 
             setTimeout(() => {
-                const el = textareaRef.current
-                if (!el) return
-                el.setSelectionRange(result.cursorPosition, result.cursorPosition)
+                const el = textareaRef.current;
+                if (!el) return;
+                el.setSelectionRange(result.cursorPosition, result.cursorPosition);
                 try {
-                    el.focus({ preventScroll: true })
+                    el.focus({ preventScroll: true });
                 } catch {
-                    el.focus()
+                    el.focus();
                 }
-            }, 0)
+            }, 0);
 
-            haptic('light')
+            haptic('light');
         },
-        [api, suggestions, inputState, autocompletePrefixes, haptic, agentFlavor]
-    )
+        [api, suggestions, inputState, autocompletePrefixes, haptic, agentFlavor],
+    );
 
-    const abortDisabled = controlsDisabled || isAborting || !threadIsRunning
-    const switchDisabled = controlsDisabled || isSwitching || !controlledByUser
-    const showSwitchButton = Boolean(controlledByUser && onSwitchToRemote)
-    const showTerminalButton = Boolean(onTerminal)
-
-    useEffect(() => {
-        if (!isAborting) return
-        if (threadIsRunning) return
-        setIsAborting(false)
-    }, [isAborting, threadIsRunning])
+    const abortDisabled = controlsDisabled || isAborting || !threadIsRunning;
+    const switchDisabled = controlsDisabled || isSwitching || !controlledByUser;
+    const showSwitchButton = Boolean(controlledByUser && onSwitchToRemote);
+    const showTerminalButton = Boolean(onTerminal);
 
     useEffect(() => {
-        if (!isSwitching) return
-        if (controlledByUser) return
-        setIsSwitching(false)
-    }, [isSwitching, controlledByUser])
+        if (!isAborting) return;
+        if (threadIsRunning) return;
+        setIsAborting(false);
+    }, [isAborting, threadIsRunning]);
+
+    useEffect(() => {
+        if (!isSwitching) return;
+        if (controlledByUser) return;
+        setIsSwitching(false);
+    }, [isSwitching, controlledByUser]);
 
     const handleAbort = useCallback(() => {
-        if (abortDisabled) return
-        haptic('error')
-        setIsAborting(true)
-        api.thread().cancelRun()
-    }, [abortDisabled, api, haptic])
+        if (abortDisabled) return;
+        haptic('error');
+        setIsAborting(true);
+        api.thread().cancelRun();
+    }, [abortDisabled, api, haptic]);
 
     const handleSwitch = useCallback(async () => {
-        if (switchDisabled || !onSwitchToRemote) return
-        haptic('light')
-        setIsSwitching(true)
+        if (switchDisabled || !onSwitchToRemote) return;
+        haptic('light');
+        setIsSwitching(true);
         try {
-            await onSwitchToRemote()
+            await onSwitchToRemote();
         } catch {
-            setIsSwitching(false)
+            setIsSwitching(false);
         }
-    }, [switchDisabled, onSwitchToRemote, haptic])
+    }, [switchDisabled, onSwitchToRemote, haptic]);
 
-    const permissionModeOptions = useMemo(() => getPermissionModeOptionsForFlavor(agentFlavor), [agentFlavor])
-    const permissionModes = useMemo(() => permissionModeOptions.map((option) => option.mode), [permissionModeOptions])
+    const permissionModeOptions = useMemo(() => getPermissionModeOptionsForFlavor(agentFlavor), [agentFlavor]);
+    const permissionModes = useMemo(() => permissionModeOptions.map((option) => option.mode), [permissionModeOptions]);
 
     const handleKeyDown = useCallback(
         (e: ReactKeyboardEvent<HTMLTextAreaElement>) => {
-            const key = e.key
+            const key = e.key;
 
             // Avoid intercepting IME composition keystrokes (Enter, arrows, etc.)
             if (e.nativeEvent.isComposing) {
-                return
+                return;
             }
 
             if (suggestions.length > 0) {
                 if (key === 'ArrowUp') {
-                    e.preventDefault()
-                    moveUp()
-                    return
+                    e.preventDefault();
+                    moveUp();
+                    return;
                 }
                 if (key === 'ArrowDown') {
-                    e.preventDefault()
-                    moveDown()
-                    return
+                    e.preventDefault();
+                    moveDown();
+                    return;
                 }
                 if ((key === 'Enter' || key === 'Tab') && !e.shiftKey) {
-                    e.preventDefault()
-                    const indexToSelect = selectedIndex >= 0 ? selectedIndex : 0
-                    handleSuggestionSelect(indexToSelect)
-                    return
+                    e.preventDefault();
+                    const indexToSelect = selectedIndex >= 0 ? selectedIndex : 0;
+                    handleSuggestionSelect(indexToSelect);
+                    return;
                 }
                 if (key === 'Escape') {
-                    e.preventDefault()
-                    clearSuggestions()
-                    return
+                    e.preventDefault();
+                    clearSuggestions();
+                    return;
                 }
             }
 
             if (key === 'Escape' && threadIsRunning) {
-                e.preventDefault()
-                handleAbort()
-                return
+                e.preventDefault();
+                handleAbort();
+                return;
             }
 
             if (key === 'Tab' && e.shiftKey && onPermissionModeChange && permissionModes.length > 0) {
-                e.preventDefault()
-                const currentIndex = permissionModes.indexOf(permissionMode)
-                const nextIndex = (currentIndex + 1) % permissionModes.length
-                const nextMode = permissionModes[nextIndex] ?? 'default'
-                onPermissionModeChange(nextMode)
-                haptic('light')
+                e.preventDefault();
+                const currentIndex = permissionModes.indexOf(permissionMode);
+                const nextIndex = (currentIndex + 1) % permissionModes.length;
+                const nextMode = permissionModes[nextIndex] ?? 'default';
+                onPermissionModeChange(nextMode);
+                haptic('light');
             }
         },
         [
@@ -313,105 +313,105 @@ export function HappyComposer(props: {
             permissionMode,
             permissionModes,
             haptic,
-        ]
-    )
+        ],
+    );
 
     useEffect(() => {
         const handleGlobalKeyDown = (e: globalThis.KeyboardEvent) => {
             if (e.key === 'm' && (e.metaKey || e.ctrlKey) && onModelModeChange && !isCodexFamilyFlavor(agentFlavor)) {
-                e.preventDefault()
-                const currentIndex = MODEL_MODES.indexOf(modelMode as (typeof MODEL_MODES)[number])
-                const nextIndex = (currentIndex + 1) % MODEL_MODES.length
-                onModelModeChange(MODEL_MODES[nextIndex])
-                haptic('light')
+                e.preventDefault();
+                const currentIndex = MODEL_MODES.indexOf(modelMode as (typeof MODEL_MODES)[number]);
+                const nextIndex = (currentIndex + 1) % MODEL_MODES.length;
+                onModelModeChange(MODEL_MODES[nextIndex]);
+                haptic('light');
             }
-        }
+        };
 
-        window.addEventListener('keydown', handleGlobalKeyDown)
-        return () => window.removeEventListener('keydown', handleGlobalKeyDown)
-    }, [modelMode, onModelModeChange, haptic, agentFlavor])
+        window.addEventListener('keydown', handleGlobalKeyDown);
+        return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+    }, [modelMode, onModelModeChange, haptic, agentFlavor]);
 
     const handleChange = useCallback((e: ReactChangeEvent<HTMLTextAreaElement>) => {
         const selection = {
             start: e.target.selectionStart,
             end: e.target.selectionEnd,
-        }
-        setInputState({ text: e.target.value, selection })
-    }, [])
+        };
+        setInputState({ text: e.target.value, selection });
+    }, []);
 
     const handleSelect = useCallback((e: ReactSyntheticEvent<HTMLTextAreaElement>) => {
-        const target = e.target as HTMLTextAreaElement
+        const target = e.target as HTMLTextAreaElement;
         setInputState((prev) => ({
             ...prev,
             selection: { start: target.selectionStart, end: target.selectionEnd },
-        }))
-    }, [])
+        }));
+    }, []);
 
     const handlePaste = useCallback(
         async (e: ReactClipboardEvent<HTMLTextAreaElement>) => {
-            const files = Array.from(e.clipboardData?.files || [])
-            const imageFiles = files.filter((file) => file.type.startsWith('image/'))
+            const files = Array.from(e.clipboardData?.files || []);
+            const imageFiles = files.filter((file) => file.type.startsWith('image/'));
 
-            if (imageFiles.length === 0) return
+            if (imageFiles.length === 0) return;
 
-            e.preventDefault()
+            e.preventDefault();
 
             try {
                 for (const file of imageFiles) {
-                    await api.composer().addAttachment(file)
+                    await api.composer().addAttachment(file);
                 }
             } catch (error) {
-                console.error('Error adding pasted image:', error)
+                console.error('Error adding pasted image:', error);
             }
         },
-        [api]
-    )
+        [api],
+    );
 
     const handleSettingsToggle = useCallback(() => {
-        haptic('light')
-        setShowSettings((prev) => !prev)
-    }, [haptic])
+        haptic('light');
+        setShowSettings((prev) => !prev);
+    }, [haptic]);
 
     const handleSubmit = useCallback(
         (event?: ReactFormEvent<HTMLFormElement>) => {
             if (event && !attachmentsReady) {
-                event.preventDefault()
-                return
+                event.preventDefault();
+                return;
             }
-            setShowContinueHint(false)
+            setShowContinueHint(false);
         },
-        [attachmentsReady]
-    )
+        [attachmentsReady],
+    );
 
     const handlePermissionChange = useCallback(
         (mode: PermissionMode) => {
-            if (!onPermissionModeChange || controlsDisabled) return
-            onPermissionModeChange(mode)
-            setShowSettings(false)
-            haptic('light')
+            if (!onPermissionModeChange || controlsDisabled) return;
+            onPermissionModeChange(mode);
+            setShowSettings(false);
+            haptic('light');
         },
-        [onPermissionModeChange, controlsDisabled, haptic]
-    )
+        [onPermissionModeChange, controlsDisabled, haptic],
+    );
 
     const handleModelChange = useCallback(
         (mode: ModelMode) => {
-            if (!onModelModeChange || controlsDisabled) return
-            onModelModeChange(mode)
-            setShowSettings(false)
-            haptic('light')
+            if (!onModelModeChange || controlsDisabled) return;
+            onModelModeChange(mode);
+            setShowSettings(false);
+            haptic('light');
         },
-        [onModelModeChange, controlsDisabled, haptic]
-    )
+        [onModelModeChange, controlsDisabled, haptic],
+    );
 
-    const showPermissionSettings = Boolean(onPermissionModeChange && permissionModeOptions.length > 0)
-    const showModelSettings = Boolean(onModelModeChange && !isCodexFamilyFlavor(agentFlavor))
-    const showSettingsButton = Boolean(showPermissionSettings || showModelSettings)
-    const showAbortButton = true
-    const voiceEnabled = Boolean(onVoiceToggle)
+    const showPermissionSettings = Boolean(onPermissionModeChange && permissionModeOptions.length > 0);
+    const showModelSettings = Boolean(onModelModeChange && !isCodexFamilyFlavor(agentFlavor));
+    const showSettingsButton = Boolean(showPermissionSettings || showModelSettings);
+    const showAbortButton = true;
+    const voiceEnabled = Boolean(onVoiceToggle);
 
     const handleSend = useCallback(() => {
-        api.composer().send()
-    }, [api])
+        api.composer().send();
+    }, [api]);
 
     const overlays = useMemo(() => {
         if (showSettings && (showPermissionSettings || showModelSettings)) {
@@ -499,7 +499,7 @@ export function HappyComposer(props: {
                         ) : null}
                     </FloatingOverlay>
                 </div>
-            )
+            );
         }
 
         if (suggestions.length > 0) {
@@ -513,10 +513,10 @@ export function HappyComposer(props: {
                         />
                     </FloatingOverlay>
                 </div>
-            )
+            );
         }
 
-        return null
+        return null;
     }, [
         showSettings,
         showPermissionSettings,
@@ -530,7 +530,8 @@ export function HappyComposer(props: {
         handlePermissionChange,
         handleModelChange,
         handleSuggestionSelect,
-    ])
+        t,
+    ]);
 
     return (
         <div className={`px-3 ${bottomPaddingClass} pt-2 bg-[var(--app-bg)]`}>
@@ -600,5 +601,5 @@ export function HappyComposer(props: {
                 </ComposerPrimitive.Root>
             </div>
         </div>
-    )
+    );
 }

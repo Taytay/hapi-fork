@@ -1,22 +1,22 @@
-import { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { useTranslation } from '@/lib/use-translation'
+import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useTranslation } from '@/lib/use-translation';
 
 type ConfirmDialogProps = {
-    isOpen: boolean
-    onClose: () => void
-    title: string
-    description: string
-    confirmLabel: string
-    confirmingLabel: string
-    onConfirm: () => Promise<void>
-    isPending: boolean
-    destructive?: boolean
-}
+    isOpen: boolean;
+    onClose: () => void;
+    title: string;
+    description: string;
+    confirmLabel: string;
+    confirmingLabel: string;
+    onConfirm: () => Promise<void>;
+    isPending: boolean;
+    destructive?: boolean;
+};
 
 export function ConfirmDialog(props: ConfirmDialogProps) {
-    const { t } = useTranslation()
+    const { t } = useTranslation();
     const {
         isOpen,
         onClose,
@@ -27,27 +27,27 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
         onConfirm,
         isPending,
         destructive = false,
-    } = props
+    } = props;
 
-    const [error, setError] = useState<string | null>(null)
+    const [error, setError] = useState<string | null>(null);
 
     // Clear error when dialog opens/closes
     useEffect(() => {
         if (isOpen) {
-            setError(null)
+            setError(null);
         }
-    }, [isOpen])
+    }, [isOpen]);
 
     const handleConfirm = async () => {
-        setError(null)
+        setError(null);
         try {
-            await onConfirm()
-            onClose()
+            await onConfirm();
+            onClose();
         } catch (err) {
-            const message = err instanceof Error && err.message ? err.message : t('dialog.error.default')
-            setError(message)
+            const message = err instanceof Error && err.message ? err.message : t('dialog.error.default');
+            setError(message);
         }
-    }
+    };
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -78,5 +78,5 @@ export function ConfirmDialog(props: ConfirmDialogProps) {
                 </div>
             </DialogContent>
         </Dialog>
-    )
+    );
 }

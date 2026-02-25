@@ -1,15 +1,15 @@
-import type { Database } from 'bun:sqlite'
+import type { Database } from 'bun:sqlite';
 
-import type { StoredPushSubscription } from './types'
+import type { StoredPushSubscription } from './types';
 
 type DbPushSubscriptionRow = {
-    id: number
-    namespace: string
-    endpoint: string
-    p256dh: string
-    auth: string
-    created_at: number
-}
+    id: number;
+    namespace: string;
+    endpoint: string;
+    p256dh: string;
+    auth: string;
+    created_at: number;
+};
 
 function toStoredPushSubscription(row: DbPushSubscriptionRow): StoredPushSubscription {
     return {
@@ -19,17 +19,16 @@ function toStoredPushSubscription(row: DbPushSubscriptionRow): StoredPushSubscri
         p256dh: row.p256dh,
         auth: row.auth,
         createdAt: row.created_at,
-    }
+    };
 }
 
 export function addPushSubscription(
     db: Database,
     namespace: string,
-    subscription: { endpoint: string; p256dh: string; auth: string }
+    subscription: { endpoint: string; p256dh: string; auth: string },
 ): void {
-    const now = Date.now()
-    db.prepare(
-        `
+    const now = Date.now();
+    db.prepare(`
         INSERT INTO push_subscriptions (
             namespace, endpoint, p256dh, auth, created_at
         ) VALUES (
@@ -40,23 +39,22 @@ export function addPushSubscription(
             p256dh = excluded.p256dh,
             auth = excluded.auth,
             created_at = excluded.created_at
-    `
-    ).run({
+    `).run({
         namespace,
         endpoint: subscription.endpoint,
         p256dh: subscription.p256dh,
         auth: subscription.auth,
         created_at: now,
-    })
+    });
 }
 
 export function removePushSubscription(db: Database, namespace: string, endpoint: string): void {
-    db.prepare('DELETE FROM push_subscriptions WHERE namespace = ? AND endpoint = ?').run(namespace, endpoint)
+    db.prepare('DELETE FROM push_subscriptions WHERE namespace = ? AND endpoint = ?').run(namespace, endpoint);
 }
 
 export function getPushSubscriptionsByNamespace(db: Database, namespace: string): StoredPushSubscription[] {
     const rows = db
         .prepare('SELECT * FROM push_subscriptions WHERE namespace = ? ORDER BY created_at DESC')
-        .all(namespace) as DbPushSubscriptionRow[]
-    return rows.map(toStoredPushSubscription)
+        .all(namespace) as DbPushSubscriptionRow[];
+    return rows.map(toStoredPushSubscription);
 }

@@ -1,0 +1,115 @@
+{
+    "$schema": "https://biomejs.dev/schemas/2.4.4/schema.json",
+    "vcs": {
+        "enabled": true,
+        "clientKind": "git",
+        "useIgnoreFile": true
+    },
+    "files": {
+        "ignoreUnknown": true,
+        "includes": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.json", "**/*.css"]
+    },
+    "css": {
+        "parser": {
+            "cssModules": true,
+            "tailwindDirectives": true
+        },
+        "formatter": {
+            "enabled": true
+        },
+        "linter": {
+            "enabled": true
+        }
+    },
+    "formatter": {
+        "enabled": true,
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineWidth": 120
+    },
+    "linter": {
+        "enabled": true,
+        "rules": {
+            "recommended": true,
+            "suspicious": {
+                "noExplicitAny": "warn",
+                "noArrayIndexKey": "off",
+                "noControlCharactersInRegex": "off",
+                "noPrototypeBuiltins": "off",
+                "noImplicitAnyLet": "off",
+                "noAssignInExpressions": "off",
+                "noDocumentCookie": "off",
+                "useIterableCallbackReturn": "off"
+            },
+            "style": {
+                "noNonNullAssertion": "warn"
+            },
+            "a11y": {
+                "noSvgWithoutTitle": "off",
+                "useSemanticElements": "off",
+                "useButtonType": "off",
+                "noLabelWithoutControl": "off",
+                "useFocusableInteractive": "off",
+                "useKeyWithClickEvents": "off",
+                "useAriaPropsForRole": "off",
+                "useAltText": "off"
+            },
+            "security": {
+                "noDangerouslySetInnerHtml": "off"
+            },
+            "complexity": {
+                "noBannedTypes": "off",
+                "noStaticOnlyClass": "off"
+            },
+            "correctness": {
+                "noVoidTypeReturn": "off",
+                "useExhaustiveDependencies": "warn"
+            }
+        }
+    },
+    "javascript": {
+        "formatter": {
+            "quoteStyle": "single"
+        }
+    },
+    "assist": {
+        "enabled": true,
+        "actions": {
+            "source": {
+                "organizeImports": "on"
+            }
+        }
+    },
+    "overrides": [
+        {
+            "includes": ["website/**"],
+            "formatter": {
+                "indentWidth": 2,
+                "lineWidth": 80
+            },
+            "javascript": {
+                "formatter": {
+                    "quoteStyle": "double",
+                    "semicolons": "always"
+                }
+            }
+        },
+        {
+            "includes": ["**/*.bun.ts"],
+            "formatter": {
+                "enabled": false
+            },
+            "linter": {
+                "enabled": false
+            }
+        },
+        {
+            "includes": ["**/*.css"],
+            "css": {
+                "parser": {
+                    "cssModules": true
+                }
+            }
+        }
+    ]
+}

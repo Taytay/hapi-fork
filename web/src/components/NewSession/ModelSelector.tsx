@@ -1,17 +1,17 @@
-import type { AgentType } from './types'
-import { MODEL_OPTIONS } from './types'
-import { useTranslation } from '@/lib/use-translation'
+import { useTranslation } from '@/lib/use-translation';
+import type { AgentType } from './types';
+import { MODEL_OPTIONS } from './types';
 
 export function ModelSelector(props: {
-    agent: AgentType
-    model: string
-    isDisabled: boolean
-    onModelChange: (value: string) => void
+    agent: AgentType;
+    model: string;
+    isDisabled: boolean;
+    onModelChange: (value: string) => void;
 }) {
-    const { t } = useTranslation()
-    const options = MODEL_OPTIONS[props.agent]
+    const { t } = useTranslation();
+    const options = MODEL_OPTIONS[props.agent];
     if (options.length === 0) {
-        return null
+        return null;
     }
 
     return (
@@ -32,5 +32,5 @@ export function ModelSelector(props: {
                 ))}
             </select>
         </div>
-    )
+    );
 }

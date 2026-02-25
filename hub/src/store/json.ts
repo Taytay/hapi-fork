@@ -1,8 +1,8 @@
 export function safeJsonParse(value: string | null): unknown | null {
-    if (value === null) return null
+    if (value === null) return null;
     try {
-        return JSON.parse(value) as unknown
+        return JSON.parse(value) as unknown;
     } catch {
-        return null
+        return null;
     }
 }

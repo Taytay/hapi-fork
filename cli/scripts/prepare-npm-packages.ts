@@ -11,12 +11,12 @@
  * Run after `bun run build:exe:all`
  */
 
-import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const projectRoot = join(__dirname, '..')
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const projectRoot = join(__dirname, '..');
 
 // Platform configurations
 // Maps npm platform name to build target info
@@ -56,29 +56,29 @@ const PLATFORMS = [
         buildTarget: 'bun-windows-x64',
         binName: 'hapi.exe',
     },
-] as const
+] as const;
 
 interface MainPackageJson {
-    name: string
-    version: string
-    description?: string
-    author?: string | { name: string; email?: string; url?: string }
-    license?: string
-    type?: string
-    homepage?: string
-    bugs?: string | { url?: string; email?: string }
+    name: string;
+    version: string;
+    description?: string;
+    author?: string | { name: string; email?: string; url?: string };
+    license?: string;
+    type?: string;
+    homepage?: string;
+    bugs?: string | { url?: string; email?: string };
     repository?: {
-        type: string
-        url: string
-        directory?: string
-    }
-    bin?: Record<string, string>
+        type: string;
+        url: string;
+        directory?: string;
+    };
+    bin?: Record<string, string>;
 }
 
 async function readMainPackageJson(): Promise<MainPackageJson> {
-    const pkgPath = join(projectRoot, 'package.json')
-    const content = await Bun.file(pkgPath).text()
-    return JSON.parse(content)
+    const pkgPath = join(projectRoot, 'package.json');
+    const content = await Bun.file(pkgPath).text();
+    return JSON.parse(content);
 }
 
 function generatePlatformPackageJson(platform: (typeof PLATFORMS)[number], mainPkg: MainPackageJson): object {
@@ -94,17 +94,17 @@ function generatePlatformPackageJson(platform: (typeof PLATFORMS)[number], mainP
         files: [`bin/${platform.binName}`],
         license: mainPkg.license ?? 'MIT',
         repository: mainPkg.repository,
-    }
+    };
 }
 
 function buildOptionalDependencies(version: string): Record<string, string> {
-    const optionalDependencies: Record<string, string> = {}
+    const optionalDependencies: Record<string, string> = {};
 
     for (const platform of PLATFORMS) {
-        optionalDependencies[`@twsxtd/hapi-${platform.name}`] = version
+        optionalDependencies[`@twsxtd/hapi-${platform.name}`] = version;
     }
 
-    return optionalDependencies
+    return optionalDependencies;
 }
 
 function generateMainPackageJson(mainPkg: MainPackageJson, optionalDependencies: Record<string, string>): object {
@@ -121,117 +121,117 @@ function generateMainPackageJson(mainPkg: MainPackageJson, optionalDependencies:
         bin: mainPkg.bin ?? { hapi: 'bin/hapi.cjs' },
         files: ['bin/hapi.cjs', 'NOTICE'],
         optionalDependencies,
-    }
+    };
 }
 
 function prepareMainPackage(mainPkg: MainPackageJson, projectRoot: string, npmDir: string): void {
-    const mainDir = join(npmDir, 'main')
-    const binDir = join(mainDir, 'bin')
-    const optionalDependencies = buildOptionalDependencies(mainPkg.version)
+    const mainDir = join(npmDir, 'main');
+    const binDir = join(mainDir, 'bin');
+    const optionalDependencies = buildOptionalDependencies(mainPkg.version);
 
-    mkdirSync(binDir, { recursive: true })
+    mkdirSync(binDir, { recursive: true });
 
-    const srcBin = join(projectRoot, 'bin', 'hapi.cjs')
-    const destBin = join(binDir, 'hapi.cjs')
-    copyFileSync(srcBin, destBin)
-    chmodSync(destBin, 0o755)
+    const srcBin = join(projectRoot, 'bin', 'hapi.cjs');
+    const destBin = join(binDir, 'hapi.cjs');
+    copyFileSync(srcBin, destBin);
+    chmodSync(destBin, 0o755);
 
-    const srcNotice = join(projectRoot, 'NOTICE')
-    const destNotice = join(mainDir, 'NOTICE')
-    copyFileSync(srcNotice, destNotice)
+    const srcNotice = join(projectRoot, 'NOTICE');
+    const destNotice = join(mainDir, 'NOTICE');
+    copyFileSync(srcNotice, destNotice);
 
-    const pkgJson = generateMainPackageJson(mainPkg, optionalDependencies)
-    const pkgJsonPath = join(mainDir, 'package.json')
-    writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4) + '\n')
-    console.log(`Generated: ${pkgJsonPath}`)
+    const pkgJson = generateMainPackageJson(mainPkg, optionalDependencies);
+    const pkgJsonPath = join(mainDir, 'package.json');
+    writeFileSync(pkgJsonPath, `${JSON.stringify(pkgJson, null, 4)}\n`);
+    console.log(`Generated: ${pkgJsonPath}`);
 }
 
 async function preparePlatform(
     platform: (typeof PLATFORMS)[number],
     mainPkg: MainPackageJson,
     distExeDir: string,
-    npmDir: string
+    npmDir: string,
 ): Promise<void> {
-    const platformDir = join(npmDir, platform.name)
-    const binDir = join(platformDir, 'bin')
+    const platformDir = join(npmDir, platform.name);
+    const binDir = join(platformDir, 'bin');
 
     // Ensure bin directory exists
-    mkdirSync(binDir, { recursive: true })
+    mkdirSync(binDir, { recursive: true });
 
     // Generate package.json
-    const pkgJson = generatePlatformPackageJson(platform, mainPkg)
-    const pkgJsonPath = join(platformDir, 'package.json')
-    writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 4) + '\n')
-    console.log(`Generated: ${pkgJsonPath}`)
+    const pkgJson = generatePlatformPackageJson(platform, mainPkg);
+    const pkgJsonPath = join(platformDir, 'package.json');
+    writeFileSync(pkgJsonPath, `${JSON.stringify(pkgJson, null, 4)}\n`);
+    console.log(`Generated: ${pkgJsonPath}`);
 
     // Copy binary
-    const srcBin = join(distExeDir, platform.buildTarget, platform.binName)
-    const destBin = join(binDir, platform.binName)
+    const srcBin = join(distExeDir, platform.buildTarget, platform.binName);
+    const destBin = join(binDir, platform.binName);
 
     if (!existsSync(srcBin)) {
-        console.warn(`Warning: Binary not found: ${srcBin}`)
-        console.warn(`  Run 'bun run build:exe:all' first to build binaries.`)
-        return
+        console.warn(`Warning: Binary not found: ${srcBin}`);
+        console.warn(`  Run 'bun run build:exe:all' first to build binaries.`);
+        return;
     }
 
-    copyFileSync(srcBin, destBin)
-    console.log(`Copied: ${srcBin} -> ${destBin}`)
+    copyFileSync(srcBin, destBin);
+    console.log(`Copied: ${srcBin} -> ${destBin}`);
 }
 
 function updateMainPackageOptionalDeps(version: string): void {
-    const pkgPath = join(projectRoot, 'package.json')
-    const content = readFileSync(pkgPath, 'utf-8')
-    const pkg = JSON.parse(content)
+    const pkgPath = join(projectRoot, 'package.json');
+    const content = readFileSync(pkgPath, 'utf-8');
+    const pkg = JSON.parse(content);
 
     // Update optionalDependencies versions
     if (!pkg.optionalDependencies) {
-        pkg.optionalDependencies = {}
+        pkg.optionalDependencies = {};
     }
 
-    pkg.optionalDependencies = buildOptionalDependencies(version)
+    pkg.optionalDependencies = buildOptionalDependencies(version);
 
-    writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n')
-    console.log(`Updated optionalDependencies in package.json to version ${version}`)
+    writeFileSync(pkgPath, `${JSON.stringify(pkg, null, 2)}\n`);
+    console.log(`Updated optionalDependencies in package.json to version ${version}`);
 }
 
 async function main(): Promise<void> {
-    console.log('Preparing npm platform packages...\n')
+    console.log('Preparing npm platform packages...\n');
 
-    const mainPkg = await readMainPackageJson()
-    console.log(`Version: ${mainPkg.version}\n`)
+    const mainPkg = await readMainPackageJson();
+    console.log(`Version: ${mainPkg.version}\n`);
 
     // Update optionalDependencies in main package.json
-    updateMainPackageOptionalDeps(mainPkg.version)
+    updateMainPackageOptionalDeps(mainPkg.version);
 
-    const distExeDir = join(projectRoot, 'dist-exe')
-    const npmDir = join(projectRoot, 'npm')
+    const distExeDir = join(projectRoot, 'dist-exe');
+    const npmDir = join(projectRoot, 'npm');
 
-    let hasErrors = false
+    let hasErrors = false;
 
     try {
-        prepareMainPackage(mainPkg, projectRoot, npmDir)
+        prepareMainPackage(mainPkg, projectRoot, npmDir);
     } catch (error) {
-        console.error('Error preparing main package:', error)
-        hasErrors = true
+        console.error('Error preparing main package:', error);
+        hasErrors = true;
     }
 
     for (const platform of PLATFORMS) {
         try {
-            await preparePlatform(platform, mainPkg, distExeDir, npmDir)
+            await preparePlatform(platform, mainPkg, distExeDir, npmDir);
         } catch (error) {
-            console.error(`Error preparing ${platform.name}:`, error)
-            hasErrors = true
+            console.error(`Error preparing ${platform.name}:`, error);
+            hasErrors = true;
         }
     }
 
-    console.log('\nDone!')
+    console.log('\nDone!');
 
     if (hasErrors) {
-        process.exit(1)
+        process.exit(1);
     }
 }
 
 main().catch((error) => {
-    console.error('Fatal error:', error)
-    process.exit(1)
-})
+    console.error('Fatal error:', error);
+    process.exit(1);
+});

@@ -10,20 +10,20 @@
  * - Stable object comparison for optimistic concurrency
  */
 
-import { createHash } from 'crypto'
+import { createHash } from 'node:crypto';
 
 /**
  * Options for deterministic JSON stringification
  */
 export interface DeterministicJsonOptions {
     /** How to handle undefined values */
-    undefinedBehavior?: 'omit' | 'null' | 'throw'
+    undefinedBehavior?: 'omit' | 'null' | 'throw';
     /** Whether to sort array contents (default: false) */
-    sortArrays?: boolean
+    sortArrays?: boolean;
     /** Custom replacer function */
-    replacer?: (key: string, value: any) => any
+    replacer?: (key: string, value: any) => any;
     /** Whether to include Symbol properties (default: false) */
-    includeSymbols?: boolean
+    includeSymbols?: boolean;
 }
 
 /**
@@ -34,104 +34,104 @@ export interface DeterministicJsonOptions {
  * @returns Deterministic JSON string
  */
 export function deterministicStringify(obj: any, options: DeterministicJsonOptions = {}): string {
-    const { undefinedBehavior = 'omit', sortArrays = false, replacer, includeSymbols = false } = options
+    const { undefinedBehavior = 'omit', sortArrays = false, replacer, includeSymbols = false } = options;
 
-    const seen = new WeakSet()
+    const seen = new WeakSet();
 
     function processValue(value: any, key?: string): any {
         // Handle replacer function
         if (replacer && key !== undefined) {
-            value = replacer(key, value)
+            value = replacer(key, value);
         }
 
         // Handle primitive types
-        if (value === null) return null
+        if (value === null) return null;
         if (value === undefined) {
             switch (undefinedBehavior) {
                 case 'omit':
-                    return undefined
+                    return undefined;
                 case 'null':
-                    return null
+                    return null;
                 case 'throw':
-                    throw new Error(`Undefined value at key: ${key}`)
+                    throw new Error(`Undefined value at key: ${key}`);
             }
         }
         if (typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') {
-            return value
+            return value;
         }
 
         // Handle special types
         if (value instanceof Date) {
-            return value.toISOString()
+            return value.toISOString();
         }
         if (value instanceof RegExp) {
-            return value.toString()
+            return value.toString();
         }
         if (typeof value === 'function') {
-            return undefined // Functions are omitted
+            return undefined; // Functions are omitted
         }
         if (typeof value === 'symbol') {
-            return includeSymbols ? value.toString() : undefined
+            return includeSymbols ? value.toString() : undefined;
         }
         if (typeof value === 'bigint') {
-            return value.toString() + 'n'
+            return `${value.toString()}n`;
         }
 
         // Handle circular references
         if (seen.has(value)) {
-            throw new Error('Circular reference detected')
+            throw new Error('Circular reference detected');
         }
-        seen.add(value)
+        seen.add(value);
 
         // Handle arrays
         if (Array.isArray(value)) {
             const processed = value
                 .map((item, index) => processValue(item, String(index)))
-                .filter((item) => item !== undefined)
+                .filter((item) => item !== undefined);
 
             if (sortArrays) {
                 // Sort arrays by their stringified content for true determinism
                 processed.sort((a, b) => {
-                    const aStr = JSON.stringify(processValue(a))
-                    const bStr = JSON.stringify(processValue(b))
-                    return aStr.localeCompare(bStr)
-                })
+                    const aStr = JSON.stringify(processValue(a));
+                    const bStr = JSON.stringify(processValue(b));
+                    return aStr.localeCompare(bStr);
+                });
             }
 
-            seen.delete(value)
-            return processed
+            seen.delete(value);
+            return processed;
         }
 
         // Handle objects
         if (value.constructor === Object || value.constructor === undefined) {
-            const processed: Record<string, any> = {}
-            const keys = Object.keys(value).sort()
+            const processed: Record<string, any> = {};
+            const keys = Object.keys(value).sort();
 
             for (const k of keys) {
-                const processedValue = processValue(value[k], k)
+                const processedValue = processValue(value[k], k);
                 if (processedValue !== undefined) {
-                    processed[k] = processedValue
+                    processed[k] = processedValue;
                 }
             }
 
-            seen.delete(value)
-            return processed
+            seen.delete(value);
+            return processed;
         }
 
         // Handle other object types (like class instances)
         // Try to convert to plain object
         try {
-            const plain = { ...value }
-            seen.delete(value)
-            return processValue(plain, key)
+            const plain = { ...value };
+            seen.delete(value);
+            return processValue(plain, key);
         } catch {
-            seen.delete(value)
-            return String(value)
+            seen.delete(value);
+            return String(value);
         }
     }
 
-    const processed = processValue(obj)
-    return JSON.stringify(processed)
+    const processed = processValue(obj);
+    return JSON.stringify(processed);
 }
 
 /**
@@ -145,10 +145,10 @@ export function deterministicStringify(obj: any, options: DeterministicJsonOptio
 export function hashObject(
     obj: any,
     options?: DeterministicJsonOptions,
-    encoding: 'hex' | 'base64' | 'base64url' = 'hex'
+    encoding: 'hex' | 'base64' | 'base64url' = 'hex',
 ): string {
-    const jsonString = deterministicStringify(obj, options)
-    return createHash('sha256').update(jsonString).digest(encoding)
+    const jsonString = deterministicStringify(obj, options);
+    return createHash('sha256').update(jsonString).digest(encoding);
 }
 
 /**
@@ -161,9 +161,9 @@ export function hashObject(
  */
 export function deepEqual(a: any, b: any, options?: DeterministicJsonOptions): boolean {
     try {
-        return deterministicStringify(a, options) === deterministicStringify(b, options)
+        return deterministicStringify(a, options) === deterministicStringify(b, options);
     } catch {
-        return false
+        return false;
     }
 }
 
@@ -175,5 +175,5 @@ export function deepEqual(a: any, b: any, options?: DeterministicJsonOptions): b
  * @returns Stable string key
  */
 export function objectKey(obj: any, options?: DeterministicJsonOptions): string {
-    return hashObject(obj, options, 'base64url')
+    return hashObject(obj, options, 'base64url');
 }

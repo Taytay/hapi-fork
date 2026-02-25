@@ -1,84 +1,84 @@
 export type CodexCliOverrides = {
-    sandbox?: 'read-only' | 'workspace-write' | 'danger-full-access'
-    approvalPolicy?: 'untrusted' | 'on-failure' | 'on-request' | 'never'
-}
+    sandbox?: 'read-only' | 'workspace-write' | 'danger-full-access';
+    approvalPolicy?: 'untrusted' | 'on-failure' | 'on-request' | 'never';
+};
 
-const SANDBOX_VALUES = new Set<CodexCliOverrides['sandbox']>(['read-only', 'workspace-write', 'danger-full-access'])
+const SANDBOX_VALUES = new Set<CodexCliOverrides['sandbox']>(['read-only', 'workspace-write', 'danger-full-access']);
 
 const APPROVAL_POLICY_VALUES = new Set<CodexCliOverrides['approvalPolicy']>([
     'untrusted',
     'on-failure',
     'on-request',
     'never',
-])
+]);
 
 export function parseCodexCliOverrides(args?: string[]): CodexCliOverrides {
-    const overrides: CodexCliOverrides = {}
+    const overrides: CodexCliOverrides = {};
     if (!args || args.length === 0) {
-        return overrides
+        return overrides;
     }
 
     for (let i = 0; i < args.length; i++) {
-        const arg = args[i]
+        const arg = args[i];
         if (arg === '--') {
-            break
+            break;
         }
 
         if (arg === '--full-auto') {
-            overrides.approvalPolicy = 'on-request'
-            overrides.sandbox = 'workspace-write'
-            continue
+            overrides.approvalPolicy = 'on-request';
+            overrides.sandbox = 'workspace-write';
+            continue;
         }
 
         if (arg === '--yolo') {
-            overrides.approvalPolicy = 'never'
-            overrides.sandbox = 'danger-full-access'
-            continue
+            overrides.approvalPolicy = 'never';
+            overrides.sandbox = 'danger-full-access';
+            continue;
         }
 
         if (arg === '--dangerously-bypass-approvals-and-sandbox') {
-            overrides.approvalPolicy = 'never'
-            overrides.sandbox = 'danger-full-access'
-            continue
+            overrides.approvalPolicy = 'never';
+            overrides.sandbox = 'danger-full-access';
+            continue;
         }
 
         if (arg === '-s' || arg === '--sandbox') {
-            const value = args[i + 1]
+            const value = args[i + 1];
             if (SANDBOX_VALUES.has(value as CodexCliOverrides['sandbox'])) {
-                overrides.sandbox = value as CodexCliOverrides['sandbox']
-                i += 1
+                overrides.sandbox = value as CodexCliOverrides['sandbox'];
+                i += 1;
             }
-            continue
+            continue;
         }
 
         if (arg.startsWith('--sandbox=')) {
-            const value = arg.slice('--sandbox='.length)
+            const value = arg.slice('--sandbox='.length);
             if (SANDBOX_VALUES.has(value as CodexCliOverrides['sandbox'])) {
-                overrides.sandbox = value as CodexCliOverrides['sandbox']
+                overrides.sandbox = value as CodexCliOverrides['sandbox'];
             }
-            continue
+            continue;
         }
 
         if (arg === '-a' || arg === '--ask-for-approval') {
-            const value = args[i + 1]
+            const value = args[i + 1];
             if (APPROVAL_POLICY_VALUES.has(value as CodexCliOverrides['approvalPolicy'])) {
-                overrides.approvalPolicy = value as CodexCliOverrides['approvalPolicy']
-                i += 1
+                overrides.approvalPolicy = value as CodexCliOverrides['approvalPolicy'];
+                i += 1;
             }
-            continue
+            continue;
         }
 
         if (arg.startsWith('--ask-for-approval=')) {
-            const value = arg.slice('--ask-for-approval='.length)
+            const value = arg.slice('--ask-for-approval='.length);
             if (APPROVAL_POLICY_VALUES.has(value as CodexCliOverrides['approvalPolicy'])) {
-                overrides.approvalPolicy = value as CodexCliOverrides['approvalPolicy']
+                overrides.approvalPolicy = value as CodexCliOverrides['approvalPolicy'];
             }
         }
     }
 
-    return overrides
+    return overrides;
 }
 
 export function hasCodexCliOverrides(overrides?: CodexCliOverrides): boolean {
-    return Boolean(overrides?.sandbox || overrides?.approvalPolicy)
+    return Boolean(overrides?.sandbox || overrides?.approvalPolicy);
 }

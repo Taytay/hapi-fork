@@ -1,29 +1,29 @@
-import { memo, useEffect, useRef } from 'react'
-import type { Suggestion } from '@/hooks/useActiveSuggestions'
+import { memo, useEffect, useRef } from 'react';
+import type { Suggestion } from '@/hooks/useActiveSuggestions';
 
 interface AutocompleteProps {
-    suggestions: readonly Suggestion[]
-    selectedIndex: number
-    onSelect: (index: number) => void
+    suggestions: readonly Suggestion[];
+    selectedIndex: number;
+    onSelect: (index: number) => void;
 }
 
 /**
  * Autocomplete suggestions list component
  */
 export const Autocomplete = memo(function Autocomplete(props: AutocompleteProps) {
-    const { suggestions, selectedIndex, onSelect } = props
-    const listRef = useRef<HTMLDivElement>(null)
+    const { suggestions, selectedIndex, onSelect } = props;
+    const listRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (selectedIndex < 0 || selectedIndex >= suggestions.length) return
-        const listEl = listRef.current
-        if (!listEl) return
-        const selectedEl = listEl.querySelector<HTMLButtonElement>(`[data-suggestion-index="${selectedIndex}"]`)
-        selectedEl?.scrollIntoView({ block: 'nearest' })
-    }, [selectedIndex, suggestions])
+        if (selectedIndex < 0 || selectedIndex >= suggestions.length) return;
+        const listEl = listRef.current;
+        if (!listEl) return;
+        const selectedEl = listEl.querySelector<HTMLButtonElement>(`[data-suggestion-index="${selectedIndex}"]`);
+        selectedEl?.scrollIntoView({ block: 'nearest' });
+    }, [selectedIndex, suggestions]);
 
     if (suggestions.length === 0) {
-        return null
+        return null;
     }
 
     return (
@@ -54,5 +54,5 @@ export const Autocomplete = memo(function Autocomplete(props: AutocompleteProps)
                 </button>
             ))}
         </div>
-    )
-})
+    );
+});

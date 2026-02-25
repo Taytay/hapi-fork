@@ -3,13 +3,13 @@
  * Provides endpoints for listing sessions, stopping sessions, and runner shutdown
  */
 
-import fastify, { FastifyInstance } from 'fastify'
-import { z } from 'zod'
-import { serializerCompiler, validatorCompiler, ZodTypeProvider } from 'fastify-type-provider-zod'
-import { logger } from '@/ui/logger'
-import { Metadata } from '@/api/types'
-import { TrackedSession } from './types'
-import { SpawnSessionOptions, SpawnSessionResult } from '@/modules/common/rpcTypes'
+import fastify from 'fastify';
+import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from 'fastify-type-provider-zod';
+import { z } from 'zod';
+import type { Metadata } from '@/api/types';
+import type { SpawnSessionOptions, SpawnSessionResult } from '@/modules/common/rpcTypes';
+import { logger } from '@/ui/logger';
+import type { TrackedSession } from './types';
 
 export function startRunnerControlServer({
     getChildren,
@@ -18,21 +18,21 @@ export function startRunnerControlServer({
     requestShutdown,
     onHappySessionWebhook,
 }: {
-    getChildren: () => TrackedSession[]
-    stopSession: (sessionId: string) => boolean
-    spawnSession: (options: SpawnSessionOptions) => Promise<SpawnSessionResult>
-    requestShutdown: () => void
-    onHappySessionWebhook: (sessionId: string, metadata: Metadata) => void
+    getChildren: () => TrackedSession[];
+    stopSession: (sessionId: string) => boolean;
+    spawnSession: (options: SpawnSessionOptions) => Promise<SpawnSessionResult>;
+    requestShutdown: () => void;
+    onHappySessionWebhook: (sessionId: string, metadata: Metadata) => void;
 }): Promise<{ port: number; stop: () => Promise<void> }> {
     return new Promise((resolve) => {
         const app = fastify({
             logger: false, // We use our own logger
-        })
+        });
 
         // Set up Zod type provider
-        app.setValidatorCompiler(validatorCompiler)
-        app.setSerializerCompiler(serializerCompiler)
-        const typed = app.withTypeProvider<ZodTypeProvider>()
+        app.setValidatorCompiler(validatorCompiler);
+        app.setSerializerCompiler(serializerCompiler);
+        const typed = app.withTypeProvider<ZodTypeProvider>();
 
         // Session reports itself after creation
         typed.post(
@@ -51,14 +51,14 @@ export function startRunnerControlServer({
                 },
             },
             async (request) => {
-                const { sessionId, metadata } = request.body
+                const { sessionId, metadata } = request.body;
 
-                logger.debug(`[CONTROL SERVER] Session started: ${sessionId}`)
-                onHappySessionWebhook(sessionId, metadata)
+                logger.debug(`[CONTROL SERVER] Session started: ${sessionId}`);
+                onHappySessionWebhook(sessionId, metadata);
 
-                return { status: 'ok' as const }
-            }
-        )
+                return { status: 'ok' as const };
+            },
+        );
 
         // List all tracked sessions
         typed.post(
@@ -72,15 +72,15 @@ export function startRunnerControlServer({
                                     startedBy: z.string(),
                                     happySessionId: z.string(),
                                     pid: z.number(),
-                                })
+                                }),
                             ),
                         }),
                     },
                 },
             },
             async () => {
-                const children = getChildren()
-                logger.debug(`[CONTROL SERVER] Listing ${children.length} sessions`)
+                const children = getChildren();
+                logger.debug(`[CONTROL SERVER] Listing ${children.length} sessions`);
                 return {
                     children: children
                         .filter((child) => child.happySessionId !== undefined)
@@ -89,9 +89,9 @@ export function startRunnerControlServer({
                             happySessionId: child.happySessionId!,
                             pid: child.pid,
                         })),
-                }
-            }
-        )
+                };
+            },
+        );
 
         // Stop specific session
         typed.post(
@@ -109,13 +109,13 @@ export function startRunnerControlServer({
                 },
             },
             async (request) => {
-                const { sessionId } = request.body
+                const { sessionId } = request.body;
 
-                logger.debug(`[CONTROL SERVER] Stop session request: ${sessionId}`)
-                const success = stopSession(sessionId)
-                return { success }
-            }
-        )
+                logger.debug(`[CONTROL SERVER] Stop session request: ${sessionId}`);
+                const success = stopSession(sessionId);
+                return { success };
+            },
+        );
 
         // Spawn new session
         typed.post(
@@ -148,47 +148,47 @@ export function startRunnerControlServer({
                 },
             },
             async (request, reply) => {
-                const { directory, sessionId, sessionType, worktreeName } = request.body
+                const { directory, sessionId, sessionType, worktreeName } = request.body;
 
                 logger.debug(
-                    `[CONTROL SERVER] Spawn session request: dir=${directory}, sessionId=${sessionId || 'new'}`
-                )
-                const result = await spawnSession({ directory, sessionId, sessionType, worktreeName })
+                    `[CONTROL SERVER] Spawn session request: dir=${directory}, sessionId=${sessionId || 'new'}`,
+                );
+                const result = await spawnSession({ directory, sessionId, sessionType, worktreeName });
 
                 switch (result.type) {
                     case 'success':
                         // Check if sessionId exists, if not return error
                         if (!result.sessionId) {
-                            reply.code(500)
+                            reply.code(500);
                             return {
                                 success: false,
                                 error: 'Failed to spawn session: no session ID returned',
-                            }
+                            };
                         }
                         return {
                             success: true,
                             sessionId: result.sessionId,
                             approvedNewDirectoryCreation: true,
-                        }
+                        };
 
                     case 'requestToApproveDirectoryCreation':
-                        reply.code(409) // Conflict - user input needed
+                        reply.code(409); // Conflict - user input needed
                         return {
                             success: false,
                             requiresUserApproval: true,
                             actionRequired: 'CREATE_DIRECTORY',
                             directory: result.directory,
-                        }
+                        };
 
                     case 'error':
-                        reply.code(500)
+                        reply.code(500);
                         return {
                             success: false,
                             error: result.errorMessage,
-                        }
+                        };
                 }
-            }
-        )
+            },
+        );
 
         // Stop runner
         typed.post(
@@ -203,35 +203,35 @@ export function startRunnerControlServer({
                 },
             },
             async () => {
-                logger.debug('[CONTROL SERVER] Stop runner request received')
+                logger.debug('[CONTROL SERVER] Stop runner request received');
 
                 // Give time for response to arrive
                 setTimeout(() => {
-                    logger.debug('[CONTROL SERVER] Triggering runner shutdown')
-                    requestShutdown()
-                }, 50)
+                    logger.debug('[CONTROL SERVER] Triggering runner shutdown');
+                    requestShutdown();
+                }, 50);
 
-                return { status: 'stopping' }
-            }
-        )
+                return { status: 'stopping' };
+            },
+        );
 
         app.listen({ port: 0, host: '127.0.0.1' }, (err, address) => {
             if (err) {
-                logger.debug('[CONTROL SERVER] Failed to start:', err)
-                throw err
+                logger.debug('[CONTROL SERVER] Failed to start:', err);
+                throw err;
             }
 
-            const port = parseInt(address.split(':').pop()!)
-            logger.debug(`[CONTROL SERVER] Started on port ${port}`)
+            const port = parseInt(address.split(':').pop()!, 10);
+            logger.debug(`[CONTROL SERVER] Started on port ${port}`);
 
             resolve({
                 port,
                 stop: async () => {
-                    logger.debug('[CONTROL SERVER] Stopping server')
-                    await app.close()
-                    logger.debug('[CONTROL SERVER] Server stopped')
+                    logger.debug('[CONTROL SERVER] Stopping server');
+                    await app.close();
+                    logger.debug('[CONTROL SERVER] Server stopped');
                 },
-            })
-        })
-    })
+            });
+        });
+    });
 }

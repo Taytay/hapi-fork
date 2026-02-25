@@ -1,11 +1,11 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { VitePWA } from 'vite-plugin-pwa'
-import { resolve } from 'node:path'
-import { createRequire } from 'node:module'
+import { createRequire } from 'node:module';
+import { resolve } from 'node:path';
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
 
-const require = createRequire(import.meta.url)
-const base = process.env.VITE_BASE_URL || '/'
+const require = createRequire(import.meta.url);
+const base = process.env.VITE_BASE_URL || '/';
 
 export default defineConfig({
     define: {
@@ -86,4 +86,4 @@ export default defineConfig({
         outDir: 'dist',
         emptyOutDir: true,
     },
-})
+});

@@ -9,19 +9,19 @@
  * 2. Custom: Client provides their own ElevenLabs agent ID and API key
  */
 
-import type { ApiClient } from './client'
-import { ELEVENLABS_API_BASE, VOICE_AGENT_NAME, buildVoiceAgentConfig } from '@hapi/protocol/voice'
+import { buildVoiceAgentConfig, ELEVENLABS_API_BASE, VOICE_AGENT_NAME } from '@hapi/protocol/voice';
+import type { ApiClient } from './client';
 
 export interface VoiceTokenResponse {
-    allowed: boolean
-    token?: string
-    agentId?: string
-    error?: string
+    allowed: boolean;
+    token?: string;
+    agentId?: string;
+    error?: string;
 }
 
 export interface VoiceTokenRequest {
-    customAgentId?: string
-    customApiKey?: string
+    customAgentId?: string;
+    customApiKey?: string;
 }
 
 /**
@@ -34,31 +34,31 @@ export interface VoiceTokenRequest {
  */
 export async function fetchVoiceToken(api: ApiClient, options?: VoiceTokenRequest): Promise<VoiceTokenResponse> {
     try {
-        return await api.fetchVoiceToken(options)
+        return await api.fetchVoiceToken(options);
     } catch (error) {
         return {
             allowed: false,
             error: error instanceof Error ? error.message : 'Network error',
-        }
+        };
     }
 }
 
 export interface ElevenLabsAgent {
-    agent_id: string
-    name: string
+    agent_id: string;
+    name: string;
 }
 
 export interface FindAgentResult {
-    success: boolean
-    agentId?: string
-    error?: string
+    success: boolean;
+    agentId?: string;
+    error?: string;
 }
 
 export interface CreateAgentResult {
-    success: boolean
-    agentId?: string
-    error?: string
-    created?: boolean
+    success: boolean;
+    agentId?: string;
+    error?: string;
+    created?: boolean;
 }
 
 /**
@@ -72,29 +72,29 @@ export async function findHapiAgent(apiKey: string): Promise<FindAgentResult> {
                 'xi-api-key': apiKey,
                 Accept: 'application/json',
             },
-        })
+        });
 
         if (!response.ok) {
-            const errorData = (await response.json().catch(() => ({}))) as { detail?: { message?: string } | string }
+            const errorData = (await response.json().catch(() => ({}))) as { detail?: { message?: string } | string };
             const errorMessage =
                 typeof errorData.detail === 'string'
                     ? errorData.detail
-                    : errorData.detail?.message || `API error: ${response.status}`
-            return { success: false, error: errorMessage }
+                    : errorData.detail?.message || `API error: ${response.status}`;
+            return { success: false, error: errorMessage };
         }
 
-        const data = (await response.json()) as { agents?: ElevenLabsAgent[] }
-        const agents: ElevenLabsAgent[] = data.agents || []
+        const data = (await response.json()) as { agents?: ElevenLabsAgent[] };
+        const agents: ElevenLabsAgent[] = data.agents || [];
 
-        const hapiAgent = agents.find((agent) => agent.name === VOICE_AGENT_NAME)
+        const hapiAgent = agents.find((agent) => agent.name === VOICE_AGENT_NAME);
 
         if (hapiAgent) {
-            return { success: true, agentId: hapiAgent.agent_id }
+            return { success: true, agentId: hapiAgent.agent_id };
         } else {
-            return { success: false, error: `No agent named "${VOICE_AGENT_NAME}" found` }
+            return { success: false, error: `No agent named "${VOICE_AGENT_NAME}" found` };
         }
     } catch (e) {
-        return { success: false, error: e instanceof Error ? e.message : 'Network error' }
+        return { success: false, error: e instanceof Error ? e.message : 'Network error' };
     }
 }
 
@@ -103,13 +103,13 @@ export async function findHapiAgent(apiKey: string): Promise<FindAgentResult> {
  */
 export async function createOrUpdateHapiAgent(apiKey: string): Promise<CreateAgentResult> {
     try {
-        const findResult = await findHapiAgent(apiKey)
-        const existingAgentId = findResult.success ? findResult.agentId : null
+        const findResult = await findHapiAgent(apiKey);
+        const existingAgentId = findResult.success ? findResult.agentId : null;
 
-        const agentConfig = buildVoiceAgentConfig()
+        const agentConfig = buildVoiceAgentConfig();
 
-        let response: Response
-        let created = false
+        let response: Response;
+        let created = false;
 
         if (existingAgentId) {
             response = await fetch(`${ELEVENLABS_API_BASE}/convai/agents/${existingAgentId}`, {
@@ -120,7 +120,7 @@ export async function createOrUpdateHapiAgent(apiKey: string): Promise<CreateAge
                     Accept: 'application/json',
                 },
                 body: JSON.stringify(agentConfig),
-            })
+            });
         } else {
             response = await fetch(`${ELEVENLABS_API_BASE}/convai/agents/create`, {
                 method: 'POST',
@@ -130,28 +130,28 @@ export async function createOrUpdateHapiAgent(apiKey: string): Promise<CreateAge
                     Accept: 'application/json',
                 },
                 body: JSON.stringify(agentConfig),
-            })
-            created = true
+            });
+            created = true;
         }
 
         if (!response.ok) {
-            const errorData = (await response.json().catch(() => ({}))) as { detail?: { message?: string } | string }
+            const errorData = (await response.json().catch(() => ({}))) as { detail?: { message?: string } | string };
             const errorMessage =
                 typeof errorData.detail === 'string'
                     ? errorData.detail
-                    : errorData.detail?.message || `API error: ${response.status}`
-            return { success: false, error: errorMessage }
+                    : errorData.detail?.message || `API error: ${response.status}`;
+            return { success: false, error: errorMessage };
         }
 
-        const data = (await response.json()) as { agent_id?: string }
-        const agentId = existingAgentId || data.agent_id
+        const data = (await response.json()) as { agent_id?: string };
+        const agentId = existingAgentId || data.agent_id;
 
         if (!agentId) {
-            return { success: false, error: 'Failed to get agent ID from response' }
+            return { success: false, error: 'Failed to get agent ID from response' };
         }
 
-        return { success: true, agentId, created }
+        return { success: true, agentId, created };
     } catch (e) {
-        return { success: false, error: e instanceof Error ? e.message : 'Network error' }
+        return { success: false, error: e instanceof Error ? e.message : 'Network error' };
     }
 }

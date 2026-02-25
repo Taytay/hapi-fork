@@ -5,80 +5,80 @@
  * Environment files should be loaded using Node's --env-file flag
  */
 
-import { existsSync, mkdirSync } from 'node:fs'
-import { homedir } from 'node:os'
-import { join } from 'node:path'
-import packageJson from '../package.json'
-import { getCliArgs } from '@/utils/cliArgs'
+import { existsSync, mkdirSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+import { getCliArgs } from '@/utils/cliArgs';
+import packageJson from '../package.json';
 
 class Configuration {
-    private _apiUrl: string
-    private _cliApiToken: string
-    public readonly isRunnerProcess: boolean
+    private _apiUrl: string;
+    private _cliApiToken: string;
+    public readonly isRunnerProcess: boolean;
 
     // Directories and paths (from persistence)
-    public readonly happyHomeDir: string
-    public readonly logsDir: string
-    public readonly settingsFile: string
-    public readonly privateKeyFile: string
-    public readonly runnerStateFile: string
-    public readonly runnerLockFile: string
-    public readonly currentCliVersion: string
+    public readonly happyHomeDir: string;
+    public readonly logsDir: string;
+    public readonly settingsFile: string;
+    public readonly privateKeyFile: string;
+    public readonly runnerStateFile: string;
+    public readonly runnerLockFile: string;
+    public readonly currentCliVersion: string;
 
-    public readonly isExperimentalEnabled: boolean
+    public readonly isExperimentalEnabled: boolean;
 
     constructor() {
         // Server configuration
-        this._apiUrl = process.env.HAPI_API_URL || 'http://localhost:3006'
-        this._cliApiToken = process.env.CLI_API_TOKEN || ''
+        this._apiUrl = process.env.HAPI_API_URL || 'http://localhost:3006';
+        this._cliApiToken = process.env.CLI_API_TOKEN || '';
 
         // Check if we're running as runner based on process args
-        const args = getCliArgs()
-        this.isRunnerProcess = args.length >= 2 && args[0] === 'runner' && args[1] === 'start-sync'
+        const args = getCliArgs();
+        this.isRunnerProcess = args.length >= 2 && args[0] === 'runner' && args[1] === 'start-sync';
 
         // Directory configuration - Priority: HAPI_HOME env > default home dir
         if (process.env.HAPI_HOME) {
             // Expand ~ to home directory if present
-            const expandedPath = process.env.HAPI_HOME.replace(/^~/, homedir())
-            this.happyHomeDir = expandedPath
+            const expandedPath = process.env.HAPI_HOME.replace(/^~/, homedir());
+            this.happyHomeDir = expandedPath;
         } else {
-            this.happyHomeDir = join(homedir(), '.hapi')
+            this.happyHomeDir = join(homedir(), '.hapi');
         }
 
-        this.logsDir = join(this.happyHomeDir, 'logs')
-        this.settingsFile = join(this.happyHomeDir, 'settings.json')
-        this.privateKeyFile = join(this.happyHomeDir, 'access.key')
-        this.runnerStateFile = join(this.happyHomeDir, 'runner.state.json')
-        this.runnerLockFile = join(this.happyHomeDir, 'runner.state.json.lock')
+        this.logsDir = join(this.happyHomeDir, 'logs');
+        this.settingsFile = join(this.happyHomeDir, 'settings.json');
+        this.privateKeyFile = join(this.happyHomeDir, 'access.key');
+        this.runnerStateFile = join(this.happyHomeDir, 'runner.state.json');
+        this.runnerLockFile = join(this.happyHomeDir, 'runner.state.json.lock');
 
-        this.isExperimentalEnabled = ['true', '1', 'yes'].includes(process.env.HAPI_EXPERIMENTAL?.toLowerCase() || '')
+        this.isExperimentalEnabled = ['true', '1', 'yes'].includes(process.env.HAPI_EXPERIMENTAL?.toLowerCase() || '');
 
-        this.currentCliVersion = packageJson.version
+        this.currentCliVersion = packageJson.version;
 
         if (!existsSync(this.happyHomeDir)) {
-            mkdirSync(this.happyHomeDir, { recursive: true })
+            mkdirSync(this.happyHomeDir, { recursive: true });
         }
         // Ensure directories exist
         if (!existsSync(this.logsDir)) {
-            mkdirSync(this.logsDir, { recursive: true })
+            mkdirSync(this.logsDir, { recursive: true });
         }
     }
 
     get apiUrl(): string {
-        return this._apiUrl
+        return this._apiUrl;
     }
 
     _setApiUrl(url: string): void {
-        this._apiUrl = url
+        this._apiUrl = url;
     }
 
     get cliApiToken(): string {
-        return this._cliApiToken
+        return this._cliApiToken;
     }
 
     _setCliApiToken(token: string): void {
-        this._cliApiToken = token
+        this._cliApiToken = token;
     }
 }
 
-export const configuration: Configuration = new Configuration()
+export const configuration: Configuration = new Configuration();

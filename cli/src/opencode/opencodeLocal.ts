@@ -1,21 +1,21 @@
-import { logger } from '@/ui/logger'
-import { restoreTerminalState } from '@/ui/terminalState'
-import { spawnWithAbort } from '@/utils/spawnWithAbort'
+import { logger } from '@/ui/logger';
+import { restoreTerminalState } from '@/ui/terminalState';
+import { spawnWithAbort } from '@/utils/spawnWithAbort';
 
 export async function opencodeLocal(opts: {
-    path: string
-    abort: AbortSignal
-    env: NodeJS.ProcessEnv
-    sessionId?: string
+    path: string;
+    abort: AbortSignal;
+    env: NodeJS.ProcessEnv;
+    sessionId?: string;
 }): Promise<void> {
-    const args: string[] = []
+    const args: string[] = [];
     if (opts.sessionId) {
-        args.push('--session', opts.sessionId)
+        args.push('--session', opts.sessionId);
     }
 
-    logger.debug(`[OpencodeLocal] Spawning opencode with args: ${JSON.stringify(args)}`)
+    logger.debug(`[OpencodeLocal] Spawning opencode with args: ${JSON.stringify(args)}`);
 
-    process.stdin.pause()
+    process.stdin.pause();
     try {
         await spawnWithAbort({
             command: 'opencode',
@@ -29,9 +29,9 @@ export async function opencodeLocal(opts: {
             installHint: 'OpenCode CLI',
             includeCause: true,
             logExit: true,
-        })
+        });
     } finally {
-        process.stdin.resume()
-        restoreTerminalState()
+        process.stdin.resume();
+        restoreTerminalState();
     }
 }

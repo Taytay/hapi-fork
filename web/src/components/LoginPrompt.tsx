@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
-import { ApiClient } from '@/api/client'
-import { LanguageSwitcher } from '@/components/LanguageSwitcher'
-import { Spinner } from '@/components/Spinner'
-import { Button } from '@/components/ui/button'
+import { useCallback, useEffect, useState } from 'react';
+import { ApiClient } from '@/api/client';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { Spinner } from '@/components/Spinner';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -10,120 +10,120 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-} from '@/components/ui/dialog'
-import { useTranslation } from '@/lib/use-translation'
-import type { ServerUrlResult } from '@/hooks/useServerUrl'
+} from '@/components/ui/dialog';
+import type { ServerUrlResult } from '@/hooks/useServerUrl';
+import { useTranslation } from '@/lib/use-translation';
 
 type LoginPromptProps = {
-    mode?: 'login' | 'bind'
-    onLogin?: (token: string) => void
-    onBind?: (token: string) => Promise<void>
-    baseUrl: string
-    serverUrl: string | null
-    setServerUrl: (input: string) => ServerUrlResult
-    clearServerUrl: () => void
-    requireServerUrl?: boolean
-    error?: string | null
-}
+    mode?: 'login' | 'bind';
+    onLogin?: (token: string) => void;
+    onBind?: (token: string) => Promise<void>;
+    baseUrl: string;
+    serverUrl: string | null;
+    setServerUrl: (input: string) => ServerUrlResult;
+    clearServerUrl: () => void;
+    requireServerUrl?: boolean;
+    error?: string | null;
+};
 
 export function LoginPrompt(props: LoginPromptProps) {
-    const { t } = useTranslation()
-    const isBindMode = props.mode === 'bind'
-    const [accessToken, setAccessToken] = useState('')
-    const [isLoading, setIsLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
-    const [isServerDialogOpen, setIsServerDialogOpen] = useState(false)
-    const [serverInput, setServerInput] = useState(props.serverUrl ?? '')
-    const [serverError, setServerError] = useState<string | null>(null)
+    const { t } = useTranslation();
+    const isBindMode = props.mode === 'bind';
+    const [accessToken, setAccessToken] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [isServerDialogOpen, setIsServerDialogOpen] = useState(false);
+    const [serverInput, setServerInput] = useState(props.serverUrl ?? '');
+    const [serverError, setServerError] = useState<string | null>(null);
 
     const handleSubmit = useCallback(
         async (e: React.FormEvent) => {
-            e.preventDefault()
+            e.preventDefault();
 
-            const trimmedToken = accessToken.trim()
+            const trimmedToken = accessToken.trim();
             if (!trimmedToken) {
-                setError(t('login.error.enterToken'))
-                return
+                setError(t('login.error.enterToken'));
+                return;
             }
 
             if (!isBindMode && props.requireServerUrl && !props.serverUrl) {
-                setServerError(t('login.server.required'))
-                setIsServerDialogOpen(true)
-                return
+                setServerError(t('login.server.required'));
+                setIsServerDialogOpen(true);
+                return;
             }
 
-            setIsLoading(true)
-            setError(null)
+            setIsLoading(true);
+            setError(null);
 
             try {
                 if (isBindMode) {
                     if (!props.onBind) {
-                        setError(t('login.error.bindingUnavailable'))
-                        return
+                        setError(t('login.error.bindingUnavailable'));
+                        return;
                     }
-                    await props.onBind(trimmedToken)
+                    await props.onBind(trimmedToken);
                 } else {
                     // Validate token by attempting to authenticate
-                    const client = new ApiClient('', { baseUrl: props.baseUrl })
-                    await client.authenticate({ accessToken: trimmedToken })
+                    const client = new ApiClient('', { baseUrl: props.baseUrl });
+                    await client.authenticate({ accessToken: trimmedToken });
                     // If successful, pass token to parent
                     if (!props.onLogin) {
-                        setError(t('login.error.loginUnavailable'))
-                        return
+                        setError(t('login.error.loginUnavailable'));
+                        return;
                     }
-                    props.onLogin(trimmedToken)
+                    props.onLogin(trimmedToken);
                 }
             } catch (e) {
-                const fallbackMessage = isBindMode ? t('login.error.bindFailed') : t('login.error.authFailed')
-                setError(e instanceof Error ? e.message : fallbackMessage)
+                const fallbackMessage = isBindMode ? t('login.error.bindFailed') : t('login.error.authFailed');
+                setError(e instanceof Error ? e.message : fallbackMessage);
             } finally {
-                setIsLoading(false)
+                setIsLoading(false);
             }
         },
-        [accessToken, props, t, isBindMode]
-    )
+        [accessToken, props, t, isBindMode],
+    );
 
     useEffect(() => {
         if (!isServerDialogOpen) {
-            return
+            return;
         }
-        setServerInput(props.serverUrl ?? '')
-    }, [isServerDialogOpen, props.serverUrl])
+        setServerInput(props.serverUrl ?? '');
+    }, [isServerDialogOpen, props.serverUrl]);
 
     const handleSaveServer = useCallback(
         (e: React.FormEvent) => {
-            e.preventDefault()
-            const result = props.setServerUrl(serverInput)
+            e.preventDefault();
+            const result = props.setServerUrl(serverInput);
             if (!result.ok) {
-                setServerError(result.error)
-                return
+                setServerError(result.error);
+                return;
             }
-            setServerError(null)
-            setServerInput(result.value)
-            setIsServerDialogOpen(false)
+            setServerError(null);
+            setServerInput(result.value);
+            setIsServerDialogOpen(false);
         },
-        [props, serverInput]
-    )
+        [props, serverInput],
+    );
 
     const handleClearServer = useCallback(() => {
-        props.clearServerUrl()
-        setServerInput('')
-        setServerError(null)
-        setIsServerDialogOpen(false)
-    }, [props])
+        props.clearServerUrl();
+        setServerInput('');
+        setServerError(null);
+        setIsServerDialogOpen(false);
+    }, [props]);
 
     const handleServerDialogOpenChange = useCallback((open: boolean) => {
-        setIsServerDialogOpen(open)
+        setIsServerDialogOpen(open);
         if (!open) {
-            setServerError(null)
+            setServerError(null);
         }
-    }, [])
+    }, []);
 
-    const displayError = error || props.error
-    const serverSummary = props.serverUrl ?? `${props.baseUrl} ${t('login.server.default')}`
-    const title = isBindMode ? t('login.bind.title') : t('login.title')
-    const subtitle = t('login.subtitle')
-    const submitLabel = isBindMode ? t('login.bind.submit') : t('login.submit')
+    const displayError = error || props.error;
+    const serverSummary = props.serverUrl ?? `${props.baseUrl} ${t('login.server.default')}`;
+    const title = isBindMode ? t('login.bind.title') : t('login.title');
+    const subtitle = t('login.subtitle');
+    const submitLabel = isBindMode ? t('login.bind.submit') : t('login.submit');
 
     return (
         <div className="relative h-full flex items-center justify-center p-4">
@@ -205,8 +205,8 @@ export function LoginPrompt(props: LoginPromptProps) {
                                             type="url"
                                             value={serverInput}
                                             onChange={(e) => {
-                                                setServerInput(e.target.value)
-                                                setServerError(null)
+                                                setServerInput(e.target.value);
+                                                setServerError(null);
                                             }}
                                             placeholder={t('login.server.placeholder')}
                                             className="w-full px-3 py-2.5 rounded-lg border border-[var(--app-border)] bg-[var(--app-bg)] text-[var(--app-fg)] placeholder:text-[var(--app-hint)] focus:outline-none focus:ring-2 focus:ring-[var(--app-button)] focus:border-transparent"
@@ -243,5 +243,5 @@ export function LoginPrompt(props: LoginPromptProps) {
                 </div>
             </div>
         </div>
-    )
+    );
 }

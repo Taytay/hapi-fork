@@ -1,10 +1,10 @@
-import { Button } from "@/components/ui/button";
 import { Github, Menu, X } from "lucide-react";
 import { useState } from "react";
-import { Link } from "wouter";
-import { ModeToggle } from "./ModeToggle";
-import { LanguageToggle } from "./LanguageToggle";
 import { useTranslation } from "react-i18next";
+import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
+import { LanguageToggle } from "./LanguageToggle";
+import { ModeToggle } from "./ModeToggle";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

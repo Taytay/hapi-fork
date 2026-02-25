@@ -1,11 +1,10 @@
-import { defineConfig } from 'vitest/config'
-import { resolve } from 'node:path'
-
-import dotenv from 'dotenv'
+import { resolve } from 'node:path';
+import dotenv from 'dotenv';
+import { defineConfig } from 'vitest/config';
 
 const testEnv = dotenv.config({
     path: '.env.integration-test',
-}).parsed
+}).parsed;
 
 export default defineConfig({
     test: {
@@ -27,4 +26,4 @@ export default defineConfig({
             '@': resolve('./src'),
         },
     },
-})
+});

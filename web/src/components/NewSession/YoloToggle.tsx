@@ -1,7 +1,7 @@
-import { useTranslation } from '@/lib/use-translation'
+import { useTranslation } from '@/lib/use-translation';
 
 export function YoloToggle(props: { yoloMode: boolean; isDisabled: boolean; onToggle: (value: boolean) => void }) {
-    const { t } = useTranslation()
+    const { t } = useTranslation();
 
     return (
         <div className="flex flex-col gap-1.5 px-3 py-3">
@@ -24,5 +24,5 @@ export function YoloToggle(props: { yoloMode: boolean; isDisabled: boolean; onTo
                 </label>
             </div>
         </div>
-    )
+    );
 }

@@ -3,109 +3,111 @@
  * Used by CLI commands to interact with running runner
  */
 
-import { logger } from '@/ui/logger'
-import { clearRunnerState, readRunnerState } from '@/persistence'
-import { Metadata } from '@/api/types'
-import packageJson from '../../package.json'
-import { existsSync, statSync } from 'node:fs'
-import { join } from 'node:path'
-import { isBunCompiled, projectPath } from '@/projectPath'
-import { isProcessAlive, killProcess } from '@/utils/process'
+import { existsSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import type { Metadata } from '@/api/types';
+import { clearRunnerState, readRunnerState } from '@/persistence';
+import { isBunCompiled, projectPath } from '@/projectPath';
+import { logger } from '@/ui/logger';
+import { isProcessAlive, killProcess } from '@/utils/process';
+import packageJson from '../../package.json';
 
 export function getInstalledCliMtimeMs(): number | undefined {
     if (isBunCompiled()) {
         try {
-            return statSync(process.execPath).mtimeMs
+            return statSync(process.execPath).mtimeMs;
         } catch {
-            return undefined
+            return undefined;
         }
     }
 
-    const packageJsonPath = join(projectPath(), 'package.json')
+    const packageJsonPath = join(projectPath(), 'package.json');
     if (!existsSync(packageJsonPath)) {
-        return undefined
+        return undefined;
     }
 
     try {
-        return statSync(packageJsonPath).mtimeMs
+        return statSync(packageJsonPath).mtimeMs;
     } catch {
-        return undefined
+        return undefined;
     }
 }
 
 async function runnerPost(path: string, body?: any): Promise<{ error?: string } | any> {
-    const state = await readRunnerState()
+    const state = await readRunnerState();
     if (!state?.httpPort) {
-        const errorMessage = 'No runner running, no state file found'
-        logger.debug(`[CONTROL CLIENT] ${errorMessage}`)
+        const errorMessage = 'No runner running, no state file found';
+        logger.debug(`[CONTROL CLIENT] ${errorMessage}`);
         return {
             error: errorMessage,
-        }
+        };
     }
 
     if (!isProcessAlive(state.pid)) {
-        const errorMessage = 'Runner is not running, file is stale'
-        logger.debug(`[CONTROL CLIENT] ${errorMessage}`)
+        const errorMessage = 'Runner is not running, file is stale';
+        logger.debug(`[CONTROL CLIENT] ${errorMessage}`);
         return {
             error: errorMessage,
-        }
+        };
     }
 
     try {
-        const timeout = process.env.HAPI_RUNNER_HTTP_TIMEOUT ? parseInt(process.env.HAPI_RUNNER_HTTP_TIMEOUT) : 10_000
+        const timeout = process.env.HAPI_RUNNER_HTTP_TIMEOUT
+            ? parseInt(process.env.HAPI_RUNNER_HTTP_TIMEOUT, 10)
+            : 10_000;
         const response = await fetch(`http://127.0.0.1:${state.httpPort}${path}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body || {}),
             // Mostly increased for stress test
             signal: AbortSignal.timeout(timeout),
-        })
+        });
 
         if (!response.ok) {
-            const errorMessage = `Request failed: ${path}, HTTP ${response.status}`
-            logger.debug(`[CONTROL CLIENT] ${errorMessage}`)
+            const errorMessage = `Request failed: ${path}, HTTP ${response.status}`;
+            logger.debug(`[CONTROL CLIENT] ${errorMessage}`);
             return {
                 error: errorMessage,
-            }
+            };
         }
 
-        return await response.json()
+        return await response.json();
     } catch (error) {
-        const errorMessage = `Request failed: ${path}, ${error instanceof Error ? error.message : 'Unknown error'}`
-        logger.debug(`[CONTROL CLIENT] ${errorMessage}`)
+        const errorMessage = `Request failed: ${path}, ${error instanceof Error ? error.message : 'Unknown error'}`;
+        logger.debug(`[CONTROL CLIENT] ${errorMessage}`);
         return {
             error: errorMessage,
-        }
+        };
     }
 }
 
 export async function notifyRunnerSessionStarted(
     sessionId: string,
-    metadata: Metadata
+    metadata: Metadata,
 ): Promise<{ error?: string } | any> {
     return await runnerPost('/session-started', {
         sessionId,
         metadata,
-    })
+    });
 }
 
 export async function listRunnerSessions(): Promise<any[]> {
-    const result = await runnerPost('/list')
-    return result.children || []
+    const result = await runnerPost('/list');
+    return result.children || [];
 }
 
 export async function stopRunnerSession(sessionId: string): Promise<boolean> {
-    const result = await runnerPost('/stop-session', { sessionId })
-    return result.success || false
+    const result = await runnerPost('/stop-session', { sessionId });
+    return result.success || false;
 }
 
 export async function spawnRunnerSession(directory: string, sessionId?: string): Promise<any> {
-    const result = await runnerPost('/spawn-session', { directory, sessionId })
-    return result
+    const result = await runnerPost('/spawn-session', { directory, sessionId });
+    return result;
 }
 
 export async function stopRunnerHttp(): Promise<void> {
-    await runnerPost('/stop')
+    await runnerPost('/stop');
 }
 
 /**
@@ -136,19 +138,19 @@ export async function stopRunnerHttp(): Promise<void> {
  * For instance when running `hapi runner status` we can show more information.
  */
 export async function checkIfRunnerRunningAndCleanupStaleState(): Promise<boolean> {
-    const state = await readRunnerState()
+    const state = await readRunnerState();
     if (!state) {
-        return false
+        return false;
     }
 
     // Check if the runner is running
     if (isProcessAlive(state.pid)) {
-        return true
+        return true;
     }
 
-    logger.debug('[RUNNER RUN] Runner PID not running, cleaning up state')
-    await cleanupRunnerState()
-    return false
+    logger.debug('[RUNNER RUN] Runner PID not running, cleaning up state');
+    await cleanupRunnerState();
+    return false;
 }
 
 /**
@@ -159,33 +161,33 @@ export async function checkIfRunnerRunningAndCleanupStaleState(): Promise<boolea
  * @returns true if versions match, false if versions differ or no runner running
  */
 export async function isRunnerRunningCurrentlyInstalledHappyVersion(): Promise<boolean> {
-    logger.debug('[RUNNER CONTROL] Checking if runner is running same version')
-    const runningRunner = await checkIfRunnerRunningAndCleanupStaleState()
+    logger.debug('[RUNNER CONTROL] Checking if runner is running same version');
+    const runningRunner = await checkIfRunnerRunningAndCleanupStaleState();
     if (!runningRunner) {
-        logger.debug('[RUNNER CONTROL] No runner running, returning false')
-        return false
+        logger.debug('[RUNNER CONTROL] No runner running, returning false');
+        return false;
     }
 
-    const state = await readRunnerState()
+    const state = await readRunnerState();
     if (!state) {
-        logger.debug('[RUNNER CONTROL] No runner state found, returning false')
-        return false
+        logger.debug('[RUNNER CONTROL] No runner state found, returning false');
+        return false;
     }
 
     try {
-        const currentCliMtimeMs = getInstalledCliMtimeMs()
+        const currentCliMtimeMs = getInstalledCliMtimeMs();
         if (typeof currentCliMtimeMs === 'number' && typeof state.startedWithCliMtimeMs === 'number') {
             logger.debug(
-                `[RUNNER CONTROL] Current CLI mtime: ${currentCliMtimeMs}, Runner started with mtime: ${state.startedWithCliMtimeMs}`
-            )
-            return currentCliMtimeMs === state.startedWithCliMtimeMs
+                `[RUNNER CONTROL] Current CLI mtime: ${currentCliMtimeMs}, Runner started with mtime: ${state.startedWithCliMtimeMs}`,
+            );
+            return currentCliMtimeMs === state.startedWithCliMtimeMs;
         }
 
-        const currentCliVersion = packageJson.version
+        const currentCliVersion = packageJson.version;
         logger.debug(
-            `[RUNNER CONTROL] Current CLI version: ${currentCliVersion}, Runner started with version: ${state.startedWithCliVersion}`
-        )
-        return currentCliVersion === state.startedWithCliVersion
+            `[RUNNER CONTROL] Current CLI version: ${currentCliVersion}, Runner started with version: ${state.startedWithCliVersion}`,
+        );
+        return currentCliVersion === state.startedWithCliVersion;
 
         // PREVIOUS IMPLEMENTATION - Keeping this commented in case we need it
         // Kirill does not understand how the upgrade of npm packages happen and whether
@@ -204,62 +206,62 @@ export async function isRunnerRunningCurrentlyInstalledHappyVersion(): Promise<b
     return version === state.startedWithCliVersion;
     */
     } catch (error) {
-        logger.debug('[RUNNER CONTROL] Error checking runner version', error)
-        return false
+        logger.debug('[RUNNER CONTROL] Error checking runner version', error);
+        return false;
     }
 }
 
 export async function cleanupRunnerState(): Promise<void> {
     try {
-        await clearRunnerState()
-        logger.debug('[RUNNER RUN] Runner state file removed')
+        await clearRunnerState();
+        logger.debug('[RUNNER RUN] Runner state file removed');
     } catch (error) {
-        logger.debug('[RUNNER RUN] Error cleaning up runner metadata', error)
+        logger.debug('[RUNNER RUN] Error cleaning up runner metadata', error);
     }
 }
 
 export async function stopRunner() {
     try {
-        const state = await readRunnerState()
+        const state = await readRunnerState();
         if (!state) {
-            logger.debug('No runner state found')
-            return
+            logger.debug('No runner state found');
+            return;
         }
 
-        logger.debug(`Stopping runner with PID ${state.pid}`)
+        logger.debug(`Stopping runner with PID ${state.pid}`);
 
         // Try HTTP graceful stop
         try {
-            await stopRunnerHttp()
+            await stopRunnerHttp();
 
             // Wait for runner to die
-            await waitForProcessDeath(state.pid, 2000)
-            logger.debug('Runner stopped gracefully via HTTP')
-            return
+            await waitForProcessDeath(state.pid, 2000);
+            logger.debug('Runner stopped gracefully via HTTP');
+            return;
         } catch (error) {
-            logger.debug('HTTP stop failed, will force kill', error)
+            logger.debug('HTTP stop failed, will force kill', error);
         }
 
         // Force kill
-        const killed = await killProcess(state.pid, true)
+        const killed = await killProcess(state.pid, true);
         if (killed) {
-            logger.debug('Force killed runner')
+            logger.debug('Force killed runner');
         } else {
-            logger.debug('Runner already dead or could not be killed')
+            logger.debug('Runner already dead or could not be killed');
         }
     } catch (error) {
-        logger.debug('Error stopping runner', error)
+        logger.debug('Error stopping runner', error);
     }
 }
 
 async function waitForProcessDeath(pid: number, timeout: number): Promise<void> {
-    const start = Date.now()
+    const start = Date.now();
     while (Date.now() - start < timeout) {
         if (isProcessAlive(pid)) {
-            await new Promise((resolve) => setTimeout(resolve, 100))
-            continue
+            await new Promise((resolve) => setTimeout(resolve, 100));
+            continue;
         }
-        return // Process is dead
+        return; // Process is dead
     }
-    throw new Error('Process did not die within timeout')
+    throw new Error('Process did not die within timeout');
 }

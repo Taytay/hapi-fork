@@ -7,8 +7,8 @@
  * 3. Default value (http://localhost:3006)
  */
 
-import { configuration } from '@/configuration'
-import { readSettings } from '@/persistence'
+import { configuration } from '@/configuration';
+import { readSettings } from '@/persistence';
 
 /**
  * Initialize API URL
@@ -17,19 +17,19 @@ import { readSettings } from '@/persistence'
 export async function initializeApiUrl(): Promise<void> {
     // 1. Environment variable has highest priority (allows temporary override)
     if (process.env.HAPI_API_URL) {
-        return
+        return;
     }
 
     // 2. Read from settings file (new name first, then legacy)
-    const settings = await readSettings()
+    const settings = await readSettings();
     if (settings.apiUrl) {
-        configuration._setApiUrl(settings.apiUrl)
-        return
+        configuration._setApiUrl(settings.apiUrl);
+        return;
     }
     if (settings.serverUrl) {
         // Migrate from legacy field name
-        configuration._setApiUrl(settings.serverUrl)
-        return
+        configuration._setApiUrl(settings.serverUrl);
+        return;
     }
 
     // 3. Default value already set in configuration constructor

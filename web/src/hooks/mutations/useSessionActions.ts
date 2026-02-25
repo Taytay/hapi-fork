@@ -1,110 +1,110 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { isPermissionModeAllowedForFlavor } from '@hapi/protocol'
-import type { ApiClient } from '@/api/client'
-import type { ModelMode, PermissionMode } from '@/types/api'
-import { queryKeys } from '@/lib/query-keys'
-import { clearMessageWindow } from '@/lib/message-window-store'
-import { isKnownFlavor } from '@/lib/agentFlavorUtils'
+import { isPermissionModeAllowedForFlavor } from '@hapi/protocol';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import type { ApiClient } from '@/api/client';
+import { isKnownFlavor } from '@/lib/agentFlavorUtils';
+import { clearMessageWindow } from '@/lib/message-window-store';
+import { queryKeys } from '@/lib/query-keys';
+import type { ModelMode, PermissionMode } from '@/types/api';
 
 export function useSessionActions(
     api: ApiClient | null,
     sessionId: string | null,
-    agentFlavor?: string | null
+    agentFlavor?: string | null,
 ): {
-    abortSession: () => Promise<void>
-    archiveSession: () => Promise<void>
-    switchSession: () => Promise<void>
-    setPermissionMode: (mode: PermissionMode) => Promise<void>
-    setModelMode: (mode: ModelMode) => Promise<void>
-    renameSession: (name: string) => Promise<void>
-    deleteSession: () => Promise<void>
-    isPending: boolean
+    abortSession: () => Promise<void>;
+    archiveSession: () => Promise<void>;
+    switchSession: () => Promise<void>;
+    setPermissionMode: (mode: PermissionMode) => Promise<void>;
+    setModelMode: (mode: ModelMode) => Promise<void>;
+    renameSession: (name: string) => Promise<void>;
+    deleteSession: () => Promise<void>;
+    isPending: boolean;
 } {
-    const queryClient = useQueryClient()
+    const queryClient = useQueryClient();
 
     const invalidateSession = async () => {
-        if (!sessionId) return
-        await queryClient.invalidateQueries({ queryKey: queryKeys.session(sessionId) })
-        await queryClient.invalidateQueries({ queryKey: queryKeys.sessions })
-    }
+        if (!sessionId) return;
+        await queryClient.invalidateQueries({ queryKey: queryKeys.session(sessionId) });
+        await queryClient.invalidateQueries({ queryKey: queryKeys.sessions });
+    };
 
     const abortMutation = useMutation({
         mutationFn: async () => {
             if (!api || !sessionId) {
-                throw new Error('Session unavailable')
+                throw new Error('Session unavailable');
             }
-            await api.abortSession(sessionId)
+            await api.abortSession(sessionId);
         },
         onSuccess: () => void invalidateSession(),
-    })
+    });
 
     const archiveMutation = useMutation({
         mutationFn: async () => {
             if (!api || !sessionId) {
-                throw new Error('Session unavailable')
+                throw new Error('Session unavailable');
             }
-            await api.archiveSession(sessionId)
+            await api.archiveSession(sessionId);
         },
         onSuccess: () => void invalidateSession(),
-    })
+    });
 
     const switchMutation = useMutation({
         mutationFn: async () => {
             if (!api || !sessionId) {
-                throw new Error('Session unavailable')
+                throw new Error('Session unavailable');
             }
-            await api.switchSession(sessionId)
+            await api.switchSession(sessionId);
         },
         onSuccess: () => void invalidateSession(),
-    })
+    });
 
     const permissionMutation = useMutation({
         mutationFn: async (mode: PermissionMode) => {
             if (!api || !sessionId) {
-                throw new Error('Session unavailable')
+                throw new Error('Session unavailable');
             }
             if (isKnownFlavor(agentFlavor) && !isPermissionModeAllowedForFlavor(mode, agentFlavor)) {
-                throw new Error('Invalid permission mode for session flavor')
+                throw new Error('Invalid permission mode for session flavor');
             }
-            await api.setPermissionMode(sessionId, mode)
+            await api.setPermissionMode(sessionId, mode);
         },
         onSuccess: () => void invalidateSession(),
-    })
+    });
 
     const modelMutation = useMutation({
         mutationFn: async (mode: ModelMode) => {
             if (!api || !sessionId) {
-                throw new Error('Session unavailable')
+                throw new Error('Session unavailable');
             }
-            await api.setModelMode(sessionId, mode)
+            await api.setModelMode(sessionId, mode);
         },
         onSuccess: () => void invalidateSession(),
-    })
+    });
 
     const renameMutation = useMutation({
         mutationFn: async (name: string) => {
             if (!api || !sessionId) {
-                throw new Error('Session unavailable')
+                throw new Error('Session unavailable');
             }
-            await api.renameSession(sessionId, name)
+            await api.renameSession(sessionId, name);
         },
         onSuccess: () => void invalidateSession(),
-    })
+    });
 
     const deleteMutation = useMutation({
         mutationFn: async () => {
             if (!api || !sessionId) {
-                throw new Error('Session unavailable')
+                throw new Error('Session unavailable');
             }
-            await api.deleteSession(sessionId)
+            await api.deleteSession(sessionId);
         },
         onSuccess: async () => {
-            if (!sessionId) return
-            queryClient.removeQueries({ queryKey: queryKeys.session(sessionId) })
-            clearMessageWindow(sessionId)
-            await queryClient.invalidateQueries({ queryKey: queryKeys.sessions })
+            if (!sessionId) return;
+            queryClient.removeQueries({ queryKey: queryKeys.session(sessionId) });
+            clearMessageWindow(sessionId);
+            await queryClient.invalidateQueries({ queryKey: queryKeys.sessions });
         },
-    })
+    });
 
     return {
         abortSession: abortMutation.mutateAsync,
@@ -122,5 +122,5 @@ export function useSessionActions(
             modelMutation.isPending ||
             renameMutation.isPending ||
             deleteMutation.isPending,
-    }
+    };
 }

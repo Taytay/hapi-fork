@@ -1,10 +1,10 @@
-import type { NormalizedMessage } from '@/chat/types'
-import type { AttachmentMetadata } from '@/types/api'
-import { isObject } from '@hapi/protocol'
+import { isObject } from '@hapi/protocol';
+import type { NormalizedMessage } from '@/chat/types';
+import type { AttachmentMetadata } from '@/types/api';
 
 function parseAttachments(raw: unknown): AttachmentMetadata[] | undefined {
-    if (!Array.isArray(raw)) return undefined
-    const attachments: AttachmentMetadata[] = []
+    if (!Array.isArray(raw)) return undefined;
+    const attachments: AttachmentMetadata[] = [];
     for (const item of raw) {
         if (
             isObject(item) &&
@@ -21,10 +21,10 @@ function parseAttachments(raw: unknown): AttachmentMetadata[] | undefined {
                 size: item.size,
                 path: item.path,
                 previewUrl: typeof item.previewUrl === 'string' ? item.previewUrl : undefined,
-            })
+            });
         }
     }
-    return attachments.length > 0 ? attachments : undefined
+    return attachments.length > 0 ? attachments : undefined;
 }
 
 export function normalizeUserRecord(
@@ -32,7 +32,7 @@ export function normalizeUserRecord(
     localId: string | null,
     createdAt: number,
     content: unknown,
-    meta?: unknown
+    meta?: unknown,
 ): NormalizedMessage | null {
     if (typeof content === 'string') {
         return {
@@ -43,11 +43,11 @@ export function normalizeUserRecord(
             content: { type: 'text', text: content },
             isSidechain: false,
             meta,
-        }
+        };
     }
 
     if (isObject(content) && content.type === 'text' && typeof content.text === 'string') {
-        const attachments = parseAttachments(content.attachments)
+        const attachments = parseAttachments(content.attachments);
         return {
             id: messageId,
             localId,
@@ -56,8 +56,8 @@ export function normalizeUserRecord(
             content: { type: 'text', text: content.text, attachments },
             isSidechain: false,
             meta,
-        }
+        };
     }
 
-    return null
+    return null;
 }

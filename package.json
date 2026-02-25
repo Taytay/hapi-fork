@@ -25,25 +25,23 @@
         "typecheck:cli": "cd cli && bun run typecheck",
         "typecheck:hub": "cd hub && bun run typecheck",
         "typecheck:web": "cd web && bun run typecheck",
-        "format": "prettier --write .",
-        "format:check": "prettier --check .",
-        "lint": "eslint .",
-        "lint:fix": "eslint --fix .",
-        "test": "bun run test:cli && bun run test:shared && bun run test:hub && bun run test:web",
+        "format": "biome format --write .",
+        "format:check": "biome format .",
+        "lint": "biome lint .",
+        "lint:fix": "biome lint --fix .",
+        "check": "biome check .",
+        "check:fix": "biome check --fix .",
+        "test": "bun run test:cli && bun run test:hub && bun run test:web",
         "test:cli": "cd cli && bun run test",
-        "test:shared": "cd shared && bun run test",
         "test:hub": "cd hub && bun run test",
         "test:web": "cd web && bun run test",
         "clean-session": "bun run hub/scripts/cleanup-sessions.ts",
         "release-all": "cd cli && bun run release-all"
     },
     "devDependencies": {
-        "@eslint/js": "^10.0.1",
+        "@biomejs/biome": "^2.4.4",
         "concurrently": "^9.2.1",
-        "eslint": "^10.0.2",
-        "prettier": "^3.8.1",
         "react-devtools-core": "^7.0.1",
-        "typescript-eslint": "^8.56.1",
         "vite-plugin-pwa": "^1.2.0"
     }
 }

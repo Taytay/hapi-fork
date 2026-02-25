@@ -1,41 +1,41 @@
-import type { ToolViewProps } from '@/components/ToolCard/views/_all'
-import { parseRequestUserInputInput, parseRequestUserInputAnswers } from '@/components/ToolCard/requestUserInput'
-import { cn } from '@/lib/utils'
+import { parseRequestUserInputAnswers, parseRequestUserInputInput } from '@/components/ToolCard/requestUserInput';
+import type { ToolViewProps } from '@/components/ToolCard/views/_all';
+import { cn } from '@/lib/utils';
 
 function getSelectionMark(isSelected: boolean): string {
-    return isSelected ? '●' : '○'
+    return isSelected ? '●' : '○';
 }
 
 function parseResultAsAnswers(result: unknown): unknown {
     // tool.result from history may be a JSON string
     if (typeof result === 'string') {
         try {
-            return JSON.parse(result)
+            return JSON.parse(result);
         } catch {
-            return undefined
+            return undefined;
         }
     }
-    return result
+    return result;
 }
 
 export function RequestUserInputView(props: ToolViewProps) {
-    const parsed = parseRequestUserInputInput(props.block.tool.input)
-    const questions = parsed.questions
+    const parsed = parseRequestUserInputInput(props.block.tool.input);
+    const questions = parsed.questions;
     // Try permission.answers first (live), fall back to tool.result (history)
     const rawAnswers =
-        props.block.tool.permission?.answers ?? parseResultAsAnswers(props.block.tool.result) ?? undefined
-    const parsedAnswers = rawAnswers ? parseRequestUserInputAnswers(rawAnswers) : null
-    const hasAnswers = parsedAnswers && Object.keys(parsedAnswers).length > 0
+        props.block.tool.permission?.answers ?? parseResultAsAnswers(props.block.tool.result) ?? undefined;
+    const parsedAnswers = rawAnswers ? parseRequestUserInputAnswers(rawAnswers) : null;
+    const hasAnswers = parsedAnswers && Object.keys(parsedAnswers).length > 0;
 
     if (questions.length === 0) {
-        return null
+        return null;
     }
 
     return (
         <div className="flex flex-col gap-3">
             {questions.map((q) => {
-                const answer = parsedAnswers?.[q.id]
-                const isPureTextQuestion = q.options.length === 0
+                const answer = parsedAnswers?.[q.id];
+                const isPureTextQuestion = q.options.length === 0;
 
                 return (
                     <div key={q.id} className="rounded-md border border-[var(--app-border)] bg-[var(--app-bg)] p-3">
@@ -63,7 +63,7 @@ export function RequestUserInputView(props: ToolViewProps) {
                             // Question with options
                             <div className="mt-3 flex flex-col gap-1">
                                 {q.options.map((opt, optIdx) => {
-                                    const isSelected = answer?.selected === opt.label
+                                    const isSelected = answer?.selected === opt.label;
 
                                     return (
                                         <div
@@ -72,7 +72,7 @@ export function RequestUserInputView(props: ToolViewProps) {
                                                 'rounded-md border px-2 py-2',
                                                 isSelected
                                                     ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30'
-                                                    : 'border-[var(--app-border)]'
+                                                    : 'border-[var(--app-border)]',
                                             )}
                                         >
                                             <div className="flex items-start gap-2">
@@ -80,7 +80,7 @@ export function RequestUserInputView(props: ToolViewProps) {
                                                     <span
                                                         className={cn(
                                                             'shrink-0 text-sm',
-                                                            isSelected ? 'text-emerald-600' : 'text-[var(--app-hint)]'
+                                                            isSelected ? 'text-emerald-600' : 'text-[var(--app-hint)]',
                                                         )}
                                                     >
                                                         {getSelectionMark(isSelected)}
@@ -92,7 +92,7 @@ export function RequestUserInputView(props: ToolViewProps) {
                                                             'text-sm break-words',
                                                             isSelected
                                                                 ? 'text-emerald-700 dark:text-emerald-300 font-medium'
-                                                                : 'text-[var(--app-fg)]'
+                                                                : 'text-[var(--app-fg)]',
                                                         )}
                                                     >
                                                         {opt.label}
@@ -105,7 +105,7 @@ export function RequestUserInputView(props: ToolViewProps) {
                                                 </div>
                                             </div>
                                         </div>
-                                    )
+                                    );
                                 })}
 
                                 {/* Show user note if present */}
@@ -125,8 +125,8 @@ export function RequestUserInputView(props: ToolViewProps) {
                             </div>
                         )}
                     </div>
-                )
+                );
             })}
         </div>
-    )
+    );
 }

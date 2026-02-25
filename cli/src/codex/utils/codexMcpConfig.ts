@@ -17,7 +17,7 @@ function escapeTomlString(value: string): string {
         .replace(/"/g, '\\"')
         .replace(/\n/g, '\\n')
         .replace(/\r/g, '\\r')
-        .replace(/\t/g, '\\t')
+        .replace(/\t/g, '\\t');
 }
 
 /**
@@ -25,12 +25,12 @@ function escapeTomlString(value: string): string {
  * Only single quotes need escaping (by doubling them).
  */
 function escapeTomlLiteralString(value: string): string {
-    return value.replace(/'/g, "''")
+    return value.replace(/'/g, "''");
 }
 
 function buildTomlLiteralArray(values: string[]): string {
-    const items = values.map((value) => `'${escapeTomlLiteralString(value)}'`)
-    return `[${items.join(',')}]`
+    const items = values.map((value) => `'${escapeTomlLiteralString(value)}'`);
+    return `[${items.join(',')}]`;
 }
 
 /**
@@ -44,19 +44,19 @@ function buildTomlLiteralArray(values: string[]): string {
  * @returns Array of CLI arguments to pass to codex
  */
 export function buildMcpServerConfigArgs(mcpServers: Record<string, { command: string; args: string[] }>): string[] {
-    const configArgs: string[] = []
+    const configArgs: string[] = [];
 
     for (const [name, server] of Object.entries(mcpServers)) {
         // -c 'mcp_servers.<name>.command="<command>"'
-        configArgs.push('-c', `mcp_servers.${name}.command="${escapeTomlString(server.command)}"`)
+        configArgs.push('-c', `mcp_servers.${name}.command="${escapeTomlString(server.command)}"`);
 
         // -c 'mcp_servers.<name>.args=['arg1','arg2']'
         // Use TOML literal strings to avoid shell-quote mangling on Windows.
-        const argsToml = buildTomlLiteralArray(server.args)
-        configArgs.push('-c', `mcp_servers.${name}.args=${argsToml}`)
+        const argsToml = buildTomlLiteralArray(server.args);
+        configArgs.push('-c', `mcp_servers.${name}.args=${argsToml}`);
     }
 
-    return configArgs
+    return configArgs;
 }
 
 /**
@@ -69,6 +69,6 @@ export function buildMcpServerConfigArgs(mcpServers: Record<string, { command: s
  * @returns Array of CLI arguments to pass to codex
  */
 export function buildDeveloperInstructionsArg(instructions: string): string[] {
-    const escaped = escapeTomlString(instructions)
-    return ['-c', `developer_instructions="${escaped}"`]
+    const escaped = escapeTomlString(instructions);
+    return ['-c', `developer_instructions="${escaped}"`];
 }

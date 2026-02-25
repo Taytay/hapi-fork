@@ -27,18 +27,13 @@
 
         <!-- Prevent flash of white background on dark mode -->
         <style>
-            html {
-                background: #fff;
-            }
+            html { background: #fff }
             @media (prefers-color-scheme: dark) {
-                html {
-                    background: #1c1c1e;
-                    color-scheme: dark;
-                }
+                html { background: #1c1c1e; color-scheme: dark }
             }
         </style>
         <script>
-            ;(function () {
+            (function () {
                 try {
                     var raw = localStorage.getItem('hapi-font-scale')
                     var scale = Number(raw)

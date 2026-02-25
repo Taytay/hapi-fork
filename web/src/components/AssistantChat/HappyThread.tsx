@@ -1,19 +1,19 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { ThreadPrimitive } from '@assistant-ui/react'
-import type { ApiClient } from '@/api/client'
-import type { SessionMetadataSummary } from '@/types/api'
-import { HappyChatProvider } from '@/components/AssistantChat/context'
-import { HappyAssistantMessage } from '@/components/AssistantChat/messages/AssistantMessage'
-import { HappyUserMessage } from '@/components/AssistantChat/messages/UserMessage'
-import { HappySystemMessage } from '@/components/AssistantChat/messages/SystemMessage'
-import { Button } from '@/components/ui/button'
-import { Spinner } from '@/components/Spinner'
-import { useTranslation } from '@/lib/use-translation'
+import { ThreadPrimitive } from '@assistant-ui/react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import type { ApiClient } from '@/api/client';
+import { HappyChatProvider } from '@/components/AssistantChat/context';
+import { HappyAssistantMessage } from '@/components/AssistantChat/messages/AssistantMessage';
+import { HappySystemMessage } from '@/components/AssistantChat/messages/SystemMessage';
+import { HappyUserMessage } from '@/components/AssistantChat/messages/UserMessage';
+import { Spinner } from '@/components/Spinner';
+import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/lib/use-translation';
+import type { SessionMetadataSummary } from '@/types/api';
 
 function NewMessagesIndicator(props: { count: number; onClick: () => void }) {
-    const { t } = useTranslation()
+    const { t } = useTranslation();
     if (props.count === 0) {
-        return null
+        return null;
     }
 
     return (
@@ -23,17 +23,17 @@ function NewMessagesIndicator(props: { count: number; onClick: () => void }) {
         >
             {t('misc.newMessage', { n: props.count })} &#8595;
         </button>
-    )
+    );
 }
 
 function MessageSkeleton() {
-    const { t } = useTranslation()
+    const { t } = useTranslation();
     const rows = [
         { align: 'end', width: 'w-2/3', height: 'h-10' },
         { align: 'start', width: 'w-3/4', height: 'h-12' },
         { align: 'end', width: 'w-1/2', height: 'h-9' },
         { align: 'start', width: 'w-5/6', height: 'h-14' },
-    ]
+    ];
 
     return (
         <div role="status" aria-live="polite">
@@ -49,135 +49,135 @@ function MessageSkeleton() {
                 ))}
             </div>
         </div>
-    )
+    );
 }
 
 const THREAD_MESSAGE_COMPONENTS = {
     UserMessage: HappyUserMessage,
     AssistantMessage: HappyAssistantMessage,
     SystemMessage: HappySystemMessage,
-} as const
+} as const;
 
 export function HappyThread(props: {
-    api: ApiClient
-    sessionId: string
-    metadata: SessionMetadataSummary | null
-    disabled: boolean
-    onRefresh: () => void
-    onRetryMessage?: (localId: string) => void
-    onFlushPending: () => void
-    onAtBottomChange: (atBottom: boolean) => void
-    isLoadingMessages: boolean
-    messagesWarning: string | null
-    hasMoreMessages: boolean
-    isLoadingMoreMessages: boolean
-    onLoadMore: () => Promise<unknown>
-    pendingCount: number
-    rawMessagesCount: number
-    normalizedMessagesCount: number
-    messagesVersion: number
-    forceScrollToken: number
+    api: ApiClient;
+    sessionId: string;
+    metadata: SessionMetadataSummary | null;
+    disabled: boolean;
+    onRefresh: () => void;
+    onRetryMessage?: (localId: string) => void;
+    onFlushPending: () => void;
+    onAtBottomChange: (atBottom: boolean) => void;
+    isLoadingMessages: boolean;
+    messagesWarning: string | null;
+    hasMoreMessages: boolean;
+    isLoadingMoreMessages: boolean;
+    onLoadMore: () => Promise<unknown>;
+    pendingCount: number;
+    rawMessagesCount: number;
+    normalizedMessagesCount: number;
+    messagesVersion: number;
+    forceScrollToken: number;
 }) {
-    const { t } = useTranslation()
-    const viewportRef = useRef<HTMLDivElement | null>(null)
-    const topSentinelRef = useRef<HTMLDivElement | null>(null)
-    const loadLockRef = useRef(false)
-    const pendingScrollRef = useRef<{ scrollTop: number; scrollHeight: number } | null>(null)
-    const prevLoadingMoreRef = useRef(false)
-    const loadStartedRef = useRef(false)
-    const isLoadingMoreRef = useRef(props.isLoadingMoreMessages)
-    const hasMoreMessagesRef = useRef(props.hasMoreMessages)
-    const isLoadingMessagesRef = useRef(props.isLoadingMessages)
-    const onLoadMoreRef = useRef(props.onLoadMore)
-    const handleLoadMoreRef = useRef<() => void>(() => {})
-    const atBottomRef = useRef(true)
-    const onAtBottomChangeRef = useRef(props.onAtBottomChange)
-    const onFlushPendingRef = useRef(props.onFlushPending)
-    const forceScrollTokenRef = useRef(props.forceScrollToken)
+    const { t } = useTranslation();
+    const viewportRef = useRef<HTMLDivElement | null>(null);
+    const topSentinelRef = useRef<HTMLDivElement | null>(null);
+    const loadLockRef = useRef(false);
+    const pendingScrollRef = useRef<{ scrollTop: number; scrollHeight: number } | null>(null);
+    const prevLoadingMoreRef = useRef(false);
+    const loadStartedRef = useRef(false);
+    const isLoadingMoreRef = useRef(props.isLoadingMoreMessages);
+    const hasMoreMessagesRef = useRef(props.hasMoreMessages);
+    const isLoadingMessagesRef = useRef(props.isLoadingMessages);
+    const onLoadMoreRef = useRef(props.onLoadMore);
+    const handleLoadMoreRef = useRef<() => void>(() => {});
+    const atBottomRef = useRef(true);
+    const onAtBottomChangeRef = useRef(props.onAtBottomChange);
+    const onFlushPendingRef = useRef(props.onFlushPending);
+    const forceScrollTokenRef = useRef(props.forceScrollToken);
 
     // Smart scroll state: autoScroll enabled when user is near bottom
-    const [autoScrollEnabled, setAutoScrollEnabled] = useState(true)
-    const autoScrollEnabledRef = useRef(autoScrollEnabled)
+    const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
+    const autoScrollEnabledRef = useRef(autoScrollEnabled);
 
     // Keep refs in sync with state
     useEffect(() => {
-        autoScrollEnabledRef.current = autoScrollEnabled
-    }, [autoScrollEnabled])
+        autoScrollEnabledRef.current = autoScrollEnabled;
+    }, [autoScrollEnabled]);
     useEffect(() => {
-        onAtBottomChangeRef.current = props.onAtBottomChange
-    }, [props.onAtBottomChange])
+        onAtBottomChangeRef.current = props.onAtBottomChange;
+    }, [props.onAtBottomChange]);
     useEffect(() => {
-        onFlushPendingRef.current = props.onFlushPending
-    }, [props.onFlushPending])
+        onFlushPendingRef.current = props.onFlushPending;
+    }, [props.onFlushPending]);
     useEffect(() => {
-        hasMoreMessagesRef.current = props.hasMoreMessages
-    }, [props.hasMoreMessages])
+        hasMoreMessagesRef.current = props.hasMoreMessages;
+    }, [props.hasMoreMessages]);
     useEffect(() => {
-        isLoadingMessagesRef.current = props.isLoadingMessages
-    }, [props.isLoadingMessages])
+        isLoadingMessagesRef.current = props.isLoadingMessages;
+    }, [props.isLoadingMessages]);
     useEffect(() => {
-        onLoadMoreRef.current = props.onLoadMore
-    }, [props.onLoadMore])
+        onLoadMoreRef.current = props.onLoadMore;
+    }, [props.onLoadMore]);
 
     // Track scroll position to toggle autoScroll (stable listener using refs)
     useEffect(() => {
-        const viewport = viewportRef.current
-        if (!viewport) return
+        const viewport = viewportRef.current;
+        if (!viewport) return;
 
-        const THRESHOLD_PX = 120
+        const THRESHOLD_PX = 120;
 
         const handleScroll = () => {
-            const distanceFromBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight
-            const isNearBottom = distanceFromBottom < THRESHOLD_PX
+            const distanceFromBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
+            const isNearBottom = distanceFromBottom < THRESHOLD_PX;
 
             if (isNearBottom) {
-                if (!autoScrollEnabledRef.current) setAutoScrollEnabled(true)
+                if (!autoScrollEnabledRef.current) setAutoScrollEnabled(true);
             } else if (autoScrollEnabledRef.current) {
-                setAutoScrollEnabled(false)
+                setAutoScrollEnabled(false);
             }
 
             if (isNearBottom !== atBottomRef.current) {
-                atBottomRef.current = isNearBottom
-                onAtBottomChangeRef.current(isNearBottom)
+                atBottomRef.current = isNearBottom;
+                onAtBottomChangeRef.current(isNearBottom);
                 if (isNearBottom) {
-                    onFlushPendingRef.current()
+                    onFlushPendingRef.current();
                 }
             }
-        }
+        };
 
-        viewport.addEventListener('scroll', handleScroll, { passive: true })
-        return () => viewport.removeEventListener('scroll', handleScroll)
-    }, []) // Stable: no dependencies, reads from refs
+        viewport.addEventListener('scroll', handleScroll, { passive: true });
+        return () => viewport.removeEventListener('scroll', handleScroll);
+    }, []); // Stable: no dependencies, reads from refs
 
     // Scroll to bottom handler for the indicator button
     const scrollToBottom = useCallback(() => {
-        const viewport = viewportRef.current
+        const viewport = viewportRef.current;
         if (viewport) {
-            viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' })
+            viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
         }
-        setAutoScrollEnabled(true)
+        setAutoScrollEnabled(true);
         if (!atBottomRef.current) {
-            atBottomRef.current = true
-            onAtBottomChangeRef.current(true)
+            atBottomRef.current = true;
+            onAtBottomChangeRef.current(true);
         }
-        onFlushPendingRef.current()
-    }, [])
+        onFlushPendingRef.current();
+    }, []);
 
     // Reset state when session changes
     useEffect(() => {
-        setAutoScrollEnabled(true)
-        atBottomRef.current = true
-        onAtBottomChangeRef.current(true)
-        forceScrollTokenRef.current = props.forceScrollToken
-    }, [props.sessionId])
+        setAutoScrollEnabled(true);
+        atBottomRef.current = true;
+        onAtBottomChangeRef.current(true);
+        forceScrollTokenRef.current = props.forceScrollToken;
+    }, [props.forceScrollToken]);
 
     useEffect(() => {
         if (forceScrollTokenRef.current === props.forceScrollToken) {
-            return
+            return;
         }
-        forceScrollTokenRef.current = props.forceScrollToken
-        scrollToBottom()
-    }, [props.forceScrollToken, scrollToBottom])
+        forceScrollTokenRef.current = props.forceScrollToken;
+        scrollToBottom();
+    }, [props.forceScrollToken, scrollToBottom]);
 
     const handleLoadMore = useCallback(() => {
         if (
@@ -186,97 +186,97 @@ export function HappyThread(props: {
             isLoadingMoreRef.current ||
             loadLockRef.current
         ) {
-            return
+            return;
         }
-        const viewport = viewportRef.current
+        const viewport = viewportRef.current;
         if (!viewport) {
-            return
+            return;
         }
         pendingScrollRef.current = {
             scrollTop: viewport.scrollTop,
             scrollHeight: viewport.scrollHeight,
-        }
-        loadLockRef.current = true
-        loadStartedRef.current = false
-        let loadPromise: Promise<unknown>
+        };
+        loadLockRef.current = true;
+        loadStartedRef.current = false;
+        let loadPromise: Promise<unknown>;
         try {
-            loadPromise = onLoadMoreRef.current()
+            loadPromise = onLoadMoreRef.current();
         } catch (error) {
-            pendingScrollRef.current = null
-            loadLockRef.current = false
-            throw error
+            pendingScrollRef.current = null;
+            loadLockRef.current = false;
+            throw error;
         }
         void loadPromise
             .catch((error) => {
-                pendingScrollRef.current = null
-                loadLockRef.current = false
-                console.error('Failed to load older messages:', error)
+                pendingScrollRef.current = null;
+                loadLockRef.current = false;
+                console.error('Failed to load older messages:', error);
             })
             .finally(() => {
                 if (!loadStartedRef.current && !isLoadingMoreRef.current && pendingScrollRef.current) {
-                    pendingScrollRef.current = null
-                    loadLockRef.current = false
+                    pendingScrollRef.current = null;
+                    loadLockRef.current = false;
                 }
-            })
-    }, [])
+            });
+    }, []);
 
     useEffect(() => {
-        handleLoadMoreRef.current = handleLoadMore
-    }, [handleLoadMore])
+        handleLoadMoreRef.current = handleLoadMore;
+    }, [handleLoadMore]);
 
     useEffect(() => {
-        const sentinel = topSentinelRef.current
-        const viewport = viewportRef.current
+        const sentinel = topSentinelRef.current;
+        const viewport = viewportRef.current;
         if (!sentinel || !viewport || !props.hasMoreMessages || props.isLoadingMessages) {
-            return
+            return;
         }
         if (typeof IntersectionObserver === 'undefined') {
-            return
+            return;
         }
 
         const observer = new IntersectionObserver(
             (entries) => {
                 for (const entry of entries) {
                     if (entry.isIntersecting) {
-                        handleLoadMoreRef.current()
+                        handleLoadMoreRef.current();
                     }
                 }
             },
             {
                 root: viewport,
                 rootMargin: '200px 0px 0px 0px',
-            }
-        )
+            },
+        );
 
-        observer.observe(sentinel)
-        return () => observer.disconnect()
-    }, [props.hasMoreMessages, props.isLoadingMessages])
+        observer.observe(sentinel);
+        return () => observer.disconnect();
+    }, [props.hasMoreMessages, props.isLoadingMessages]);
 
     useLayoutEffect(() => {
-        const pending = pendingScrollRef.current
-        const viewport = viewportRef.current
+        const pending = pendingScrollRef.current;
+        const viewport = viewportRef.current;
         if (!pending || !viewport) {
-            return
+            return;
         }
-        const delta = viewport.scrollHeight - pending.scrollHeight
-        viewport.scrollTop = pending.scrollTop + delta
-        pendingScrollRef.current = null
-        loadLockRef.current = false
-    }, [props.messagesVersion])
+        const delta = viewport.scrollHeight - pending.scrollHeight;
+        viewport.scrollTop = pending.scrollTop + delta;
+        pendingScrollRef.current = null;
+        loadLockRef.current = false;
+    }, []);
 
     useEffect(() => {
-        isLoadingMoreRef.current = props.isLoadingMoreMessages
+        isLoadingMoreRef.current = props.isLoadingMoreMessages;
         if (props.isLoadingMoreMessages) {
-            loadStartedRef.current = true
+            loadStartedRef.current = true;
         }
         if (prevLoadingMoreRef.current && !props.isLoadingMoreMessages && pendingScrollRef.current) {
-            pendingScrollRef.current = null
-            loadLockRef.current = false
+            pendingScrollRef.current = null;
+            loadLockRef.current = false;
         }
-        prevLoadingMoreRef.current = props.isLoadingMoreMessages
-    }, [props.isLoadingMoreMessages])
+        prevLoadingMoreRef.current = props.isLoadingMoreMessages;
+    }, [props.isLoadingMoreMessages]);
 
-    const showSkeleton = props.isLoadingMessages && props.rawMessagesCount === 0 && props.pendingCount === 0
+    const showSkeleton = props.isLoadingMessages && props.rawMessagesCount === 0 && props.pendingCount === 0;
 
     return (
         <HappyChatProvider
@@ -350,5 +350,5 @@ export function HappyThread(props: {
                 <NewMessagesIndicator count={props.pendingCount} onClick={scrollToBottom} />
             </ThreadPrimitive.Root>
         </HappyChatProvider>
-    )
+    );
 }

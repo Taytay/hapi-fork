@@ -1,34 +1,34 @@
-import type { AttachmentAdapter, PendingAttachment, CompleteAttachment, Attachment } from '@assistant-ui/react'
-import type { ApiClient } from '@/api/client'
-import type { AttachmentMetadata } from '@/types/api'
-import { isImageMimeType } from '@/lib/fileAttachments'
+import type { Attachment, AttachmentAdapter, CompleteAttachment, PendingAttachment } from '@assistant-ui/react';
+import type { ApiClient } from '@/api/client';
+import { isImageMimeType } from '@/lib/fileAttachments';
+import type { AttachmentMetadata } from '@/types/api';
 
-const MAX_UPLOAD_BYTES = 50 * 1024 * 1024
-const MAX_PREVIEW_BYTES = 5 * 1024 * 1024
+const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+const MAX_PREVIEW_BYTES = 5 * 1024 * 1024;
 
 type PendingUploadAttachment = PendingAttachment & {
-    path?: string
-    previewUrl?: string
-}
+    path?: string;
+    previewUrl?: string;
+};
 
 export function createAttachmentAdapter(api: ApiClient, sessionId: string): AttachmentAdapter {
-    const cancelledAttachmentIds = new Set<string>()
+    const cancelledAttachmentIds = new Set<string>();
 
     const deleteUpload = async (path?: string) => {
-        if (!path) return
+        if (!path) return;
         try {
-            await api.deleteUploadFile(sessionId, path)
+            await api.deleteUploadFile(sessionId, path);
         } catch {
             // Best effort cleanup
         }
-    }
+    };
 
     return {
         accept: '*/*',
 
         async *add({ file }): AsyncGenerator<PendingAttachment> {
-            const id = crypto.randomUUID()
-            const contentType = file.type || 'application/octet-stream'
+            const id = crypto.randomUUID();
+            const contentType = file.type || 'application/octet-stream';
 
             yield {
                 id,
@@ -37,11 +37,11 @@ export function createAttachmentAdapter(api: ApiClient, sessionId: string): Atta
                 contentType,
                 file,
                 status: { type: 'running', reason: 'uploading', progress: 0 },
-            }
+            };
 
             try {
                 if (cancelledAttachmentIds.has(id)) {
-                    return
+                    return;
                 }
 
                 if (file.size > MAX_UPLOAD_BYTES) {
@@ -52,13 +52,13 @@ export function createAttachmentAdapter(api: ApiClient, sessionId: string): Atta
                         contentType,
                         file,
                         status: { type: 'incomplete', reason: 'error' },
-                    }
-                    return
+                    };
+                    return;
                 }
 
-                const content = await fileToBase64(file)
+                const content = await fileToBase64(file);
                 if (cancelledAttachmentIds.has(id)) {
-                    return
+                    return;
                 }
 
                 yield {
@@ -68,14 +68,14 @@ export function createAttachmentAdapter(api: ApiClient, sessionId: string): Atta
                     contentType,
                     file,
                     status: { type: 'running', reason: 'uploading', progress: 50 },
-                }
+                };
 
-                const result = await api.uploadFile(sessionId, file.name, content, contentType)
+                const result = await api.uploadFile(sessionId, file.name, content, contentType);
                 if (cancelledAttachmentIds.has(id)) {
                     if (result.success && result.path) {
-                        await deleteUpload(result.path)
+                        await deleteUpload(result.path);
                     }
-                    return
+                    return;
                 }
 
                 if (!result.success || !result.path) {
@@ -86,14 +86,14 @@ export function createAttachmentAdapter(api: ApiClient, sessionId: string): Atta
                         contentType,
                         file,
                         status: { type: 'incomplete', reason: 'error' },
-                    }
-                    return
+                    };
+                    return;
                 }
 
                 // Generate preview URL for images under 5MB
-                let previewUrl: string | undefined
+                let previewUrl: string | undefined;
                 if (isImageMimeType(contentType) && file.size <= MAX_PREVIEW_BYTES) {
-                    previewUrl = await fileToDataUrl(file)
+                    previewUrl = await fileToDataUrl(file);
                 }
 
                 yield {
@@ -105,7 +105,7 @@ export function createAttachmentAdapter(api: ApiClient, sessionId: string): Atta
                     status: { type: 'requires-action', reason: 'composer-send' },
                     path: result.path,
                     previewUrl,
-                } as PendingUploadAttachment
+                } as PendingUploadAttachment;
             } catch {
                 yield {
                     id,
@@ -114,19 +114,19 @@ export function createAttachmentAdapter(api: ApiClient, sessionId: string): Atta
                     contentType,
                     file,
                     status: { type: 'incomplete', reason: 'error' },
-                }
+                };
             }
         },
 
         async remove(attachment: Attachment): Promise<void> {
-            cancelledAttachmentIds.add(attachment.id)
-            const path = (attachment as PendingUploadAttachment).path
-            await deleteUpload(path)
+            cancelledAttachmentIds.add(attachment.id);
+            const path = (attachment as PendingUploadAttachment).path;
+            await deleteUpload(path);
         },
 
         async send(attachment: PendingAttachment): Promise<CompleteAttachment> {
-            const pending = attachment as PendingUploadAttachment
-            const path = pending.path
+            const pending = attachment as PendingUploadAttachment;
+            const path = pending.path;
 
             // Build AttachmentMetadata to be sent with the message
             const metadata: AttachmentMetadata | undefined = path
@@ -138,7 +138,7 @@ export function createAttachmentAdapter(api: ApiClient, sessionId: string): Atta
                       path,
                       previewUrl: pending.previewUrl,
                   }
-                : undefined
+                : undefined;
 
             return {
                 id: attachment.id,
@@ -148,35 +148,35 @@ export function createAttachmentAdapter(api: ApiClient, sessionId: string): Atta
                 status: { type: 'complete' },
                 // Store metadata as JSON in the text content for extraction by assistant-runtime
                 content: metadata ? [{ type: 'text', text: JSON.stringify({ __attachmentMetadata: metadata }) }] : [],
-            }
+            };
         },
-    }
+    };
 }
 
 async function fileToBase64(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
-        const reader = new FileReader()
+        const reader = new FileReader();
         reader.onload = () => {
-            const result = reader.result as string
-            const base64 = result.split(',')[1]
+            const result = reader.result as string;
+            const base64 = result.split(',')[1];
             if (!base64) {
-                reject(new Error('Failed to read file'))
-                return
+                reject(new Error('Failed to read file'));
+                return;
             }
-            resolve(base64)
-        }
-        reader.onerror = reject
-        reader.readAsDataURL(file)
-    })
+            resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
 }
 
 async function fileToDataUrl(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
-        const reader = new FileReader()
+        const reader = new FileReader();
         reader.onload = () => {
-            resolve(reader.result as string)
-        }
-        reader.onerror = reject
-        reader.readAsDataURL(file)
-    })
+            resolve(reader.result as string);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
 }

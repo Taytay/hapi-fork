@@ -1,16 +1,16 @@
-import type { MarkdownTextPrimitiveProps } from '@assistant-ui/react-markdown'
-import { MarkdownTextPrimitive } from '@assistant-ui/react-markdown'
-import { TextMessagePartProvider } from '@assistant-ui/react'
-import { MARKDOWN_PLUGINS, defaultComponents } from '@/components/assistant-ui/markdown-text'
-import { cn } from '@/lib/utils'
+import { TextMessagePartProvider } from '@assistant-ui/react';
+import type { MarkdownTextPrimitiveProps } from '@assistant-ui/react-markdown';
+import { MarkdownTextPrimitive } from '@assistant-ui/react-markdown';
+import { defaultComponents, MARKDOWN_PLUGINS } from '@/components/assistant-ui/markdown-text';
+import { cn } from '@/lib/utils';
 
 interface MarkdownRendererProps {
-    content: string
-    components?: MarkdownTextPrimitiveProps['components']
+    content: string;
+    components?: MarkdownTextPrimitiveProps['components'];
 }
 
 function MarkdownContent(props: MarkdownRendererProps) {
-    const mergedComponents = props.components ? { ...defaultComponents, ...props.components } : defaultComponents
+    const mergedComponents = props.components ? { ...defaultComponents, ...props.components } : defaultComponents;
 
     return (
         <TextMessagePartProvider text={props.content}>
@@ -20,9 +20,9 @@ function MarkdownContent(props: MarkdownRendererProps) {
                 className={cn('aui-md min-w-0 max-w-full break-words text-base')}
             />
         </TextMessagePartProvider>
-    )
+    );
 }
 
 export function MarkdownRenderer(props: MarkdownRendererProps) {
-    return <MarkdownContent {...props} />
+    return <MarkdownContent {...props} />;
 }

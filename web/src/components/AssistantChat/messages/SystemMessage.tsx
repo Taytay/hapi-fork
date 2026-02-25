@@ -1,34 +1,21 @@
-import { useAssistantState } from '@assistant-ui/react'
-import { getEventPresentation } from '@/chat/presentation'
-import type { HappyChatMessageMetadata } from '@/lib/assistant-runtime'
+import { useAssistantState } from '@assistant-ui/react';
+import { getEventPresentation } from '@/chat/presentation';
+import type { HappyChatMessageMetadata } from '@/lib/assistant-runtime';
 
 export function HappySystemMessage() {
-    const role = useAssistantState(({ message }) => message.role)
+    const role = useAssistantState(({ message }) => message.role);
     const text = useAssistantState(({ message }) => {
-        if (message.role !== 'system') return ''
-        return message.content[0]?.type === 'text' ? message.content[0].text : ''
-    })
+        if (message.role !== 'system') return '';
+        return message.content[0]?.type === 'text' ? message.content[0].text : '';
+    });
     const icon = useAssistantState(({ message }) => {
-        if (message.role !== 'system') return null
-        const custom = message.metadata.custom as Partial<HappyChatMessageMetadata> | undefined
-        const event = custom?.kind === 'event' ? custom.event : undefined
-        return event ? getEventPresentation(event).icon : null
-    })
-    const isTurnSeparator = useAssistantState(({ message }) => {
-        if (message.role !== 'system') return false
-        const custom = message.metadata.custom as Partial<HappyChatMessageMetadata> | undefined
-        return custom?.kind === 'turn-separator'
-    })
+        if (message.role !== 'system') return null;
+        const custom = message.metadata.custom as Partial<HappyChatMessageMetadata> | undefined;
+        const event = custom?.kind === 'event' ? custom.event : undefined;
+        return event ? getEventPresentation(event).icon : null;
+    });
 
-    if (role !== 'system') return null
-
-    if (isTurnSeparator) {
-        return (
-            <div className="py-2">
-                <div className="mx-auto max-w-content border-t border-[var(--app-border)]" />
-            </div>
-        )
-    }
+    if (role !== 'system') return null;
 
     return (
         <div className="py-1">
@@ -39,5 +26,5 @@ export function HappySystemMessage() {
                 </span>
             </div>
         </div>
-    )
+    );
 }

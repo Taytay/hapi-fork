@@ -1,134 +1,134 @@
-import { logger } from '@/ui/logger'
-import { loop } from '@/claude/loop'
-import { AgentState, SessionModelMode } from '@/api/types'
-import { EnhancedMode, PermissionMode } from './loop'
-import { MessageQueue2 } from '@/utils/MessageQueue2'
-import { hashObject } from '@/utils/deterministicJson'
-import { extractSDKMetadataAsync } from '@/claude/sdk/metadataExtractor'
-import { parseSpecialCommand } from '@/parsers/specialCommands'
-import { getEnvironmentInfo } from '@/ui/doctor'
-import { startHappyServer } from '@/claude/utils/startHappyServer'
-import { startHookServer } from '@/claude/utils/startHookServer'
-import { generateHookSettingsFile, cleanupHookSettingsFile } from '@/modules/common/hooks/generateHookSettings'
-import { registerKillSessionHandler } from './registerKillSessionHandler'
-import type { Session } from './session'
-import { bootstrapSession } from '@/agent/sessionFactory'
-import { createModeChangeHandler, createRunnerLifecycle, setControlledByUser } from '@/agent/runnerLifecycle'
-import { isModelModeAllowedForFlavor, isPermissionModeAllowedForFlavor } from '@hapi/protocol'
-import { ModelModeSchema, PermissionModeSchema } from '@hapi/protocol/schemas'
-import { formatMessageWithAttachments } from '@/utils/attachmentFormatter'
+import { isModelModeAllowedForFlavor, isPermissionModeAllowedForFlavor } from '@hapi/protocol';
+import { ModelModeSchema, PermissionModeSchema } from '@hapi/protocol/schemas';
+import { createModeChangeHandler, createRunnerLifecycle, setControlledByUser } from '@/agent/runnerLifecycle';
+import { bootstrapSession } from '@/agent/sessionFactory';
+import type { AgentState, SessionModelMode } from '@/api/types';
+import { loop } from '@/claude/loop';
+import { extractSDKMetadataAsync } from '@/claude/sdk/metadataExtractor';
+import { startHappyServer } from '@/claude/utils/startHappyServer';
+import { startHookServer } from '@/claude/utils/startHookServer';
+import { cleanupHookSettingsFile, generateHookSettingsFile } from '@/modules/common/hooks/generateHookSettings';
+import { parseSpecialCommand } from '@/parsers/specialCommands';
+import { getEnvironmentInfo } from '@/ui/doctor';
+import { logger } from '@/ui/logger';
+import { formatMessageWithAttachments } from '@/utils/attachmentFormatter';
+import { hashObject } from '@/utils/deterministicJson';
+import { MessageQueue2 } from '@/utils/MessageQueue2';
+import type { EnhancedMode, PermissionMode } from './loop';
+import { registerKillSessionHandler } from './registerKillSessionHandler';
+import type { Session } from './session';
 
 export interface StartOptions {
-    model?: string
-    permissionMode?: PermissionMode
-    startingMode?: 'local' | 'remote'
-    shouldStartRunner?: boolean
-    claudeEnvVars?: Record<string, string>
-    claudeArgs?: string[]
-    startedBy?: 'runner' | 'terminal'
+    model?: string;
+    permissionMode?: PermissionMode;
+    startingMode?: 'local' | 'remote';
+    shouldStartRunner?: boolean;
+    claudeEnvVars?: Record<string, string>;
+    claudeArgs?: string[];
+    startedBy?: 'runner' | 'terminal';
 }
 
 export async function runClaude(options: StartOptions = {}): Promise<void> {
-    const workingDirectory = process.cwd()
-    const startedBy = options.startedBy ?? 'terminal'
+    const workingDirectory = process.cwd();
+    const startedBy = options.startedBy ?? 'terminal';
 
     // Log environment info at startup
-    logger.debugLargeJson('[START] HAPI process started', getEnvironmentInfo())
-    logger.debug(`[START] Options: startedBy=${startedBy}, startingMode=${options.startingMode}`)
+    logger.debugLargeJson('[START] HAPI process started', getEnvironmentInfo());
+    logger.debug(`[START] Options: startedBy=${startedBy}, startingMode=${options.startingMode}`);
 
     // Validate runner spawn requirements
     if (startedBy === 'runner' && options.startingMode === 'local') {
-        logger.debug('Runner spawn requested with local mode - forcing remote mode')
-        options.startingMode = 'remote'
+        logger.debug('Runner spawn requested with local mode - forcing remote mode');
+        options.startingMode = 'remote';
         // TODO: Eventually we should error here instead of silently switching
         // throw new Error('Runner-spawned sessions cannot use local/interactive mode');
     }
 
-    const initialState: AgentState = {}
+    const initialState: AgentState = {};
     const { api, session, sessionInfo } = await bootstrapSession({
         flavor: 'claude',
         startedBy,
         workingDirectory,
         agentState: initialState,
-    })
-    logger.debug(`Session created: ${sessionInfo.id}`)
+    });
+    logger.debug(`Session created: ${sessionInfo.id}`);
 
     // Extract SDK metadata in background and update session when ready
     extractSDKMetadataAsync(async (sdkMetadata) => {
-        logger.debug('[start] SDK metadata extracted, updating session:', sdkMetadata)
+        logger.debug('[start] SDK metadata extracted, updating session:', sdkMetadata);
         try {
             // Update session metadata with tools and slash commands
             session.updateMetadata((currentMetadata) => ({
                 ...currentMetadata,
                 tools: sdkMetadata.tools,
                 slashCommands: sdkMetadata.slashCommands,
-            }))
-            logger.debug('[start] Session metadata updated with SDK capabilities')
+            }));
+            logger.debug('[start] Session metadata updated with SDK capabilities');
         } catch (error) {
-            logger.debug('[start] Failed to update session metadata:', error)
+            logger.debug('[start] Failed to update session metadata:', error);
         }
-    })
+    });
 
     // Start HAPI MCP server
-    const happyServer = await startHappyServer(session)
-    logger.debug(`[START] HAPI MCP server started at ${happyServer.url}`)
+    const happyServer = await startHappyServer(session);
+    logger.debug(`[START] HAPI MCP server started at ${happyServer.url}`);
 
     // Variable to track current session instance (updated via onSessionReady callback)
-    const currentSessionRef: { current: Session | null } = { current: null }
+    const currentSessionRef: { current: Session | null } = { current: null };
 
     const formatFailureReason = (message: string): string => {
-        const maxLength = 200
+        const maxLength = 200;
         if (message.length <= maxLength) {
-            return message
+            return message;
         }
-        return `${message.slice(0, maxLength)}...`
-    }
+        return `${message.slice(0, maxLength)}...`;
+    };
 
     // Start Hook server for receiving Claude session notifications
     const hookServer = await startHookServer({
         onSessionHook: (sessionId, data) => {
-            logger.debug(`[START] Session hook received: ${sessionId}`, data)
+            logger.debug(`[START] Session hook received: ${sessionId}`, data);
 
-            const currentSession = currentSessionRef.current
+            const currentSession = currentSessionRef.current;
             if (currentSession) {
-                const previousSessionId = currentSession.sessionId
+                const previousSessionId = currentSession.sessionId;
                 if (previousSessionId !== sessionId) {
-                    logger.debug(`[START] Claude session ID changed: ${previousSessionId} -> ${sessionId}`)
-                    currentSession.onSessionFound(sessionId)
+                    logger.debug(`[START] Claude session ID changed: ${previousSessionId} -> ${sessionId}`);
+                    currentSession.onSessionFound(sessionId);
                 }
             }
         },
-    })
-    logger.debug(`[START] Hook server started on port ${hookServer.port}`)
+    });
+    logger.debug(`[START] Hook server started on port ${hookServer.port}`);
 
     const hookSettingsPath = generateHookSettingsFile(hookServer.port, hookServer.token, {
         filenamePrefix: 'session-hook',
         logLabel: 'generateHookSettings',
-    })
-    logger.debug(`[START] Generated hook settings file: ${hookSettingsPath}`)
+    });
+    logger.debug(`[START] Generated hook settings file: ${hookSettingsPath}`);
 
     // Print log file path
-    const logPath = logger.logFilePath
-    logger.infoDeveloper(`Session: ${sessionInfo.id}`)
-    logger.infoDeveloper(`Logs: ${logPath}`)
+    const logPath = logger.logFilePath;
+    logger.infoDeveloper(`Session: ${sessionInfo.id}`);
+    logger.infoDeveloper(`Logs: ${logPath}`);
 
     const lifecycle = createRunnerLifecycle({
         session,
         logTag: 'claude',
         stopKeepAlive: () => currentSessionRef.current?.stopKeepAlive(),
         onAfterClose: () => {
-            happyServer.stop()
-            hookServer.stop()
-            cleanupHookSettingsFile(hookSettingsPath, 'generateHookSettings')
+            happyServer.stop();
+            hookServer.stop();
+            cleanupHookSettingsFile(hookSettingsPath, 'generateHookSettings');
         },
-    })
+    });
 
-    lifecycle.registerProcessHandlers()
-    registerKillSessionHandler(session.rpcHandlerManager, lifecycle.cleanupAndExit)
+    lifecycle.registerProcessHandlers();
+    registerKillSessionHandler(session.rpcHandlerManager, lifecycle.cleanupAndExit);
 
     // Set initial agent state
-    const startingMode = options.startingMode ?? (startedBy === 'runner' ? 'remote' : 'local')
-    setControlledByUser(session, startingMode)
+    const startingMode = options.startingMode ?? (startedBy === 'runner' ? 'remote' : 'local');
+    setControlledByUser(session, startingMode);
 
     // Import MessageQueue2 and create message queue
     const messageQueue = new MessageQueue2<EnhancedMode>((mode) =>
@@ -140,117 +140,117 @@ export async function runClaude(options: StartOptions = {}): Promise<void> {
             appendSystemPrompt: mode.appendSystemPrompt,
             allowedTools: mode.allowedTools,
             disallowedTools: mode.disallowedTools,
-        })
-    )
+        }),
+    );
 
     // Forward messages to the queue
-    let currentPermissionMode: PermissionMode = options.permissionMode ?? 'default'
+    let currentPermissionMode: PermissionMode = options.permissionMode ?? 'default';
     let currentModelMode: SessionModelMode =
-        options.model === 'sonnet' || options.model === 'opus' ? options.model : 'default'
-    let currentFallbackModel: string | undefined = undefined // Track current fallback model
-    let currentCustomSystemPrompt: string | undefined = undefined // Track current custom system prompt
-    let currentAppendSystemPrompt: string | undefined = undefined // Track current append system prompt
-    let currentAllowedTools: string[] | undefined = undefined // Track current allowed tools
-    let currentDisallowedTools: string[] | undefined = undefined // Track current disallowed tools
+        options.model === 'sonnet' || options.model === 'opus' ? options.model : 'default';
+    let currentFallbackModel: string | undefined; // Track current fallback model
+    let currentCustomSystemPrompt: string | undefined; // Track current custom system prompt
+    let currentAppendSystemPrompt: string | undefined; // Track current append system prompt
+    let currentAllowedTools: string[] | undefined; // Track current allowed tools
+    let currentDisallowedTools: string[] | undefined; // Track current disallowed tools
 
     const syncSessionModes = () => {
-        const sessionInstance = currentSessionRef.current
+        const sessionInstance = currentSessionRef.current;
         if (!sessionInstance) {
-            return
+            return;
         }
-        sessionInstance.setPermissionMode(currentPermissionMode)
-        sessionInstance.setModelMode(currentModelMode)
+        sessionInstance.setPermissionMode(currentPermissionMode);
+        sessionInstance.setModelMode(currentModelMode);
         logger.debug(
-            `[loop] Synced session modes for keepalive: permissionMode=${currentPermissionMode}, modelMode=${currentModelMode}`
-        )
-    }
+            `[loop] Synced session modes for keepalive: permissionMode=${currentPermissionMode}, modelMode=${currentModelMode}`,
+        );
+    };
     session.onUserMessage((message) => {
-        const sessionPermissionMode = currentSessionRef.current?.getPermissionMode()
+        const sessionPermissionMode = currentSessionRef.current?.getPermissionMode();
         if (sessionPermissionMode && isPermissionModeAllowedForFlavor(sessionPermissionMode, 'claude')) {
-            currentPermissionMode = sessionPermissionMode as PermissionMode
+            currentPermissionMode = sessionPermissionMode as PermissionMode;
         }
-        const messagePermissionMode = currentPermissionMode
-        const messageModel = currentModelMode === 'default' ? undefined : currentModelMode
+        const messagePermissionMode = currentPermissionMode;
+        const messageModel = currentModelMode === 'default' ? undefined : currentModelMode;
         logger.debug(
-            `[loop] User message received with permission mode: ${currentPermissionMode}, model: ${currentModelMode}`
-        )
+            `[loop] User message received with permission mode: ${currentPermissionMode}, model: ${currentModelMode}`,
+        );
 
         // Resolve custom system prompt - use message.meta.customSystemPrompt if provided, otherwise use current
-        let messageCustomSystemPrompt = currentCustomSystemPrompt
+        let messageCustomSystemPrompt = currentCustomSystemPrompt;
         if (message.meta?.hasOwnProperty('customSystemPrompt')) {
-            messageCustomSystemPrompt = message.meta.customSystemPrompt || undefined // null becomes undefined
-            currentCustomSystemPrompt = messageCustomSystemPrompt
+            messageCustomSystemPrompt = message.meta.customSystemPrompt || undefined; // null becomes undefined
+            currentCustomSystemPrompt = messageCustomSystemPrompt;
             logger.debug(
-                `[loop] Custom system prompt updated from user message: ${messageCustomSystemPrompt ? 'set' : 'reset to none'}`
-            )
+                `[loop] Custom system prompt updated from user message: ${messageCustomSystemPrompt ? 'set' : 'reset to none'}`,
+            );
         } else {
             logger.debug(
-                `[loop] User message received with no custom system prompt override, using current: ${currentCustomSystemPrompt ? 'set' : 'none'}`
-            )
+                `[loop] User message received with no custom system prompt override, using current: ${currentCustomSystemPrompt ? 'set' : 'none'}`,
+            );
         }
 
         // Resolve fallback model - use message.meta.fallbackModel if provided, otherwise use current fallback model
-        let messageFallbackModel = currentFallbackModel
+        let messageFallbackModel = currentFallbackModel;
         if (message.meta?.hasOwnProperty('fallbackModel')) {
-            messageFallbackModel = message.meta.fallbackModel || undefined // null becomes undefined
-            currentFallbackModel = messageFallbackModel
-            logger.debug(`[loop] Fallback model updated from user message: ${messageFallbackModel || 'reset to none'}`)
+            messageFallbackModel = message.meta.fallbackModel || undefined; // null becomes undefined
+            currentFallbackModel = messageFallbackModel;
+            logger.debug(`[loop] Fallback model updated from user message: ${messageFallbackModel || 'reset to none'}`);
         } else {
             logger.debug(
-                `[loop] User message received with no fallback model override, using current: ${currentFallbackModel || 'none'}`
-            )
+                `[loop] User message received with no fallback model override, using current: ${currentFallbackModel || 'none'}`,
+            );
         }
 
         // Resolve append system prompt - use message.meta.appendSystemPrompt if provided, otherwise use current
-        let messageAppendSystemPrompt = currentAppendSystemPrompt
+        let messageAppendSystemPrompt = currentAppendSystemPrompt;
         if (message.meta?.hasOwnProperty('appendSystemPrompt')) {
-            messageAppendSystemPrompt = message.meta.appendSystemPrompt || undefined // null becomes undefined
-            currentAppendSystemPrompt = messageAppendSystemPrompt
+            messageAppendSystemPrompt = message.meta.appendSystemPrompt || undefined; // null becomes undefined
+            currentAppendSystemPrompt = messageAppendSystemPrompt;
             logger.debug(
-                `[loop] Append system prompt updated from user message: ${messageAppendSystemPrompt ? 'set' : 'reset to none'}`
-            )
+                `[loop] Append system prompt updated from user message: ${messageAppendSystemPrompt ? 'set' : 'reset to none'}`,
+            );
         } else {
             logger.debug(
-                `[loop] User message received with no append system prompt override, using current: ${currentAppendSystemPrompt ? 'set' : 'none'}`
-            )
+                `[loop] User message received with no append system prompt override, using current: ${currentAppendSystemPrompt ? 'set' : 'none'}`,
+            );
         }
 
         // Resolve allowed tools - use message.meta.allowedTools if provided, otherwise use current
-        let messageAllowedTools = currentAllowedTools
+        let messageAllowedTools = currentAllowedTools;
         if (message.meta?.hasOwnProperty('allowedTools')) {
-            messageAllowedTools = message.meta.allowedTools || undefined // null becomes undefined
-            currentAllowedTools = messageAllowedTools
+            messageAllowedTools = message.meta.allowedTools || undefined; // null becomes undefined
+            currentAllowedTools = messageAllowedTools;
             logger.debug(
-                `[loop] Allowed tools updated from user message: ${messageAllowedTools ? messageAllowedTools.join(', ') : 'reset to none'}`
-            )
+                `[loop] Allowed tools updated from user message: ${messageAllowedTools ? messageAllowedTools.join(', ') : 'reset to none'}`,
+            );
         } else {
             logger.debug(
-                `[loop] User message received with no allowed tools override, using current: ${currentAllowedTools ? currentAllowedTools.join(', ') : 'none'}`
-            )
+                `[loop] User message received with no allowed tools override, using current: ${currentAllowedTools ? currentAllowedTools.join(', ') : 'none'}`,
+            );
         }
 
         // Resolve disallowed tools - use message.meta.disallowedTools if provided, otherwise use current
-        let messageDisallowedTools = currentDisallowedTools
+        let messageDisallowedTools = currentDisallowedTools;
         if (message.meta?.hasOwnProperty('disallowedTools')) {
-            messageDisallowedTools = message.meta.disallowedTools || undefined // null becomes undefined
-            currentDisallowedTools = messageDisallowedTools
+            messageDisallowedTools = message.meta.disallowedTools || undefined; // null becomes undefined
+            currentDisallowedTools = messageDisallowedTools;
             logger.debug(
-                `[loop] Disallowed tools updated from user message: ${messageDisallowedTools ? messageDisallowedTools.join(', ') : 'reset to none'}`
-            )
+                `[loop] Disallowed tools updated from user message: ${messageDisallowedTools ? messageDisallowedTools.join(', ') : 'reset to none'}`,
+            );
         } else {
             logger.debug(
-                `[loop] User message received with no disallowed tools override, using current: ${currentDisallowedTools ? currentDisallowedTools.join(', ') : 'none'}`
-            )
+                `[loop] User message received with no disallowed tools override, using current: ${currentDisallowedTools ? currentDisallowedTools.join(', ') : 'none'}`,
+            );
         }
 
         // Check for special commands before processing
-        const specialCommand = parseSpecialCommand(message.content.text)
+        const specialCommand = parseSpecialCommand(message.content.text);
 
         // Format message text with attachments for Claude
-        const formattedText = formatMessageWithAttachments(message.content.text, message.content.attachments)
+        const formattedText = formatMessageWithAttachments(message.content.text, message.content.attachments);
 
         if (specialCommand.type === 'compact') {
-            logger.debug('[start] Detected /compact command')
+            logger.debug('[start] Detected /compact command');
             const enhancedMode: EnhancedMode = {
                 permissionMode: messagePermissionMode ?? 'default',
                 model: messageModel,
@@ -259,16 +259,16 @@ export async function runClaude(options: StartOptions = {}): Promise<void> {
                 appendSystemPrompt: messageAppendSystemPrompt,
                 allowedTools: messageAllowedTools,
                 disallowedTools: messageDisallowedTools,
-            }
+            };
             // Use raw text only, ignore attachments for special commands
-            const commandText = specialCommand.originalMessage || message.content.text
-            messageQueue.pushIsolateAndClear(commandText, enhancedMode)
-            logger.debugLargeJson('[start] /compact command pushed to queue:', message)
-            return
+            const commandText = specialCommand.originalMessage || message.content.text;
+            messageQueue.pushIsolateAndClear(commandText, enhancedMode);
+            logger.debugLargeJson('[start] /compact command pushed to queue:', message);
+            return;
         }
 
         if (specialCommand.type === 'clear') {
-            logger.debug('[start] Detected /clear command')
+            logger.debug('[start] Detected /clear command');
             const enhancedMode: EnhancedMode = {
                 permissionMode: messagePermissionMode ?? 'default',
                 model: messageModel,
@@ -277,12 +277,12 @@ export async function runClaude(options: StartOptions = {}): Promise<void> {
                 appendSystemPrompt: messageAppendSystemPrompt,
                 allowedTools: messageAllowedTools,
                 disallowedTools: messageDisallowedTools,
-            }
+            };
             // Use raw text only, ignore attachments for special commands
-            const commandText = specialCommand.originalMessage || message.content.text
-            messageQueue.pushIsolateAndClear(commandText, enhancedMode)
-            logger.debugLargeJson('[start] /clear command pushed to queue:', message)
-            return
+            const commandText = specialCommand.originalMessage || message.content.text;
+            messageQueue.pushIsolateAndClear(commandText, enhancedMode);
+            logger.debugLargeJson('[start] /clear command pushed to queue:', message);
+            return;
         }
 
         // Push with resolved permission mode, model, system prompts, and tools
@@ -294,48 +294,48 @@ export async function runClaude(options: StartOptions = {}): Promise<void> {
             appendSystemPrompt: messageAppendSystemPrompt,
             allowedTools: messageAllowedTools,
             disallowedTools: messageDisallowedTools,
-        }
-        messageQueue.push(formattedText, enhancedMode)
-        logger.debugLargeJson('User message pushed to queue:', message)
-    })
+        };
+        messageQueue.push(formattedText, enhancedMode);
+        logger.debugLargeJson('User message pushed to queue:', message);
+    });
 
     const resolvePermissionMode = (value: unknown): PermissionMode => {
-        const parsed = PermissionModeSchema.safeParse(value)
+        const parsed = PermissionModeSchema.safeParse(value);
         if (!parsed.success || !isPermissionModeAllowedForFlavor(parsed.data, 'claude')) {
-            throw new Error('Invalid permission mode')
+            throw new Error('Invalid permission mode');
         }
-        return parsed.data as PermissionMode
-    }
+        return parsed.data as PermissionMode;
+    };
 
     const resolveModelMode = (value: unknown): SessionModelMode => {
-        const parsed = ModelModeSchema.safeParse(value)
+        const parsed = ModelModeSchema.safeParse(value);
         if (!parsed.success || !isModelModeAllowedForFlavor(parsed.data, 'claude')) {
-            throw new Error('Invalid model mode')
+            throw new Error('Invalid model mode');
         }
-        return parsed.data
-    }
+        return parsed.data;
+    };
 
     session.rpcHandlerManager.registerHandler('set-session-config', async (payload: unknown) => {
         if (!payload || typeof payload !== 'object') {
-            throw new Error('Invalid session config payload')
+            throw new Error('Invalid session config payload');
         }
-        const config = payload as { permissionMode?: unknown; modelMode?: unknown }
+        const config = payload as { permissionMode?: unknown; modelMode?: unknown };
 
         if (config.permissionMode !== undefined) {
-            currentPermissionMode = resolvePermissionMode(config.permissionMode)
+            currentPermissionMode = resolvePermissionMode(config.permissionMode);
         }
 
         if (config.modelMode !== undefined) {
-            const resolvedModelMode = resolveModelMode(config.modelMode)
-            currentModelMode = resolvedModelMode
+            const resolvedModelMode = resolveModelMode(config.modelMode);
+            currentModelMode = resolvedModelMode;
         }
 
-        syncSessionModes()
-        return { applied: { permissionMode: currentPermissionMode, modelMode: currentModelMode } }
-    })
+        syncSessionModes();
+        return { applied: { permissionMode: currentPermissionMode, modelMode: currentModelMode } };
+    });
 
-    let loopError: unknown = null
-    let loopFailed = false
+    let loopError: unknown = null;
+    let loopFailed = false;
     try {
         await loop({
             path: workingDirectory,
@@ -347,8 +347,8 @@ export async function runClaude(options: StartOptions = {}): Promise<void> {
             allowedTools: happyServer.toolNames.map((toolName) => `mcp__hapi__${toolName}`),
             onModeChange: createModeChangeHandler(session),
             onSessionReady: (sessionInstance) => {
-                currentSessionRef.current = sessionInstance
-                syncSessionModes()
+                currentSessionRef.current = sessionInstance;
+                syncSessionModes();
             },
             mcpServers: {
                 hapi: {
@@ -361,23 +361,23 @@ export async function runClaude(options: StartOptions = {}): Promise<void> {
             claudeArgs: options.claudeArgs,
             startedBy,
             hookSettingsPath,
-        })
+        });
     } catch (error) {
-        loopError = error
-        loopFailed = true
-        lifecycle.markCrash(error)
+        loopError = error;
+        loopFailed = true;
+        lifecycle.markCrash(error);
     }
 
-    const localFailure = currentSessionRef.current?.localLaunchFailure
+    const localFailure = currentSessionRef.current?.localLaunchFailure;
     if (localFailure?.exitReason === 'exit') {
-        lifecycle.setExitCode(1)
-        lifecycle.setArchiveReason(`Local launch failed: ${formatFailureReason(localFailure.message)}`)
+        lifecycle.setExitCode(1);
+        lifecycle.setArchiveReason(`Local launch failed: ${formatFailureReason(localFailure.message)}`);
     }
 
     if (loopFailed) {
-        await lifecycle.cleanup()
-        throw loopError
+        await lifecycle.cleanup();
+        throw loopError;
     }
 
-    await lifecycle.cleanupAndExit()
+    await lifecycle.cleanupAndExit();
 }

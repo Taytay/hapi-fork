@@ -1,30 +1,26 @@
-import Layout from "@/components/Layout";
-import AppShowcase from "@/components/AppShowcase";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { motion, useScroll, useTransform } from "framer-motion";
 import {
   ArrowRight,
   Check,
-  Code2,
+  Coffee,
   Copy,
+  Footprints,
   Globe,
   Laptop,
-  Lock,
   MessageSquare,
+  Mountain,
+  ShieldAlert,
   Smartphone,
   Terminal,
   Zap,
-  GitBranch,
-  ShieldAlert,
-  Coffee,
-  Mountain,
-  Footprints,
 } from "lucide-react";
 import { useState } from "react";
-import { Link } from "wouter";
-import { motion, useScroll, useTransform } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import AppShowcase from "@/components/AppShowcase";
+import Layout from "@/components/Layout";
 import { SEO } from "@/components/SEO";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLatestVersion } from "@/hooks/useLatestVersion";
 
 export default function Home() {

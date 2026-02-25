@@ -13,14 +13,8 @@
         "./types": "./src/types.ts",
         "./voice": "./src/voice.ts"
     },
-    "scripts": {
-        "test": "vitest run"
-    },
     "sideEffects": false,
     "dependencies": {
         "zod": "^4.2.1"
-    },
-    "devDependencies": {
-        "vitest": "^4.0.18"
     }
 }

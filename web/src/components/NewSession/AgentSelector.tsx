@@ -1,12 +1,12 @@
-import type { AgentType } from './types'
-import { useTranslation } from '@/lib/use-translation'
+import { useTranslation } from '@/lib/use-translation';
+import type { AgentType } from './types';
 
 export function AgentSelector(props: {
-    agent: AgentType
-    isDisabled: boolean
-    onAgentChange: (value: AgentType) => void
+    agent: AgentType;
+    isDisabled: boolean;
+    onAgentChange: (value: AgentType) => void;
 }) {
-    const { t } = useTranslation()
+    const { t } = useTranslation();
 
     return (
         <div className="flex flex-col gap-1.5 px-3 py-3">
@@ -28,5 +28,5 @@ export function AgentSelector(props: {
                 ))}
             </div>
         </div>
-    )
+    );
 }

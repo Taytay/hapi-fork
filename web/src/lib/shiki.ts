@@ -1,12 +1,12 @@
-import { createHighlighterCore } from 'shiki/core'
-import { createJavaScriptRegexEngine } from 'shiki/engine/javascript'
-import type { HighlighterCore } from 'shiki/core'
-import { useState, useEffect, useMemo, type ReactNode } from 'react'
-import { toJsxRuntime } from 'hast-util-to-jsx-runtime'
-import { jsx, jsxs, Fragment } from 'react/jsx-runtime'
+import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import { Fragment, jsx, jsxs } from 'react/jsx-runtime';
+import type { HighlighterCore } from 'shiki/core';
+import { createHighlighterCore } from 'shiki/core';
+import { createJavaScriptRegexEngine } from 'shiki/engine/javascript';
 
 // Only 2 themes
-const THEMES = [import('@shikijs/themes/github-light'), import('@shikijs/themes/github-dark')]
+const THEMES = [import('@shikijs/themes/github-light'), import('@shikijs/themes/github-dark')];
 
 // 30 common languages for LLM code output
 const LANGS = [
@@ -51,12 +51,12 @@ const LANGS = [
     import('@shikijs/langs/make'),
     // Misc
     import('@shikijs/langs/diff'),
-]
+];
 
 export const SHIKI_THEMES = {
     light: 'github-light',
     dark: 'github-dark',
-} as const
+} as const;
 
 // Alias common code fence language names to canonical names
 export const langAlias: Record<string, string> = {
@@ -83,10 +83,10 @@ export const langAlias: Record<string, string> = {
     kt: 'kotlin',
     cs: 'csharp',
     makefile: 'make',
-}
+};
 
 // Singleton highlighter instance
-let highlighterPromise: Promise<HighlighterCore> | null = null
+let highlighterPromise: Promise<HighlighterCore> | null = null;
 
 function getHighlighter(): Promise<HighlighterCore> {
     if (!highlighterPromise) {
@@ -94,39 +94,39 @@ function getHighlighter(): Promise<HighlighterCore> {
             themes: THEMES,
             langs: LANGS,
             engine: createJavaScriptRegexEngine({ forgiving: true }),
-        })
+        });
     }
-    return highlighterPromise
+    return highlighterPromise;
 }
 
 function resolveLanguage(lang: string | undefined): string {
-    if (!lang) return 'text'
-    const cleaned = lang.startsWith('language-') ? lang.slice('language-'.length) : lang
-    const lower = cleaned.toLowerCase().trim()
-    if (lower === 'text' || lower === 'plaintext' || lower === 'txt') return 'text'
-    return langAlias[lower] ?? lower
+    if (!lang) return 'text';
+    const cleaned = lang.startsWith('language-') ? lang.slice('language-'.length) : lang;
+    const lower = cleaned.toLowerCase().trim();
+    if (lower === 'text' || lower === 'plaintext' || lower === 'txt') return 'text';
+    return langAlias[lower] ?? lower;
 }
 
 /**
  * Custom hook for syntax highlighting with our minimal Shiki bundle
  */
 export function useShikiHighlighter(code: string, language: string | undefined): ReactNode | null {
-    const [highlighted, setHighlighted] = useState<ReactNode | null>(null)
-    const lang = useMemo(() => resolveLanguage(language), [language])
+    const [highlighted, setHighlighted] = useState<ReactNode | null>(null);
+    const lang = useMemo(() => resolveLanguage(language), [language]);
 
     useEffect(() => {
-        let cancelled = false
+        let cancelled = false;
 
         async function highlight() {
-            const highlighter = await getHighlighter()
-            if (cancelled) return
+            const highlighter = await getHighlighter();
+            if (cancelled) return;
 
-            const loadedLangs = highlighter.getLoadedLanguages()
+            const loadedLangs = highlighter.getLoadedLanguages();
 
             // Skip highlighting for unsupported languages (graceful fallback to plain text)
             if (lang === 'text' || !loadedLangs.includes(lang)) {
-                setHighlighted(null)
-                return
+                setHighlighted(null);
+                return;
             }
 
             const hast = highlighter.codeToHast(code, {
@@ -134,25 +134,25 @@ export function useShikiHighlighter(code: string, language: string | undefined):
                 themes: SHIKI_THEMES,
                 defaultColor: false,
                 structure: 'inline',
-            })
+            });
 
-            if (cancelled) return
+            if (cancelled) return;
 
             const rendered = toJsxRuntime(hast, {
                 jsx,
                 jsxs,
                 Fragment,
-            })
-            setHighlighted(rendered as ReactNode)
+            });
+            setHighlighted(rendered as ReactNode);
         }
 
         // Debounce highlighting
-        const timer = setTimeout(highlight, 50)
+        const timer = setTimeout(highlight, 50);
         return () => {
-            cancelled = true
-            clearTimeout(timer)
-        }
-    }, [code, lang])
+            cancelled = true;
+            clearTimeout(timer);
+        };
+    }, [code, lang]);
 
-    return highlighted
+    return highlighted;
 }

@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect } from 'react'
-import { useTranslation, type Locale } from '@/lib/use-translation'
+import { useEffect, useRef, useState } from 'react';
+import { type Locale, useTranslation } from '@/lib/use-translation';
 
 const locales: { value: Locale; label: string }[] = [
     { value: 'en', label: 'English' },
     { value: 'zh-CN', label: '简体中文' },
-]
+];
 
 function LanguageIcon() {
     return (
@@ -26,7 +26,7 @@ function LanguageIcon() {
             <path d="m22 22-5-10-5 10" />
             <path d="M14 18h6" />
         </svg>
-    )
+    );
 }
 
 function CheckIcon() {
@@ -44,46 +44,46 @@ function CheckIcon() {
         >
             <polyline points="20 6 9 17 4 12" />
         </svg>
-    )
+    );
 }
 
 export function LanguageSwitcher() {
-    const { locale, setLocale, t } = useTranslation()
-    const [isOpen, setIsOpen] = useState(false)
-    const containerRef = useRef<HTMLDivElement>(null)
+    const { locale, setLocale, t } = useTranslation();
+    const [isOpen, setIsOpen] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
 
     const handleLocaleChange = (newLocale: Locale) => {
-        setLocale(newLocale)
-        setIsOpen(false)
-    }
+        setLocale(newLocale);
+        setIsOpen(false);
+    };
 
     // Close dropdown when clicking outside
     useEffect(() => {
-        if (!isOpen) return
+        if (!isOpen) return;
 
         const handleClickOutside = (event: MouseEvent) => {
             if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-                setIsOpen(false)
+                setIsOpen(false);
             }
-        }
+        };
 
-        document.addEventListener('mousedown', handleClickOutside)
-        return () => document.removeEventListener('mousedown', handleClickOutside)
-    }, [isOpen])
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen]);
 
     // Close on escape key
     useEffect(() => {
-        if (!isOpen) return
+        if (!isOpen) return;
 
         const handleEscape = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
-                setIsOpen(false)
+                setIsOpen(false);
             }
-        }
+        };
 
-        document.addEventListener('keydown', handleEscape)
-        return () => document.removeEventListener('keydown', handleEscape)
-    }, [isOpen])
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [isOpen]);
 
     return (
         <div ref={containerRef} className="relative">
@@ -106,7 +106,7 @@ export function LanguageSwitcher() {
                     aria-label={t('language.title')}
                 >
                     {locales.map((loc) => {
-                        const isSelected = locale === loc.value
+                        const isSelected = locale === loc.value;
                         return (
                             <button
                                 key={loc.value}
@@ -127,10 +127,10 @@ export function LanguageSwitcher() {
                                     </span>
                                 )}
                             </button>
-                        )
+                        );
                     })}
                 </div>
             )}
         </div>
-    )
+    );
 }

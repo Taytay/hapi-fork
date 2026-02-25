@@ -1,13 +1,13 @@
-import { useCopyToClipboard } from '@/hooks/useCopyToClipboard'
-import { useShikiHighlighter } from '@/lib/shiki'
-import { CopyIcon, CheckIcon } from '@/components/icons'
-import { useTranslation } from '@/lib/use-translation'
+import { CheckIcon, CopyIcon } from '@/components/icons';
+import { useCopyToClipboard } from '@/hooks/useCopyToClipboard';
+import { useShikiHighlighter } from '@/lib/shiki';
+import { useTranslation } from '@/lib/use-translation';
 
 export function CodeBlock(props: { code: string; language?: string; showCopyButton?: boolean }) {
-    const { t } = useTranslation()
-    const showCopyButton = props.showCopyButton ?? true
-    const { copied, copy } = useCopyToClipboard()
-    const highlighted = useShikiHighlighter(props.code, props.language)
+    const { t } = useTranslation();
+    const showCopyButton = props.showCopyButton ?? true;
+    const { copied, copy } = useCopyToClipboard();
+    const highlighted = useShikiHighlighter(props.code, props.language);
 
     return (
         <div className="relative min-w-0 max-w-full">
@@ -28,5 +28,5 @@ export function CodeBlock(props: { code: string; language?: string; showCopyButt
                 </pre>
             </div>
         </div>
-    )
+    );
 }

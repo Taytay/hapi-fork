@@ -1,22 +1,22 @@
-import { cn } from '@/lib/utils'
-import { useTranslation } from '@/lib/use-translation'
+import { useTranslation } from '@/lib/use-translation';
+import { cn } from '@/lib/utils';
 
 type SpinnerProps = {
-    size?: 'sm' | 'md' | 'lg'
-    className?: string
-    label?: string | null
-}
+    size?: 'sm' | 'md' | 'lg';
+    className?: string;
+    label?: string | null;
+};
 
 export function Spinner({ size = 'md', className, label }: SpinnerProps) {
-    const { t } = useTranslation()
+    const { t } = useTranslation();
     const sizeClasses = {
         sm: 'h-4 w-4',
         md: 'h-5 w-5',
         lg: 'h-6 w-6',
-    }
-    const effectiveLabel = label === undefined ? t('loading') : label
+    };
+    const effectiveLabel = label === undefined ? t('loading') : label;
     const accessibilityProps =
-        effectiveLabel === null ? { 'aria-hidden': true } : { role: 'status', 'aria-label': effectiveLabel }
+        effectiveLabel === null ? { 'aria-hidden': true } : { role: 'status', 'aria-label': effectiveLabel };
 
     return (
         <svg
@@ -34,5 +34,5 @@ export function Spinner({ size = 'md', className, label }: SpinnerProps) {
                 opacity="0.75"
             />
         </svg>
-    )
+    );
 }

@@ -1,13 +1,13 @@
-import { useOnlineStatus } from '@/hooks/useOnlineStatus'
-import { useTranslation } from '@/lib/use-translation'
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { useTranslation } from '@/lib/use-translation';
 
 export function ReconnectingBanner({ isReconnecting }: { isReconnecting: boolean }) {
-    const { t } = useTranslation()
-    const isOnline = useOnlineStatus()
+    const { t } = useTranslation();
+    const isOnline = useOnlineStatus();
 
     // Don't show if offline (OfflineBanner takes precedence) or if not reconnecting
     if (!isReconnecting || !isOnline) {
-        return null
+        return null;
     }
 
     return (
@@ -15,5 +15,5 @@ export function ReconnectingBanner({ isReconnecting }: { isReconnecting: boolean
             <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
             {t('reconnecting.message')}
         </div>
-    )
+    );
 }

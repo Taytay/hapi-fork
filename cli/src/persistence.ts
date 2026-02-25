@@ -4,60 +4,59 @@
  * Handles settings, encryption key, and runner state storage in ~/.hapi/ (or HAPI_HOME override)
  */
 
-import { FileHandle } from 'node:fs/promises'
-import { readFile, writeFile, mkdir, open, unlink, rename, stat } from 'node:fs/promises'
-import { existsSync, writeFileSync, readFileSync, unlinkSync } from 'node:fs'
-import { configuration } from '@/configuration'
-import { isProcessAlive } from '@/utils/process'
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { type FileHandle, mkdir, open, readFile, rename, stat, unlink, writeFile } from 'node:fs/promises';
+import { configuration } from '@/configuration';
+import { isProcessAlive } from '@/utils/process';
 
 interface Settings {
     // This ID is used as the actual database ID on the server
     // All machine operations use this ID
-    machineId?: string
-    machineIdConfirmedByServer?: boolean
-    runnerAutoStartWhenRunningHappy?: boolean
-    cliApiToken?: string
+    machineId?: string;
+    machineIdConfirmedByServer?: boolean;
+    runnerAutoStartWhenRunningHappy?: boolean;
+    cliApiToken?: string;
     // API URL for server connections (priority: env HAPI_API_URL > this > default)
-    apiUrl?: string
+    apiUrl?: string;
     // Legacy field name (for migration, read-only)
-    serverUrl?: string
+    serverUrl?: string;
 }
 
-const defaultSettings: Settings = {}
+const defaultSettings: Settings = {};
 
 /**
  * Runner state persisted locally (different from API RunnerState)
  * This is written to disk by the runner to track its local process state
  */
 export interface RunnerLocallyPersistedState {
-    pid: number
-    httpPort: number
-    startTime: string
-    startedWithCliVersion: string
-    startedWithCliMtimeMs?: number
-    lastHeartbeat?: string
-    runnerLogPath?: string
+    pid: number;
+    httpPort: number;
+    startTime: string;
+    startedWithCliVersion: string;
+    startedWithCliMtimeMs?: number;
+    lastHeartbeat?: string;
+    runnerLogPath?: string;
 }
 
 export async function readSettings(): Promise<Settings> {
     if (!existsSync(configuration.settingsFile)) {
-        return { ...defaultSettings }
+        return { ...defaultSettings };
     }
 
     try {
-        const content = await readFile(configuration.settingsFile, 'utf8')
-        return JSON.parse(content)
+        const content = await readFile(configuration.settingsFile, 'utf8');
+        return JSON.parse(content);
     } catch {
-        return { ...defaultSettings }
+        return { ...defaultSettings };
     }
 }
 
 export async function writeSettings(settings: Settings): Promise<void> {
     if (!existsSync(configuration.happyHomeDir)) {
-        await mkdir(configuration.happyHomeDir, { recursive: true })
+        await mkdir(configuration.happyHomeDir, { recursive: true });
     }
 
-    await writeFile(configuration.settingsFile, JSON.stringify(settings, null, 2))
+    await writeFile(configuration.settingsFile, JSON.stringify(settings, null, 2));
 }
 
 /**
@@ -67,66 +66,66 @@ export async function writeSettings(settings: Settings): Promise<void> {
  */
 export async function updateSettings(updater: (current: Settings) => Settings | Promise<Settings>): Promise<Settings> {
     // Timing constants
-    const LOCK_RETRY_INTERVAL_MS = 100 // How long to wait between lock attempts
-    const MAX_LOCK_ATTEMPTS = 50 // Maximum number of attempts (5 seconds total)
-    const STALE_LOCK_TIMEOUT_MS = 10000 // Consider lock stale after 10 seconds
+    const LOCK_RETRY_INTERVAL_MS = 100; // How long to wait between lock attempts
+    const MAX_LOCK_ATTEMPTS = 50; // Maximum number of attempts (5 seconds total)
+    const STALE_LOCK_TIMEOUT_MS = 10000; // Consider lock stale after 10 seconds
 
     if (!existsSync(configuration.happyHomeDir)) {
-        await mkdir(configuration.happyHomeDir, { recursive: true })
+        await mkdir(configuration.happyHomeDir, { recursive: true });
     }
 
-    const lockFile = configuration.settingsFile + '.lock'
-    const tmpFile = configuration.settingsFile + '.tmp'
-    let fileHandle
-    let attempts = 0
+    const lockFile = `${configuration.settingsFile}.lock`;
+    const tmpFile = `${configuration.settingsFile}.tmp`;
+    let fileHandle;
+    let attempts = 0;
 
     // Acquire exclusive lock with retries
     while (attempts < MAX_LOCK_ATTEMPTS) {
         try {
             // 'wx' = create exclusively, fail if exists (cross-platform compatible)
-            fileHandle = await open(lockFile, 'wx')
-            break
+            fileHandle = await open(lockFile, 'wx');
+            break;
         } catch (err: any) {
             if (err.code === 'EEXIST') {
                 // Lock file exists, wait and retry
-                attempts++
-                await new Promise((resolve) => setTimeout(resolve, LOCK_RETRY_INTERVAL_MS))
+                attempts++;
+                await new Promise((resolve) => setTimeout(resolve, LOCK_RETRY_INTERVAL_MS));
 
                 // Check for stale lock
                 try {
-                    const stats = await stat(lockFile)
+                    const stats = await stat(lockFile);
                     if (Date.now() - stats.mtimeMs > STALE_LOCK_TIMEOUT_MS) {
-                        await unlink(lockFile).catch(() => {})
+                        await unlink(lockFile).catch(() => {});
                     }
                 } catch {}
             } else {
-                throw err
+                throw err;
             }
         }
     }
 
     if (!fileHandle) {
         throw new Error(
-            `Failed to acquire settings lock after ${(MAX_LOCK_ATTEMPTS * LOCK_RETRY_INTERVAL_MS) / 1000} seconds`
-        )
+            `Failed to acquire settings lock after ${(MAX_LOCK_ATTEMPTS * LOCK_RETRY_INTERVAL_MS) / 1000} seconds`,
+        );
     }
 
     try {
         // Read current settings with defaults
-        const current = (await readSettings()) || { ...defaultSettings }
+        const current = (await readSettings()) || { ...defaultSettings };
 
         // Apply update
-        const updated = await updater(current)
+        const updated = await updater(current);
 
         // Write atomically using rename
-        await writeFile(tmpFile, JSON.stringify(updated, null, 2))
-        await rename(tmpFile, configuration.settingsFile) // Atomic on POSIX
+        await writeFile(tmpFile, JSON.stringify(updated, null, 2));
+        await rename(tmpFile, configuration.settingsFile); // Atomic on POSIX
 
-        return updated
+        return updated;
     } finally {
         // Release lock
-        await fileHandle.close()
-        await unlink(lockFile).catch(() => {}) // Remove lock file
+        await fileHandle.close();
+        await unlink(lockFile).catch(() => {}); // Remove lock file
     }
 }
 
@@ -135,12 +134,12 @@ export async function updateSettings(updater: (current: Settings) => Settings | 
 //
 
 export async function writeCredentialsDataKey(credentials: {
-    publicKey: Uint8Array
-    machineKey: Uint8Array
-    token: string
+    publicKey: Uint8Array;
+    machineKey: Uint8Array;
+    token: string;
 }): Promise<void> {
     if (!existsSync(configuration.happyHomeDir)) {
-        await mkdir(configuration.happyHomeDir, { recursive: true })
+        await mkdir(configuration.happyHomeDir, { recursive: true });
     }
     await writeFile(
         configuration.privateKeyFile,
@@ -153,14 +152,14 @@ export async function writeCredentialsDataKey(credentials: {
                 token: credentials.token,
             },
             null,
-            2
-        )
-    )
+            2,
+        ),
+    );
 }
 
 export async function clearCredentials(): Promise<void> {
     if (existsSync(configuration.privateKeyFile)) {
-        await unlink(configuration.privateKeyFile)
+        await unlink(configuration.privateKeyFile);
     }
 }
 
@@ -168,7 +167,7 @@ export async function clearMachineId(): Promise<void> {
     await updateSettings((settings) => ({
         ...settings,
         machineId: undefined,
-    }))
+    }));
 }
 
 /**
@@ -177,14 +176,14 @@ export async function clearMachineId(): Promise<void> {
 export async function readRunnerState(): Promise<RunnerLocallyPersistedState | null> {
     try {
         if (!existsSync(configuration.runnerStateFile)) {
-            return null
+            return null;
         }
-        const content = await readFile(configuration.runnerStateFile, 'utf-8')
-        return JSON.parse(content) as RunnerLocallyPersistedState
+        const content = await readFile(configuration.runnerStateFile, 'utf-8');
+        return JSON.parse(content) as RunnerLocallyPersistedState;
     } catch (error) {
         // State corrupted somehow :(
-        console.error(`[PERSISTENCE] Runner state file corrupted: ${configuration.runnerStateFile}`, error)
-        return null
+        console.error(`[PERSISTENCE] Runner state file corrupted: ${configuration.runnerStateFile}`, error);
+        return null;
     }
 }
 
@@ -192,7 +191,7 @@ export async function readRunnerState(): Promise<RunnerLocallyPersistedState | n
  * Write runner state to local file (synchronously for atomic operation)
  */
 export function writeRunnerState(state: RunnerLocallyPersistedState): void {
-    writeFileSync(configuration.runnerStateFile, JSON.stringify(state, null, 2), 'utf-8')
+    writeFileSync(configuration.runnerStateFile, JSON.stringify(state, null, 2), 'utf-8');
 }
 
 /**
@@ -200,12 +199,12 @@ export function writeRunnerState(state: RunnerLocallyPersistedState): void {
  */
 export async function clearRunnerState(): Promise<void> {
     if (existsSync(configuration.runnerStateFile)) {
-        await unlink(configuration.runnerStateFile)
+        await unlink(configuration.runnerStateFile);
     }
     // Also clean up lock file if it exists (for stale cleanup)
     if (existsSync(configuration.runnerLockFile)) {
         try {
-            await unlink(configuration.runnerLockFile)
+            await unlink(configuration.runnerLockFile);
         } catch {
             // Lock file might be held by running runner, ignore error
         }
@@ -219,25 +218,25 @@ export async function clearRunnerState(): Promise<void> {
  */
 export async function acquireRunnerLock(
     maxAttempts: number = 5,
-    delayIncrementMs: number = 200
+    delayIncrementMs: number = 200,
 ): Promise<FileHandle | null> {
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
         try {
             // 'wx' ensures we only create if it doesn't exist (atomic lock acquisition)
-            const fileHandle = await open(configuration.runnerLockFile, 'wx')
+            const fileHandle = await open(configuration.runnerLockFile, 'wx');
             // Write PID to lock file for debugging
-            await fileHandle.writeFile(String(process.pid))
-            return fileHandle
+            await fileHandle.writeFile(String(process.pid));
+            return fileHandle;
         } catch (error: any) {
             if (error.code === 'EEXIST') {
                 // Lock file exists, check if process is still running
                 try {
-                    const lockPid = readFileSync(configuration.runnerLockFile, 'utf-8').trim()
-                    if (lockPid && !isNaN(Number(lockPid))) {
+                    const lockPid = readFileSync(configuration.runnerLockFile, 'utf-8').trim();
+                    if (lockPid && !Number.isNaN(Number(lockPid))) {
                         if (!isProcessAlive(Number(lockPid))) {
                             // Process doesn't exist, remove stale lock
-                            unlinkSync(configuration.runnerLockFile)
-                            continue // Retry acquisition
+                            unlinkSync(configuration.runnerLockFile);
+                            continue; // Retry acquisition
                         }
                     }
                 } catch {
@@ -246,13 +245,13 @@ export async function acquireRunnerLock(
             }
 
             if (attempt === maxAttempts) {
-                return null
+                return null;
             }
-            const delayMs = attempt * delayIncrementMs
-            await new Promise((resolve) => setTimeout(resolve, delayMs))
+            const delayMs = attempt * delayIncrementMs;
+            await new Promise((resolve) => setTimeout(resolve, delayMs));
         }
     }
-    return null
+    return null;
 }
 
 /**
@@ -260,12 +259,12 @@ export async function acquireRunnerLock(
  */
 export async function releaseRunnerLock(lockHandle: FileHandle): Promise<void> {
     try {
-        await lockHandle.close()
+        await lockHandle.close();
     } catch {}
 
     try {
         if (existsSync(configuration.runnerLockFile)) {
-            unlinkSync(configuration.runnerLockFile)
+            unlinkSync(configuration.runnerLockFile);
         }
     } catch {}
 }

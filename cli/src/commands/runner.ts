@@ -1,55 +1,55 @@
-import chalk from 'chalk'
-import { startRunner } from '@/runner/run'
+import chalk from 'chalk';
 import {
     checkIfRunnerRunningAndCleanupStaleState,
     listRunnerSessions,
     stopRunner,
     stopRunnerSession,
-} from '@/runner/controlClient'
-import { getLatestRunnerLog } from '@/ui/logger'
-import { spawnHappyCLI } from '@/utils/spawnHappyCLI'
-import { runDoctorCommand } from '@/ui/doctor'
-import { initializeToken } from '@/ui/tokenInit'
-import type { CommandDefinition } from './types'
+} from '@/runner/controlClient';
+import { startRunner } from '@/runner/run';
+import { runDoctorCommand } from '@/ui/doctor';
+import { getLatestRunnerLog } from '@/ui/logger';
+import { initializeToken } from '@/ui/tokenInit';
+import { spawnHappyCLI } from '@/utils/spawnHappyCLI';
+import type { CommandDefinition } from './types';
 
 export const runnerCommand: CommandDefinition = {
     name: 'runner',
     requiresRuntimeAssets: true,
     run: async ({ commandArgs }) => {
-        const runnerSubcommand = commandArgs[0]
+        const runnerSubcommand = commandArgs[0];
 
         if (runnerSubcommand === 'list') {
             try {
-                const sessions = await listRunnerSessions()
+                const sessions = await listRunnerSessions();
 
                 if (sessions.length === 0) {
                     console.log(
-                        'No active sessions this runner is aware of (they might have been started by a previous version of the runner)'
-                    )
+                        'No active sessions this runner is aware of (they might have been started by a previous version of the runner)',
+                    );
                 } else {
-                    console.log('Active sessions:')
-                    console.log(JSON.stringify(sessions, null, 2))
+                    console.log('Active sessions:');
+                    console.log(JSON.stringify(sessions, null, 2));
                 }
             } catch {
-                console.log('No runner running')
+                console.log('No runner running');
             }
-            return
+            return;
         }
 
         if (runnerSubcommand === 'stop-session') {
-            const sessionId = commandArgs[1]
+            const sessionId = commandArgs[1];
             if (!sessionId) {
-                console.error('Session ID required')
-                process.exit(1)
+                console.error('Session ID required');
+                process.exit(1);
             }
 
             try {
-                const success = await stopRunnerSession(sessionId)
-                console.log(success ? 'Session stopped' : 'Failed to stop session')
+                const success = await stopRunnerSession(sessionId);
+                console.log(success ? 'Session stopped' : 'Failed to stop session');
             } catch {
-                console.log('No runner running')
+                console.log('No runner running');
             }
-            return
+            return;
         }
 
         if (runnerSubcommand === 'start') {
@@ -57,51 +57,51 @@ export const runnerCommand: CommandDefinition = {
                 detached: true,
                 stdio: 'ignore',
                 env: process.env,
-            })
-            child.unref()
+            });
+            child.unref();
 
-            let started = false
+            let started = false;
             for (let i = 0; i < 50; i++) {
                 if (await checkIfRunnerRunningAndCleanupStaleState()) {
-                    started = true
-                    break
+                    started = true;
+                    break;
                 }
-                await new Promise((resolve) => setTimeout(resolve, 100))
+                await new Promise((resolve) => setTimeout(resolve, 100));
             }
 
             if (started) {
-                console.log('Runner started successfully')
+                console.log('Runner started successfully');
             } else {
-                console.error('Failed to start runner')
-                process.exit(1)
+                console.error('Failed to start runner');
+                process.exit(1);
             }
-            process.exit(0)
+            process.exit(0);
         }
 
         if (runnerSubcommand === 'start-sync') {
-            await initializeToken()
-            await startRunner()
-            process.exit(0)
+            await initializeToken();
+            await startRunner();
+            process.exit(0);
         }
 
         if (runnerSubcommand === 'stop') {
-            await stopRunner()
-            process.exit(0)
+            await stopRunner();
+            process.exit(0);
         }
 
         if (runnerSubcommand === 'status') {
-            await runDoctorCommand('runner')
-            process.exit(0)
+            await runDoctorCommand('runner');
+            process.exit(0);
         }
 
         if (runnerSubcommand === 'logs') {
-            const latest = await getLatestRunnerLog()
+            const latest = await getLatestRunnerLog();
             if (!latest) {
-                console.log('No runner logs found')
+                console.log('No runner logs found');
             } else {
-                console.log(latest.path)
+                console.log(latest.path);
             }
-            process.exit(0)
+            process.exit(0);
         }
 
         console.log(`
@@ -119,6 +119,6 @@ ${chalk.bold('Usage:')}
 ${chalk.bold('Note:')} The runner runs in the background and manages Claude sessions.
 
 ${chalk.bold('To clean up runaway processes:')} Use ${chalk.cyan('hapi doctor clean')}
-`)
+`);
     },
-}
+};

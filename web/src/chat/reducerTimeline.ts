@@ -1,48 +1,33 @@
-import type { ChatBlock, ToolCallBlock, ToolPermission } from '@/chat/types'
-import type { TracedMessage } from '@/chat/tracer'
-import { createCliOutputBlock, isCliOutputText, mergeCliOutputBlocks } from '@/chat/reducerCliOutput'
-import { parseMessageAsEvent } from '@/chat/reducerEvents'
+import { createCliOutputBlock, isCliOutputText, mergeCliOutputBlocks } from '@/chat/reducerCliOutput';
+import { parseMessageAsEvent } from '@/chat/reducerEvents';
 import {
     ensureToolBlock,
     extractTitleFromChangeTitleInput,
     isChangeTitleToolName,
     type PermissionEntry,
-} from '@/chat/reducerTools'
+} from '@/chat/reducerTools';
+import type { TracedMessage } from '@/chat/tracer';
+import type { ChatBlock, ToolCallBlock, ToolPermission } from '@/chat/types';
 
 export function reduceTimeline(
     messages: TracedMessage[],
     context: {
-        permissionsById: Map<string, PermissionEntry>
-        groups: Map<string, TracedMessage[]>
-        consumedGroupIds: Set<string>
-        titleChangesByToolUseId: Map<string, string>
-        emittedTitleChangeToolUseIds: Set<string>
-    }
+        permissionsById: Map<string, PermissionEntry>;
+        groups: Map<string, TracedMessage[]>;
+        consumedGroupIds: Set<string>;
+        titleChangesByToolUseId: Map<string, string>;
+        emittedTitleChangeToolUseIds: Set<string>;
+    },
 ): { blocks: ChatBlock[]; toolBlocksById: Map<string, ToolCallBlock>; hasReadyEvent: boolean } {
-    const blocks: ChatBlock[] = []
-    const toolBlocksById = new Map<string, ToolCallBlock>()
-    let hasReadyEvent = false
-    let currentTurnId: string | null = null
+    const blocks: ChatBlock[] = [];
+    const toolBlocksById = new Map<string, ToolCallBlock>();
+    let hasReadyEvent = false;
 
     for (const msg of messages) {
-        // Insert turn separator when turnId changes between agent messages
-        const msgTurnId = msg.turnId ?? null
-        if (msgTurnId && currentTurnId && msgTurnId !== currentTurnId && msg.role !== 'user') {
-            blocks.push({
-                kind: 'turn-separator',
-                id: `turn-sep-${msgTurnId}`,
-                createdAt: msg.createdAt,
-                turnId: msgTurnId,
-            })
-        }
-        if (msgTurnId) {
-            currentTurnId = msgTurnId
-        }
-
         if (msg.role === 'event') {
             if (msg.content.type === 'ready') {
-                hasReadyEvent = true
-                continue
+                hasReadyEvent = true;
+                continue;
             }
             blocks.push({
                 kind: 'agent-event',
@@ -50,11 +35,11 @@ export function reduceTimeline(
                 createdAt: msg.createdAt,
                 event: msg.content,
                 meta: msg.meta,
-            })
-            continue
+            });
+            continue;
         }
 
-        const event = parseMessageAsEvent(msg)
+        const event = parseMessageAsEvent(msg);
         if (event) {
             blocks.push({
                 kind: 'agent-event',
@@ -62,8 +47,8 @@ export function reduceTimeline(
                 createdAt: msg.createdAt,
                 event,
                 meta: msg.meta,
-            })
-            continue
+            });
+            continue;
         }
 
         if (msg.role === 'user') {
@@ -76,9 +61,9 @@ export function reduceTimeline(
                         text: msg.content.text,
                         source: 'user',
                         meta: msg.meta,
-                    })
-                )
-                continue
+                    }),
+                );
+                continue;
             }
             blocks.push({
                 kind: 'user-text',
@@ -90,13 +75,13 @@ export function reduceTimeline(
                 status: msg.status,
                 originalText: msg.originalText,
                 meta: msg.meta,
-            })
-            continue
+            });
+            continue;
         }
 
         if (msg.role === 'agent') {
             for (let idx = 0; idx < msg.content.length; idx += 1) {
-                const c = msg.content[idx]
+                const c = msg.content[idx];
                 if (c.type === 'text') {
                     if (isCliOutputText(c.text, msg.meta)) {
                         blocks.push(
@@ -107,9 +92,9 @@ export function reduceTimeline(
                                 text: c.text,
                                 source: 'assistant',
                                 meta: msg.meta,
-                            })
-                        )
-                        continue
+                            }),
+                        );
+                        continue;
                     }
                     blocks.push({
                         kind: 'agent-text',
@@ -118,8 +103,8 @@ export function reduceTimeline(
                         createdAt: msg.createdAt,
                         text: c.text,
                         meta: msg.meta,
-                    })
-                    continue
+                    });
+                    continue;
                 }
 
                 if (c.type === 'reasoning') {
@@ -130,8 +115,8 @@ export function reduceTimeline(
                         createdAt: msg.createdAt,
                         text: c.text,
                         meta: msg.meta,
-                    })
-                    continue
+                    });
+                    continue;
                 }
 
                 if (c.type === 'summary') {
@@ -141,28 +126,28 @@ export function reduceTimeline(
                         createdAt: msg.createdAt,
                         event: { type: 'message', message: c.summary },
                         meta: msg.meta,
-                    })
-                    continue
+                    });
+                    continue;
                 }
 
                 if (c.type === 'tool-call') {
                     if (isChangeTitleToolName(c.name)) {
                         const title =
-                            context.titleChangesByToolUseId.get(c.id) ?? extractTitleFromChangeTitleInput(c.input)
+                            context.titleChangesByToolUseId.get(c.id) ?? extractTitleFromChangeTitleInput(c.input);
                         if (title && !context.emittedTitleChangeToolUseIds.has(c.id)) {
-                            context.emittedTitleChangeToolUseIds.add(c.id)
+                            context.emittedTitleChangeToolUseIds.add(c.id);
                             blocks.push({
                                 kind: 'agent-event',
                                 id: `${msg.id}:${idx}`,
                                 createdAt: msg.createdAt,
                                 event: { type: 'title-changed', title },
                                 meta: msg.meta,
-                            })
+                            });
                         }
-                        continue
+                        continue;
                     }
 
-                    const permission = context.permissionsById.get(c.id)?.permission
+                    const permission = context.permissionsById.get(c.id)?.permission;
 
                     const block = ensureToolBlock(blocks, toolBlocksById, c.id, {
                         createdAt: msg.createdAt,
@@ -172,42 +157,42 @@ export function reduceTimeline(
                         input: c.input,
                         description: c.description,
                         permission,
-                    })
+                    });
 
                     if (block.tool.state === 'pending') {
-                        block.tool.state = 'running'
-                        block.tool.startedAt = msg.createdAt
+                        block.tool.state = 'running';
+                        block.tool.startedAt = msg.createdAt;
                     }
 
                     if (c.name === 'Task' && !context.consumedGroupIds.has(msg.id)) {
-                        const sidechain = context.groups.get(msg.id) ?? null
+                        const sidechain = context.groups.get(msg.id) ?? null;
                         if (sidechain && sidechain.length > 0) {
-                            context.consumedGroupIds.add(msg.id)
-                            const child = reduceTimeline(sidechain, context)
-                            hasReadyEvent = hasReadyEvent || child.hasReadyEvent
-                            block.children = child.blocks
+                            context.consumedGroupIds.add(msg.id);
+                            const child = reduceTimeline(sidechain, context);
+                            hasReadyEvent = hasReadyEvent || child.hasReadyEvent;
+                            block.children = child.blocks;
                         }
                     }
-                    continue
+                    continue;
                 }
 
                 if (c.type === 'tool-result') {
-                    const title = context.titleChangesByToolUseId.get(c.tool_use_id) ?? null
+                    const title = context.titleChangesByToolUseId.get(c.tool_use_id) ?? null;
                     if (title) {
                         if (!context.emittedTitleChangeToolUseIds.has(c.tool_use_id)) {
-                            context.emittedTitleChangeToolUseIds.add(c.tool_use_id)
+                            context.emittedTitleChangeToolUseIds.add(c.tool_use_id);
                             blocks.push({
                                 kind: 'agent-event',
                                 id: `${msg.id}:${idx}`,
                                 createdAt: msg.createdAt,
                                 event: { type: 'title-changed', title },
                                 meta: msg.meta,
-                            })
+                            });
                         }
-                        continue
+                        continue;
                     }
 
-                    const permissionEntry = context.permissionsById.get(c.tool_use_id)
+                    const permissionEntry = context.permissionsById.get(c.tool_use_id);
                     const permissionFromResult = c.permissions
                         ? ({
                               id: c.tool_use_id,
@@ -217,7 +202,7 @@ export function reduceTimeline(
                               allowedTools: c.permissions.allowedTools,
                               decision: c.permissions.decision,
                           } satisfies ToolPermission)
-                        : undefined
+                        : undefined;
 
                     const permission = (() => {
                         if (permissionFromResult && permissionEntry?.permission) {
@@ -227,10 +212,10 @@ export function reduceTimeline(
                                 allowedTools:
                                     permissionFromResult.allowedTools ?? permissionEntry.permission.allowedTools,
                                 decision: permissionFromResult.decision ?? permissionEntry.permission.decision,
-                            } satisfies ToolPermission
+                            } satisfies ToolPermission;
                         }
-                        return permissionFromResult ?? permissionEntry?.permission
-                    })()
+                        return permissionFromResult ?? permissionEntry?.permission;
+                    })();
 
                     const block = ensureToolBlock(blocks, toolBlocksById, c.tool_use_id, {
                         createdAt: msg.createdAt,
@@ -240,12 +225,12 @@ export function reduceTimeline(
                         input: permissionEntry?.input ?? null,
                         description: null,
                         permission,
-                    })
+                    });
 
-                    block.tool.result = c.content
-                    block.tool.completedAt = msg.createdAt
-                    block.tool.state = c.is_error ? 'error' : 'completed'
-                    continue
+                    block.tool.result = c.content;
+                    block.tool.completedAt = msg.createdAt;
+                    block.tool.state = c.is_error ? 'error' : 'completed';
+                    continue;
                 }
 
                 if (c.type === 'sidechain') {
@@ -255,11 +240,11 @@ export function reduceTimeline(
                         localId: null,
                         createdAt: msg.createdAt,
                         text: c.prompt,
-                    })
+                    });
                 }
             }
         }
     }
 
-    return { blocks: mergeCliOutputBlocks(blocks), toolBlocksById, hasReadyEvent }
+    return { blocks: mergeCliOutputBlocks(blocks), toolBlocksById, hasReadyEvent };
 }

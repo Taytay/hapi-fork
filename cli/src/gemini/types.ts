@@ -1,8 +1,8 @@
-import type { GeminiPermissionMode } from '@hapi/protocol/types'
+import type { GeminiPermissionMode } from '@hapi/protocol/types';
 
-export type PermissionMode = GeminiPermissionMode
+export type PermissionMode = GeminiPermissionMode;
 
 export interface GeminiMode {
-    permissionMode: PermissionMode
-    model?: string
+    permissionMode: PermissionMode;
+    model?: string;
 }

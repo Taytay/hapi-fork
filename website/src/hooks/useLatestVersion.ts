@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const GITHUB_REPO = "tiann/hapi";
 const CACHE_KEY = "hapi-latest-version";
@@ -31,7 +31,7 @@ export function useLatestVersion(fallback: string = "latest") {
       try {
         const res = await fetch(
           `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`,
-          { headers: { Accept: "application/vnd.github.v3+json" } }
+          { headers: { Accept: "application/vnd.github.v3+json" } },
         );
         if (!res.ok) return;
 
@@ -42,7 +42,7 @@ export function useLatestVersion(fallback: string = "latest") {
           // Cache the result
           localStorage.setItem(
             CACHE_KEY,
-            JSON.stringify({ version: tag, timestamp: Date.now() })
+            JSON.stringify({ version: tag, timestamp: Date.now() }),
           );
         }
       } catch {

@@ -4,7 +4,7 @@
  */
 export function stripNewlinesForWindowsShellArg(value: string): string {
     if (process.platform !== 'win32') {
-        return value
+        return value;
     }
-    return value.replace(/\r?\n/g, ' ')
+    return value.replace(/\r?\n/g, ' ');
 }

@@ -9,7 +9,7 @@ export function ModeToggle() {
     // 如果当前是 system，则根据系统偏好决定切换到哪个模式
     if (theme === "system") {
       const systemIsDark = window.matchMedia(
-        "(prefers-color-scheme: dark)"
+        "(prefers-color-scheme: dark)",
       ).matches;
       setTheme(systemIsDark ? "light" : "dark");
     } else {

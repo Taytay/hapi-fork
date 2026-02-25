@@ -1,29 +1,29 @@
-import type { ModelMode } from './modes'
-import type { Session, WorktreeMetadata } from './schemas'
+import type { ModelMode } from './modes';
+import type { Session, WorktreeMetadata } from './schemas';
 
 export type SessionSummaryMetadata = {
-    name?: string
-    path: string
-    machineId?: string
-    summary?: { text: string }
-    flavor?: string | null
-    worktree?: WorktreeMetadata
-}
+    name?: string;
+    path: string;
+    machineId?: string;
+    summary?: { text: string };
+    flavor?: string | null;
+    worktree?: WorktreeMetadata;
+};
 
 export type SessionSummary = {
-    id: string
-    active: boolean
-    thinking: boolean
-    activeAt: number
-    updatedAt: number
-    metadata: SessionSummaryMetadata | null
-    todoProgress: { completed: number; total: number } | null
-    pendingRequestsCount: number
-    modelMode?: ModelMode
-}
+    id: string;
+    active: boolean;
+    thinking: boolean;
+    activeAt: number;
+    updatedAt: number;
+    metadata: SessionSummaryMetadata | null;
+    todoProgress: { completed: number; total: number } | null;
+    pendingRequestsCount: number;
+    modelMode?: ModelMode;
+};
 
 export function toSessionSummary(session: Session): SessionSummary {
-    const pendingRequestsCount = session.agentState?.requests ? Object.keys(session.agentState.requests).length : 0
+    const pendingRequestsCount = session.agentState?.requests ? Object.keys(session.agentState.requests).length : 0;
 
     const metadata: SessionSummaryMetadata | null = session.metadata
         ? {
@@ -34,14 +34,14 @@ export function toSessionSummary(session: Session): SessionSummary {
               flavor: session.metadata.flavor ?? null,
               worktree: session.metadata.worktree,
           }
-        : null
+        : null;
 
     const todoProgress = session.todos?.length
         ? {
               completed: session.todos.filter((t) => t.status === 'completed').length,
               total: session.todos.length,
           }
-        : null
+        : null;
 
     return {
         id: session.id,
@@ -53,5 +53,5 @@ export function toSessionSummary(session: Session): SessionSummary {
         todoProgress,
         pendingRequestsCount,
         modelMode: session.modelMode,
-    }
+    };
 }

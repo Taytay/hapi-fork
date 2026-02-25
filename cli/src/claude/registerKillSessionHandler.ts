@@ -1,27 +1,25 @@
-import { RpcHandlerManager } from '@/api/rpc/RpcHandlerManager'
-import { logger } from '@/lib'
+import type { RpcHandlerManager } from '@/api/rpc/RpcHandlerManager';
+import { logger } from '@/lib';
 
-interface KillSessionRequest {
-    // No parameters needed
-}
+type KillSessionRequest = {};
 
 interface KillSessionResponse {
-    success: boolean
-    message: string
+    success: boolean;
+    message: string;
 }
 
 export function registerKillSessionHandler(rpcHandlerManager: RpcHandlerManager, killThisHappy: () => Promise<void>) {
     rpcHandlerManager.registerHandler<KillSessionRequest, KillSessionResponse>('killSession', async () => {
-        logger.debug('Kill session request received')
+        logger.debug('Kill session request received');
 
         // This will start the cleanup process
-        void killThisHappy()
+        void killThisHappy();
 
         // We should still be able to respond the the client, though they
         // should optimistically assume the session is dead.
         return {
             success: true,
             message: 'Killing hapi CLI process',
-        }
-    })
+        };
+    });
 }

@@ -1,23 +1,23 @@
-import type { KeyboardEvent as ReactKeyboardEvent } from 'react'
-import type { Suggestion } from '@/hooks/useActiveSuggestions'
-import { Autocomplete } from '@/components/ChatInput/Autocomplete'
-import { FloatingOverlay } from '@/components/ChatInput/FloatingOverlay'
-import { useTranslation } from '@/lib/use-translation'
+import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { Autocomplete } from '@/components/ChatInput/Autocomplete';
+import { FloatingOverlay } from '@/components/ChatInput/FloatingOverlay';
+import type { Suggestion } from '@/hooks/useActiveSuggestions';
+import { useTranslation } from '@/lib/use-translation';
 
 export function DirectorySection(props: {
-    directory: string
-    suggestions: readonly Suggestion[]
-    selectedIndex: number
-    isDisabled: boolean
-    recentPaths: string[]
-    onDirectoryChange: (value: string) => void
-    onDirectoryFocus: () => void
-    onDirectoryBlur: () => void
-    onDirectoryKeyDown: (event: ReactKeyboardEvent<HTMLInputElement>) => void
-    onSuggestionSelect: (index: number) => void
-    onPathClick: (path: string) => void
+    directory: string;
+    suggestions: readonly Suggestion[];
+    selectedIndex: number;
+    isDisabled: boolean;
+    recentPaths: string[];
+    onDirectoryChange: (value: string) => void;
+    onDirectoryFocus: () => void;
+    onDirectoryBlur: () => void;
+    onDirectoryKeyDown: (event: ReactKeyboardEvent<HTMLInputElement>) => void;
+    onSuggestionSelect: (index: number) => void;
+    onPathClick: (path: string) => void;
 }) {
-    const { t } = useTranslation()
+    const { t } = useTranslation();
 
     return (
         <div className="flex flex-col gap-1.5 px-3 py-3">
@@ -67,5 +67,5 @@ export function DirectorySection(props: {
                 </div>
             )}
         </div>
-    )
+    );
 }

@@ -3,7 +3,7 @@
  * log fields required by the CLI and UI.
  */
 
-import { z } from 'zod'
+import { z } from 'zod';
 
 // Usage statistics for assistant messages - used in apiSession.ts
 export const UsageSchema = z.object({
@@ -12,13 +12,13 @@ export const UsageSchema = z.object({
     cache_read_input_tokens: z.number().int().nonnegative().optional(),
     output_tokens: z.number().int().nonnegative(),
     service_tier: z.string().optional(),
-})
+});
 
 const RawMessageSchema = z.object({
     role: z.string().optional(),
     content: z.unknown(),
     usage: UsageSchema.optional(),
-})
+});
 
 const RawJSONLinesBaseSchema = z.object({
     uuid: z.string().optional(),
@@ -32,8 +32,7 @@ const RawJSONLinesBaseSchema = z.object({
     version: z.string().optional(),
     gitBranch: z.string().optional(),
     timestamp: z.string().optional(),
-    turnId: z.string().optional(),
-})
+});
 
 // Main schema with validation for the fields used in the app
 // NOTE: Schema remains lenient on message content to handle SDK variations
@@ -76,6 +75,6 @@ export const RawJSONLinesSchema = z.discriminatedUnion('type', [
         error: z.unknown().optional(),
         durationMs: z.number().optional(),
     }),
-])
+]);
 
-export type RawJSONLines = z.infer<typeof RawJSONLinesSchema>
+export type RawJSONLines = z.infer<typeof RawJSONLinesSchema>;

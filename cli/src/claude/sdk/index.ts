@@ -3,20 +3,20 @@
  * Provides clean TypeScript implementation without Bun support
  */
 
-export { query } from './query'
-export { AbortError } from './types'
+export { query } from './query';
 export type {
-    QueryOptions,
-    QueryPrompt,
-    SDKMessage,
-    SDKUserMessage,
-    SDKAssistantMessage,
-    SDKSystemMessage,
-    SDKResultMessage,
-    SDKControlResponse,
+    CanCallToolCallback,
     ControlRequest,
     InterruptRequest,
-    SDKControlRequest,
-    CanCallToolCallback,
     PermissionResult,
-} from './types'
+    QueryOptions,
+    QueryPrompt,
+    SDKAssistantMessage,
+    SDKControlRequest,
+    SDKControlResponse,
+    SDKMessage,
+    SDKResultMessage,
+    SDKSystemMessage,
+    SDKUserMessage,
+} from './types';
+export { AbortError } from './types';

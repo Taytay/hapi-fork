@@ -1,22 +1,22 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
-import { I18nProvider } from '@/lib/i18n-context'
-import { LoginPrompt } from './LoginPrompt'
+import { fireEvent, render, screen } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { I18nProvider } from '@/lib/i18n-context';
+import { LoginPrompt } from './LoginPrompt';
 
 function renderWithProviders(ui: React.ReactElement) {
-    return render(<I18nProvider>{ui}</I18nProvider>)
+    return render(<I18nProvider>{ui}</I18nProvider>);
 }
 
 describe('LoginPrompt', () => {
     beforeEach(() => {
-        vi.clearAllMocks()
+        vi.clearAllMocks();
         const localStorageMock = {
             getItem: vi.fn(() => 'en'),
             setItem: vi.fn(),
             removeItem: vi.fn(),
-        }
-        Object.defineProperty(window, 'localStorage', { value: localStorageMock })
-    })
+        };
+        Object.defineProperty(window, 'localStorage', { value: localStorageMock });
+    });
 
     it('does not clear first hub URL edit when hub URL required', async () => {
         renderWithProviders(
@@ -27,18 +27,18 @@ describe('LoginPrompt', () => {
                 clearServerUrl={vi.fn()}
                 requireServerUrl={true}
                 onLogin={vi.fn()}
-            />
-        )
+            />,
+        );
 
-        fireEvent.change(screen.getByPlaceholderText('Access token'), { target: { value: 'token' } })
-        fireEvent.click(screen.getByRole('button', { name: 'Sign In' }))
+        fireEvent.change(screen.getByPlaceholderText('Access token'), { target: { value: 'token' } });
+        fireEvent.click(screen.getByRole('button', { name: 'Sign In' }));
 
-        const hubInput = await screen.findByPlaceholderText('https://hapi.example.com')
-        expect(screen.getByText('Hub URL required. Please set it before signing in.')).toBeInTheDocument()
+        const hubInput = await screen.findByPlaceholderText('https://hapi.example.com');
+        expect(screen.getByText('Hub URL required. Please set it before signing in.')).toBeInTheDocument();
 
-        fireEvent.change(hubInput, { target: { value: 'https://hub.example.com' } })
+        fireEvent.change(hubInput, { target: { value: 'https://hub.example.com' } });
 
-        expect(hubInput).toHaveValue('https://hub.example.com')
-        expect(screen.queryByText('Hub URL required. Please set it before signing in.')).not.toBeInTheDocument()
-    })
-})
+        expect(hubInput).toHaveValue('https://hub.example.com');
+        expect(screen.queryByText('Hub URL required. Please set it before signing in.')).not.toBeInTheDocument();
+    });
+});

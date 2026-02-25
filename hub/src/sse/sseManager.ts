@@ -1,40 +1,39 @@
-import type { SyncEvent } from '../sync/syncEngine'
-import type { VisibilityState } from '../visibility/visibilityTracker'
-import type { VisibilityTracker } from '../visibility/visibilityTracker'
+import type { SyncEvent } from '../sync/syncEngine';
+import type { VisibilityState, VisibilityTracker } from '../visibility/visibilityTracker';
 
 export type SSESubscription = {
-    id: string
-    namespace: string
-    all: boolean
-    sessionId: string | null
-    machineId: string | null
-}
+    id: string;
+    namespace: string;
+    all: boolean;
+    sessionId: string | null;
+    machineId: string | null;
+};
 
 type SSEConnection = SSESubscription & {
-    send: (event: SyncEvent) => void | Promise<void>
-    sendHeartbeat: () => void | Promise<void>
-}
+    send: (event: SyncEvent) => void | Promise<void>;
+    sendHeartbeat: () => void | Promise<void>;
+};
 
 export class SSEManager {
-    private readonly connections: Map<string, SSEConnection> = new Map()
-    private heartbeatTimer: NodeJS.Timeout | null = null
-    private readonly heartbeatMs: number
-    private readonly visibilityTracker: VisibilityTracker
+    private readonly connections: Map<string, SSEConnection> = new Map();
+    private heartbeatTimer: NodeJS.Timeout | null = null;
+    private readonly heartbeatMs: number;
+    private readonly visibilityTracker: VisibilityTracker;
 
     constructor(heartbeatMs = 30_000, visibilityTracker: VisibilityTracker) {
-        this.heartbeatMs = heartbeatMs
-        this.visibilityTracker = visibilityTracker
+        this.heartbeatMs = heartbeatMs;
+        this.visibilityTracker = visibilityTracker;
     }
 
     subscribe(options: {
-        id: string
-        namespace: string
-        all?: boolean
-        sessionId?: string | null
-        machineId?: string | null
-        visibility?: VisibilityState
-        send: (event: SyncEvent) => void | Promise<void>
-        sendHeartbeat: () => void | Promise<void>
+        id: string;
+        namespace: string;
+        all?: boolean;
+        sessionId?: string | null;
+        machineId?: string | null;
+        visibility?: VisibilityState;
+        send: (event: SyncEvent) => void | Promise<void>;
+        sendHeartbeat: () => void | Promise<void>;
     }): SSESubscription {
         const subscription: SSEConnection = {
             id: options.id,
@@ -44,137 +43,137 @@ export class SSEManager {
             machineId: options.machineId ?? null,
             send: options.send,
             sendHeartbeat: options.sendHeartbeat,
-        }
+        };
 
-        this.connections.set(subscription.id, subscription)
+        this.connections.set(subscription.id, subscription);
         this.visibilityTracker.registerConnection(
             subscription.id,
             subscription.namespace,
-            options.visibility ?? 'hidden'
-        )
-        this.ensureHeartbeat()
+            options.visibility ?? 'hidden',
+        );
+        this.ensureHeartbeat();
         return {
             id: subscription.id,
             namespace: subscription.namespace,
             all: subscription.all,
             sessionId: subscription.sessionId,
             machineId: subscription.machineId,
-        }
+        };
     }
 
     unsubscribe(id: string): void {
-        this.connections.delete(id)
-        this.visibilityTracker.removeConnection(id)
+        this.connections.delete(id);
+        this.visibilityTracker.removeConnection(id);
         if (this.connections.size === 0) {
-            this.stopHeartbeat()
+            this.stopHeartbeat();
         }
     }
 
     async sendToast(namespace: string, event: Extract<SyncEvent, { type: 'toast' }>): Promise<number> {
-        const deliveries: Array<Promise<{ id: string; ok: boolean }>> = []
+        const deliveries: Array<Promise<{ id: string; ok: boolean }>> = [];
         for (const connection of this.connections.values()) {
             if (connection.namespace !== namespace) {
-                continue
+                continue;
             }
             if (!this.visibilityTracker.isVisibleConnection(connection.id)) {
-                continue
+                continue;
             }
 
             deliveries.push(
                 Promise.resolve(connection.send(event))
                     .then(() => ({ id: connection.id, ok: true }))
-                    .catch(() => ({ id: connection.id, ok: false }))
-            )
+                    .catch(() => ({ id: connection.id, ok: false })),
+            );
         }
 
         if (deliveries.length === 0) {
-            return 0
+            return 0;
         }
 
-        const results = await Promise.all(deliveries)
-        let successCount = 0
+        const results = await Promise.all(deliveries);
+        let successCount = 0;
         for (const result of results) {
             if (result.ok) {
-                successCount += 1
-                continue
+                successCount += 1;
+                continue;
             }
-            this.unsubscribe(result.id)
+            this.unsubscribe(result.id);
         }
 
-        return successCount
+        return successCount;
     }
 
     broadcast(event: SyncEvent): void {
         for (const connection of this.connections.values()) {
             if (!this.shouldSend(connection, event)) {
-                continue
+                continue;
             }
 
             void Promise.resolve(connection.send(event)).catch(() => {
-                this.unsubscribe(connection.id)
-            })
+                this.unsubscribe(connection.id);
+            });
         }
     }
 
     stop(): void {
-        this.stopHeartbeat()
+        this.stopHeartbeat();
         for (const id of this.connections.keys()) {
-            this.visibilityTracker.removeConnection(id)
+            this.visibilityTracker.removeConnection(id);
         }
-        this.connections.clear()
+        this.connections.clear();
     }
 
     private ensureHeartbeat(): void {
         if (this.heartbeatTimer || this.heartbeatMs <= 0) {
-            return
+            return;
         }
 
         this.heartbeatTimer = setInterval(() => {
             for (const connection of this.connections.values()) {
                 void Promise.resolve(connection.sendHeartbeat()).catch(() => {
-                    this.unsubscribe(connection.id)
-                })
+                    this.unsubscribe(connection.id);
+                });
             }
-        }, this.heartbeatMs)
+        }, this.heartbeatMs);
     }
 
     private stopHeartbeat(): void {
         if (!this.heartbeatTimer) {
-            return
+            return;
         }
 
-        clearInterval(this.heartbeatTimer)
-        this.heartbeatTimer = null
+        clearInterval(this.heartbeatTimer);
+        this.heartbeatTimer = null;
     }
 
     private shouldSend(connection: SSEConnection, event: SyncEvent): boolean {
         if (event.type !== 'connection-changed') {
-            const eventNamespace = event.namespace
+            const eventNamespace = event.namespace;
             if (!eventNamespace || eventNamespace !== connection.namespace) {
-                return false
+                return false;
             }
         }
 
         if (event.type === 'message-received') {
-            return connection.sessionId === event.sessionId
+            return connection.sessionId === event.sessionId;
         }
 
         if (event.type === 'connection-changed') {
-            return true
+            return true;
         }
 
         if (connection.all) {
-            return true
+            return true;
         }
 
         if ('sessionId' in event && connection.sessionId === event.sessionId) {
-            return true
+            return true;
         }
 
         if ('machineId' in event && connection.machineId === event.machineId) {
-            return true
+            return true;
         }
 
-        return false
+        return false;
     }
 }

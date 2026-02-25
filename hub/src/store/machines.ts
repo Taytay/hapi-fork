@@ -1,22 +1,21 @@
-import type { Database } from 'bun:sqlite'
-
-import type { StoredMachine, VersionedUpdateResult } from './types'
-import { safeJsonParse } from './json'
-import { updateVersionedField } from './versionedUpdates'
+import type { Database } from 'bun:sqlite';
+import { safeJsonParse } from './json';
+import type { StoredMachine, VersionedUpdateResult } from './types';
+import { updateVersionedField } from './versionedUpdates';
 
 type DbMachineRow = {
-    id: string
-    namespace: string
-    created_at: number
-    updated_at: number
-    metadata: string | null
-    metadata_version: number
-    runner_state: string | null
-    runner_state_version: number
-    active: number
-    active_at: number | null
-    seq: number
-}
+    id: string;
+    namespace: string;
+    created_at: number;
+    updated_at: number;
+    metadata: string | null;
+    metadata_version: number;
+    runner_state: string | null;
+    runner_state_version: number;
+    active: number;
+    active_at: number | null;
+    seq: number;
+};
 
 function toStoredMachine(row: DbMachineRow): StoredMachine {
     return {
@@ -31,7 +30,7 @@ function toStoredMachine(row: DbMachineRow): StoredMachine {
         active: row.active === 1,
         activeAt: row.active_at,
         seq: row.seq,
-    }
+    };
 }
 
 export function getOrCreateMachine(
@@ -39,23 +38,22 @@ export function getOrCreateMachine(
     id: string,
     metadata: unknown,
     runnerState: unknown,
-    namespace: string
+    namespace: string,
 ): StoredMachine {
-    const existing = db.prepare('SELECT * FROM machines WHERE id = ?').get(id) as DbMachineRow | undefined
+    const existing = db.prepare('SELECT * FROM machines WHERE id = ?').get(id) as DbMachineRow | undefined;
     if (existing) {
-        const stored = toStoredMachine(existing)
+        const stored = toStoredMachine(existing);
         if (stored.namespace !== namespace) {
-            throw new Error('Machine namespace mismatch')
+            throw new Error('Machine namespace mismatch');
         }
-        return stored
+        return stored;
     }
 
-    const now = Date.now()
-    const metadataJson = JSON.stringify(metadata)
-    const runnerStateJson = runnerState === null || runnerState === undefined ? null : JSON.stringify(runnerState)
+    const now = Date.now();
+    const metadataJson = JSON.stringify(metadata);
+    const runnerStateJson = runnerState === null || runnerState === undefined ? null : JSON.stringify(runnerState);
 
-    db.prepare(
-        `
+    db.prepare(`
         INSERT INTO machines (
             id, namespace, created_at, updated_at,
             metadata, metadata_version,
@@ -67,21 +65,20 @@ export function getOrCreateMachine(
             @runner_state, 1,
             0, NULL, 0
         )
-    `
-    ).run({
+    `).run({
         id,
         namespace,
         created_at: now,
         updated_at: now,
         metadata: metadataJson,
         runner_state: runnerStateJson,
-    })
+    });
 
-    const row = getMachine(db, id)
+    const row = getMachine(db, id);
     if (!row) {
-        throw new Error('Failed to create machine')
+        throw new Error('Failed to create machine');
     }
-    return row
+    return row;
 }
 
 export function updateMachineMetadata(
@@ -89,9 +86,9 @@ export function updateMachineMetadata(
     id: string,
     metadata: unknown,
     expectedVersion: number,
-    namespace: string
+    namespace: string,
 ): VersionedUpdateResult<unknown | null> {
-    const now = Date.now()
+    const now = Date.now();
 
     return updateVersionedField({
         db,
@@ -103,13 +100,13 @@ export function updateMachineMetadata(
         expectedVersion,
         value: metadata,
         encode: (value) => {
-            const json = JSON.stringify(value)
-            return json === undefined ? null : json
+            const json = JSON.stringify(value);
+            return json === undefined ? null : json;
         },
         decode: safeJsonParse,
         setClauses: ['updated_at = @updated_at', 'seq = seq + 1'],
         params: { updated_at: now },
-    })
+    });
 }
 
 export function updateMachineRunnerState(
@@ -117,10 +114,10 @@ export function updateMachineRunnerState(
     id: string,
     runnerState: unknown,
     expectedVersion: number,
-    namespace: string
+    namespace: string,
 ): VersionedUpdateResult<unknown | null> {
-    const now = Date.now()
-    const normalized = runnerState ?? null
+    const now = Date.now();
+    const normalized = runnerState ?? null;
 
     return updateVersionedField({
         db,
@@ -135,29 +132,29 @@ export function updateMachineRunnerState(
         decode: safeJsonParse,
         setClauses: ['updated_at = @updated_at', 'active = 1', 'active_at = @active_at', 'seq = seq + 1'],
         params: { updated_at: now, active_at: now },
-    })
+    });
 }
 
 export function getMachine(db: Database, id: string): StoredMachine | null {
-    const row = db.prepare('SELECT * FROM machines WHERE id = ?').get(id) as DbMachineRow | undefined
-    return row ? toStoredMachine(row) : null
+    const row = db.prepare('SELECT * FROM machines WHERE id = ?').get(id) as DbMachineRow | undefined;
+    return row ? toStoredMachine(row) : null;
 }
 
 export function getMachineByNamespace(db: Database, id: string, namespace: string): StoredMachine | null {
     const row = db.prepare('SELECT * FROM machines WHERE id = ? AND namespace = ?').get(id, namespace) as
         | DbMachineRow
-        | undefined
-    return row ? toStoredMachine(row) : null
+        | undefined;
+    return row ? toStoredMachine(row) : null;
 }
 
 export function getMachines(db: Database): StoredMachine[] {
-    const rows = db.prepare('SELECT * FROM machines ORDER BY updated_at DESC').all() as DbMachineRow[]
-    return rows.map(toStoredMachine)
+    const rows = db.prepare('SELECT * FROM machines ORDER BY updated_at DESC').all() as DbMachineRow[];
+    return rows.map(toStoredMachine);
 }
 
 export function getMachinesByNamespace(db: Database, namespace: string): StoredMachine[] {
     const rows = db
         .prepare('SELECT * FROM machines WHERE namespace = ? ORDER BY updated_at DESC')
-        .all(namespace) as DbMachineRow[]
-    return rows.map(toStoredMachine)
+        .all(namespace) as DbMachineRow[];
+    return rows.map(toStoredMachine);
 }

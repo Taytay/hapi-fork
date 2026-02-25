@@ -5,22 +5,22 @@
  * like includeCoAuthoredBy setting for commit message generation.
  */
 
-import { existsSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
-import { homedir } from 'node:os'
-import { logger } from '@/ui/logger'
+import { existsSync, readFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+import { logger } from '@/ui/logger';
 
 export interface ClaudeSettings {
-    includeCoAuthoredBy?: boolean
-    [key: string]: any
+    includeCoAuthoredBy?: boolean;
+    [key: string]: any;
 }
 
 /**
  * Get the path to Claude's settings.json file
  */
 function getClaudeSettingsPath(): string {
-    const claudeConfigDir = process.env.CLAUDE_CONFIG_DIR || join(homedir(), '.claude')
-    return join(claudeConfigDir, 'settings.json')
+    const claudeConfigDir = process.env.CLAUDE_CONFIG_DIR || join(homedir(), '.claude');
+    return join(claudeConfigDir, 'settings.json');
 }
 
 /**
@@ -30,23 +30,23 @@ function getClaudeSettingsPath(): string {
  */
 export function readClaudeSettings(): ClaudeSettings | null {
     try {
-        const settingsPath = getClaudeSettingsPath()
+        const settingsPath = getClaudeSettingsPath();
 
         if (!existsSync(settingsPath)) {
-            logger.debug(`[ClaudeSettings] No Claude settings file found at ${settingsPath}`)
-            return null
+            logger.debug(`[ClaudeSettings] No Claude settings file found at ${settingsPath}`);
+            return null;
         }
 
-        const settingsContent = readFileSync(settingsPath, 'utf-8')
-        const settings = JSON.parse(settingsContent) as ClaudeSettings
+        const settingsContent = readFileSync(settingsPath, 'utf-8');
+        const settings = JSON.parse(settingsContent) as ClaudeSettings;
 
-        logger.debug(`[ClaudeSettings] Successfully read Claude settings from ${settingsPath}`)
-        logger.debug(`[ClaudeSettings] includeCoAuthoredBy: ${settings.includeCoAuthoredBy}`)
+        logger.debug(`[ClaudeSettings] Successfully read Claude settings from ${settingsPath}`);
+        logger.debug(`[ClaudeSettings] includeCoAuthoredBy: ${settings.includeCoAuthoredBy}`);
 
-        return settings
+        return settings;
     } catch (error) {
-        logger.debug(`[ClaudeSettings] Error reading Claude settings: ${error}`)
-        return null
+        logger.debug(`[ClaudeSettings] Error reading Claude settings: ${error}`);
+        return null;
     }
 }
 
@@ -57,13 +57,13 @@ export function readClaudeSettings(): ClaudeSettings | null {
  * @returns true if Co-Authored-By should be included, false otherwise
  */
 export function shouldIncludeCoAuthoredBy(): boolean {
-    const settings = readClaudeSettings()
+    const settings = readClaudeSettings();
 
     // If no settings file or includeCoAuthoredBy is not explicitly set,
     // default to true to maintain backward compatibility
     if (!settings || settings.includeCoAuthoredBy === undefined) {
-        return true
+        return true;
     }
 
-    return settings.includeCoAuthoredBy
+    return settings.includeCoAuthoredBy;
 }

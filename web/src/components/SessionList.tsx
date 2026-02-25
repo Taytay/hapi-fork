@@ -1,61 +1,64 @@
-import { useEffect, useMemo, useState } from 'react'
-import type { SessionSummary } from '@/types/api'
-import type { ApiClient } from '@/api/client'
-import { useLongPress } from '@/hooks/useLongPress'
-import { usePlatform } from '@/hooks/usePlatform'
-import { useSessionActions } from '@/hooks/mutations/useSessionActions'
-import { SessionActionMenu } from '@/components/SessionActionMenu'
-import { RenameSessionDialog } from '@/components/RenameSessionDialog'
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { useTranslation } from '@/lib/use-translation'
+import { useEffect, useMemo, useState } from 'react';
+import type { ApiClient } from '@/api/client';
+import { RenameSessionDialog } from '@/components/RenameSessionDialog';
+import { SessionActionMenu } from '@/components/SessionActionMenu';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { useSessionActions } from '@/hooks/mutations/useSessionActions';
+import { useLongPress } from '@/hooks/useLongPress';
+import { usePlatform } from '@/hooks/usePlatform';
+import { useTranslation } from '@/lib/use-translation';
+import type { SessionSummary } from '@/types/api';
 
 type SessionGroup = {
-    directory: string
-    displayName: string
-    sessions: SessionSummary[]
-    latestUpdatedAt: number
-    hasActiveSession: boolean
-}
+    directory: string;
+    displayName: string;
+    sessions: SessionSummary[];
+    latestUpdatedAt: number;
+    hasActiveSession: boolean;
+};
 
 function getGroupDisplayName(directory: string): string {
-    if (directory === 'Other') return directory
-    const parts = directory.split(/[\\/]+/).filter(Boolean)
-    if (parts.length === 0) return directory
-    if (parts.length === 1) return parts[0]
-    return `${parts[parts.length - 2]}/${parts[parts.length - 1]}`
+    if (directory === 'Other') return directory;
+    const parts = directory.split(/[\\/]+/).filter(Boolean);
+    if (parts.length === 0) return directory;
+    if (parts.length === 1) return parts[0];
+    return `${parts[parts.length - 2]}/${parts[parts.length - 1]}`;
 }
 
 function groupSessionsByDirectory(sessions: SessionSummary[]): SessionGroup[] {
-    const groups = new Map<string, SessionSummary[]>()
+    const groups = new Map<string, SessionSummary[]>();
 
     sessions.forEach((session) => {
-        const path = session.metadata?.worktree?.basePath ?? session.metadata?.path ?? 'Other'
+        const path = session.metadata?.worktree?.basePath ?? session.metadata?.path ?? 'Other';
         if (!groups.has(path)) {
-            groups.set(path, [])
+            groups.set(path, []);
         }
-        groups.get(path)!.push(session)
-    })
+        groups.get(path)?.push(session);
+    });
 
     return Array.from(groups.entries())
         .map(([directory, groupSessions]) => {
             const sortedSessions = [...groupSessions].sort((a, b) => {
-                const rankA = a.active ? (a.pendingRequestsCount > 0 ? 0 : 1) : 2
-                const rankB = b.active ? (b.pendingRequestsCount > 0 ? 0 : 1) : 2
-                if (rankA !== rankB) return rankA - rankB
-                return b.updatedAt - a.updatedAt
-            })
-            const latestUpdatedAt = groupSessions.reduce((max, s) => (s.updatedAt > max ? s.updatedAt : max), -Infinity)
-            const hasActiveSession = groupSessions.some((s) => s.active)
-            const displayName = getGroupDisplayName(directory)
+                const rankA = a.active ? (a.pendingRequestsCount > 0 ? 0 : 1) : 2;
+                const rankB = b.active ? (b.pendingRequestsCount > 0 ? 0 : 1) : 2;
+                if (rankA !== rankB) return rankA - rankB;
+                return b.updatedAt - a.updatedAt;
+            });
+            const latestUpdatedAt = groupSessions.reduce(
+                (max, s) => (s.updatedAt > max ? s.updatedAt : max),
+                -Infinity,
+            );
+            const hasActiveSession = groupSessions.some((s) => s.active);
+            const displayName = getGroupDisplayName(directory);
 
-            return { directory, displayName, sessions: sortedSessions, latestUpdatedAt, hasActiveSession }
+            return { directory, displayName, sessions: sortedSessions, latestUpdatedAt, hasActiveSession };
         })
         .sort((a, b) => {
             if (a.hasActiveSession !== b.hasActiveSession) {
-                return a.hasActiveSession ? -1 : 1
+                return a.hasActiveSession ? -1 : 1;
             }
-            return b.latestUpdatedAt - a.latestUpdatedAt
-        })
+            return b.latestUpdatedAt - a.latestUpdatedAt;
+        });
 }
 
 function PlusIcon(props: { className?: string }) {
@@ -75,7 +78,7 @@ function PlusIcon(props: { className?: string }) {
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
         </svg>
-    )
+    );
 }
 
 function BulbIcon(props: { className?: string }) {
@@ -96,7 +99,7 @@ function BulbIcon(props: { className?: string }) {
             <path d="M10 22h4" />
             <path d="M12 2a7 7 0 0 0-4 12c.6.6 1 1.2 1 2h6c0-.8.4-1.4 1-2a7 7 0 0 0-4-12Z" />
         </svg>
-    )
+    );
 }
 
 function ChevronIcon(props: { className?: string; collapsed?: boolean }) {
@@ -115,94 +118,94 @@ function ChevronIcon(props: { className?: string; collapsed?: boolean }) {
         >
             <polyline points="9 18 15 12 9 6" />
         </svg>
-    )
+    );
 }
 
 function getSessionTitle(session: SessionSummary): string {
     if (session.metadata?.name) {
-        return session.metadata.name
+        return session.metadata.name;
     }
     if (session.metadata?.summary?.text) {
-        return session.metadata.summary.text
+        return session.metadata.summary.text;
     }
     if (session.metadata?.path) {
-        const parts = session.metadata.path.split('/').filter(Boolean)
-        return parts.length > 0 ? parts[parts.length - 1] : session.id.slice(0, 8)
+        const parts = session.metadata.path.split('/').filter(Boolean);
+        return parts.length > 0 ? parts[parts.length - 1] : session.id.slice(0, 8);
     }
-    return session.id.slice(0, 8)
+    return session.id.slice(0, 8);
 }
 
 function getTodoProgress(session: SessionSummary): { completed: number; total: number } | null {
-    if (!session.todoProgress) return null
-    if (session.todoProgress.completed === session.todoProgress.total) return null
-    return session.todoProgress
+    if (!session.todoProgress) return null;
+    if (session.todoProgress.completed === session.todoProgress.total) return null;
+    return session.todoProgress;
 }
 
 function getAgentLabel(session: SessionSummary): string {
-    const flavor = session.metadata?.flavor?.trim()
-    if (flavor) return flavor
-    return 'unknown'
+    const flavor = session.metadata?.flavor?.trim();
+    if (flavor) return flavor;
+    return 'unknown';
 }
 
 function formatRelativeTime(
     value: number,
-    t: (key: string, params?: Record<string, string | number>) => string
+    t: (key: string, params?: Record<string, string | number>) => string,
 ): string | null {
-    const ms = value < 1_000_000_000_000 ? value * 1000 : value
-    if (!Number.isFinite(ms)) return null
-    const delta = Date.now() - ms
-    if (delta < 60_000) return t('session.time.justNow')
-    const minutes = Math.floor(delta / 60_000)
-    if (minutes < 60) return t('session.time.minutesAgo', { n: minutes })
-    const hours = Math.floor(minutes / 60)
-    if (hours < 24) return t('session.time.hoursAgo', { n: hours })
-    const days = Math.floor(hours / 24)
-    if (days < 7) return t('session.time.daysAgo', { n: days })
-    return new Date(ms).toLocaleDateString()
+    const ms = value < 1_000_000_000_000 ? value * 1000 : value;
+    if (!Number.isFinite(ms)) return null;
+    const delta = Date.now() - ms;
+    if (delta < 60_000) return t('session.time.justNow');
+    const minutes = Math.floor(delta / 60_000);
+    if (minutes < 60) return t('session.time.minutesAgo', { n: minutes });
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return t('session.time.hoursAgo', { n: hours });
+    const days = Math.floor(hours / 24);
+    if (days < 7) return t('session.time.daysAgo', { n: days });
+    return new Date(ms).toLocaleDateString();
 }
 
 function SessionItem(props: {
-    session: SessionSummary
-    onSelect: (sessionId: string) => void
-    showPath?: boolean
-    api: ApiClient | null
-    selected?: boolean
+    session: SessionSummary;
+    onSelect: (sessionId: string) => void;
+    showPath?: boolean;
+    api: ApiClient | null;
+    selected?: boolean;
 }) {
-    const { t } = useTranslation()
-    const { session: s, onSelect, showPath = true, api, selected = false } = props
-    const { haptic } = usePlatform()
-    const [menuOpen, setMenuOpen] = useState(false)
-    const [menuAnchorPoint, setMenuAnchorPoint] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
-    const [renameOpen, setRenameOpen] = useState(false)
-    const [archiveOpen, setArchiveOpen] = useState(false)
-    const [deleteOpen, setDeleteOpen] = useState(false)
+    const { t } = useTranslation();
+    const { session: s, onSelect, showPath = true, api, selected = false } = props;
+    const { haptic } = usePlatform();
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [menuAnchorPoint, setMenuAnchorPoint] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+    const [renameOpen, setRenameOpen] = useState(false);
+    const [archiveOpen, setArchiveOpen] = useState(false);
+    const [deleteOpen, setDeleteOpen] = useState(false);
 
     const { archiveSession, renameSession, deleteSession, isPending } = useSessionActions(
         api,
         s.id,
-        s.metadata?.flavor ?? null
-    )
+        s.metadata?.flavor ?? null,
+    );
 
     const longPressHandlers = useLongPress({
         onLongPress: (point) => {
-            haptic.impact('medium')
-            setMenuAnchorPoint(point)
-            setMenuOpen(true)
+            haptic.impact('medium');
+            setMenuAnchorPoint(point);
+            setMenuOpen(true);
         },
         onClick: () => {
             if (!menuOpen) {
-                onSelect(s.id)
+                onSelect(s.id);
             }
         },
         threshold: 500,
-    })
+    });
 
-    const sessionName = getSessionTitle(s)
+    const sessionName = getSessionTitle(s);
     const statusDotClass = s.active
         ? s.thinking
             ? 'bg-[#007AFF]'
             : 'bg-[var(--app-badge-success-text)]'
-        : 'bg-[var(--app-hint)]'
+        : 'bg-[var(--app-hint)]';
     return (
         <>
             <button
@@ -224,14 +227,14 @@ function SessionItem(props: {
                             <span className="text-[#007AFF] animate-pulse">{t('session.item.thinking')}</span>
                         ) : null}
                         {(() => {
-                            const progress = getTodoProgress(s)
-                            if (!progress) return null
+                            const progress = getTodoProgress(s);
+                            if (!progress) return null;
                             return (
                                 <span className="flex items-center gap-1 text-[var(--app-hint)]">
                                     <BulbIcon className="h-3 w-3" />
                                     {progress.completed}/{progress.total}
                                 </span>
-                            )
+                            );
                         })()}
                         {s.pendingRequestsCount > 0 ? (
                             <span className="text-[var(--app-badge-warning-text)]">
@@ -304,52 +307,52 @@ function SessionItem(props: {
                 destructive
             />
         </>
-    )
+    );
 }
 
 export function SessionList(props: {
-    sessions: SessionSummary[]
-    onSelect: (sessionId: string) => void
-    onNewSession: () => void
-    onRefresh: () => void
-    isLoading: boolean
-    renderHeader?: boolean
-    api: ApiClient | null
-    selectedSessionId?: string | null
+    sessions: SessionSummary[];
+    onSelect: (sessionId: string) => void;
+    onNewSession: () => void;
+    onRefresh: () => void;
+    isLoading: boolean;
+    renderHeader?: boolean;
+    api: ApiClient | null;
+    selectedSessionId?: string | null;
 }) {
-    const { t } = useTranslation()
-    const { renderHeader = true, api, selectedSessionId } = props
-    const groups = useMemo(() => groupSessionsByDirectory(props.sessions), [props.sessions])
-    const [collapseOverrides, setCollapseOverrides] = useState<Map<string, boolean>>(() => new Map())
+    const { t } = useTranslation();
+    const { renderHeader = true, api, selectedSessionId } = props;
+    const groups = useMemo(() => groupSessionsByDirectory(props.sessions), [props.sessions]);
+    const [collapseOverrides, setCollapseOverrides] = useState<Map<string, boolean>>(() => new Map());
     const isGroupCollapsed = (group: SessionGroup): boolean => {
-        const override = collapseOverrides.get(group.directory)
-        if (override !== undefined) return override
-        return !group.hasActiveSession
-    }
+        const override = collapseOverrides.get(group.directory);
+        if (override !== undefined) return override;
+        return !group.hasActiveSession;
+    };
 
     const toggleGroup = (directory: string, isCollapsed: boolean) => {
         setCollapseOverrides((prev) => {
-            const next = new Map(prev)
-            next.set(directory, !isCollapsed)
-            return next
-        })
-    }
+            const next = new Map(prev);
+            next.set(directory, !isCollapsed);
+            return next;
+        });
+    };
 
     useEffect(() => {
         setCollapseOverrides((prev) => {
-            if (prev.size === 0) return prev
-            const next = new Map(prev)
-            const knownGroups = new Set(groups.map((group) => group.directory))
-            let changed = false
+            if (prev.size === 0) return prev;
+            const next = new Map(prev);
+            const knownGroups = new Set(groups.map((group) => group.directory));
+            let changed = false;
             for (const directory of next.keys()) {
                 if (!knownGroups.has(directory)) {
-                    next.delete(directory)
-                    changed = true
+                    next.delete(directory);
+                    changed = true;
                 }
             }
-            return changed ? next : prev
-        })
-    }, [groups])
+            return changed ? next : prev;
+        });
+    }, [groups]);
 
     return (
         <div className="mx-auto w-full max-w-content flex flex-col">
@@ -371,7 +374,7 @@ export function SessionList(props: {
 
             <div className="flex flex-col">
                 {groups.map((group) => {
-                    const isCollapsed = isGroupCollapsed(group)
+                    const isCollapsed = isGroupCollapsed(group);
                     return (
                         <div key={group.directory}>
                             <button
@@ -404,9 +407,9 @@ export function SessionList(props: {
                                 </div>
                             ) : null}
                         </div>
-                    )
+                    );
                 })}
             </div>
         </div>
-    )
+    );
 }

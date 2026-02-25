@@ -1,16 +1,16 @@
-import { useState, useRef, useEffect } from 'react'
-import { useTranslation, type Locale } from '@/lib/use-translation'
-import { useAppGoBack } from '@/hooks/useAppGoBack'
-import { getElevenLabsSupportedLanguages, getLanguageDisplayName, type Language } from '@/lib/languages'
-import { getFontScaleOptions, useFontScale, type FontScale } from '@/hooks/useFontScale'
-import { PROTOCOL_VERSION } from '@hapi/protocol'
+import { PROTOCOL_VERSION } from '@hapi/protocol';
+import { useEffect, useRef, useState } from 'react';
+import { useAppGoBack } from '@/hooks/useAppGoBack';
+import { type FontScale, getFontScaleOptions, useFontScale } from '@/hooks/useFontScale';
+import { getElevenLabsSupportedLanguages, getLanguageDisplayName, type Language } from '@/lib/languages';
+import { type Locale, useTranslation } from '@/lib/use-translation';
 
 const locales: { value: Locale; nativeLabel: string }[] = [
     { value: 'en', nativeLabel: 'English' },
     { value: 'zh-CN', nativeLabel: '简体中文' },
-]
+];
 
-const voiceLanguages = getElevenLabsSupportedLanguages()
+const voiceLanguages = getElevenLabsSupportedLanguages();
 
 function BackIcon(props: { className?: string }) {
     return (
@@ -28,7 +28,7 @@ function BackIcon(props: { className?: string }) {
         >
             <polyline points="15 18 9 12 15 6" />
         </svg>
-    )
+    );
 }
 
 function CheckIcon(props: { className?: string }) {
@@ -47,7 +47,7 @@ function CheckIcon(props: { className?: string }) {
         >
             <polyline points="20 6 9 17 4 12" />
         </svg>
-    )
+    );
 }
 
 function ChevronDownIcon(props: { className?: string }) {
@@ -66,85 +66,85 @@ function ChevronDownIcon(props: { className?: string }) {
         >
             <polyline points="6 9 12 15 18 9" />
         </svg>
-    )
+    );
 }
 
 export default function SettingsPage() {
-    const { t, locale, setLocale } = useTranslation()
-    const goBack = useAppGoBack()
-    const [isOpen, setIsOpen] = useState(false)
-    const [isFontOpen, setIsFontOpen] = useState(false)
-    const [isVoiceOpen, setIsVoiceOpen] = useState(false)
-    const containerRef = useRef<HTMLDivElement>(null)
-    const fontContainerRef = useRef<HTMLDivElement>(null)
-    const voiceContainerRef = useRef<HTMLDivElement>(null)
-    const { fontScale, setFontScale } = useFontScale()
+    const { t, locale, setLocale } = useTranslation();
+    const goBack = useAppGoBack();
+    const [isOpen, setIsOpen] = useState(false);
+    const [isFontOpen, setIsFontOpen] = useState(false);
+    const [isVoiceOpen, setIsVoiceOpen] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const fontContainerRef = useRef<HTMLDivElement>(null);
+    const voiceContainerRef = useRef<HTMLDivElement>(null);
+    const { fontScale, setFontScale } = useFontScale();
 
     // Voice language state - read from localStorage
     const [voiceLanguage, setVoiceLanguage] = useState<string | null>(() => {
-        return localStorage.getItem('hapi-voice-lang')
-    })
+        return localStorage.getItem('hapi-voice-lang');
+    });
 
-    const fontScaleOptions = getFontScaleOptions()
-    const currentLocale = locales.find((loc) => loc.value === locale)
-    const currentFontScaleLabel = fontScaleOptions.find((opt) => opt.value === fontScale)?.label ?? '100%'
-    const currentVoiceLanguage = voiceLanguages.find((lang) => lang.code === voiceLanguage)
+    const fontScaleOptions = getFontScaleOptions();
+    const currentLocale = locales.find((loc) => loc.value === locale);
+    const currentFontScaleLabel = fontScaleOptions.find((opt) => opt.value === fontScale)?.label ?? '100%';
+    const currentVoiceLanguage = voiceLanguages.find((lang) => lang.code === voiceLanguage);
 
     const handleLocaleChange = (newLocale: Locale) => {
-        setLocale(newLocale)
-        setIsOpen(false)
-    }
+        setLocale(newLocale);
+        setIsOpen(false);
+    };
 
     const handleFontScaleChange = (newScale: FontScale) => {
-        setFontScale(newScale)
-        setIsFontOpen(false)
-    }
+        setFontScale(newScale);
+        setIsFontOpen(false);
+    };
 
     const handleVoiceLanguageChange = (language: Language) => {
-        setVoiceLanguage(language.code)
+        setVoiceLanguage(language.code);
         if (language.code === null) {
-            localStorage.removeItem('hapi-voice-lang')
+            localStorage.removeItem('hapi-voice-lang');
         } else {
-            localStorage.setItem('hapi-voice-lang', language.code)
+            localStorage.setItem('hapi-voice-lang', language.code);
         }
-        setIsVoiceOpen(false)
-    }
+        setIsVoiceOpen(false);
+    };
 
     // Close dropdown when clicking outside
     useEffect(() => {
-        if (!isOpen && !isFontOpen && !isVoiceOpen) return
+        if (!isOpen && !isFontOpen && !isVoiceOpen) return;
 
         const handleClickOutside = (event: MouseEvent) => {
             if (isOpen && containerRef.current && !containerRef.current.contains(event.target as Node)) {
-                setIsOpen(false)
+                setIsOpen(false);
             }
             if (isFontOpen && fontContainerRef.current && !fontContainerRef.current.contains(event.target as Node)) {
-                setIsFontOpen(false)
+                setIsFontOpen(false);
             }
             if (isVoiceOpen && voiceContainerRef.current && !voiceContainerRef.current.contains(event.target as Node)) {
-                setIsVoiceOpen(false)
+                setIsVoiceOpen(false);
             }
-        }
+        };
 
-        document.addEventListener('mousedown', handleClickOutside)
-        return () => document.removeEventListener('mousedown', handleClickOutside)
-    }, [isOpen, isFontOpen, isVoiceOpen])
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen, isFontOpen, isVoiceOpen]);
 
     // Close on escape key
     useEffect(() => {
-        if (!isOpen && !isFontOpen && !isVoiceOpen) return
+        if (!isOpen && !isFontOpen && !isVoiceOpen) return;
 
         const handleEscape = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
-                setIsOpen(false)
-                setIsFontOpen(false)
-                setIsVoiceOpen(false)
+                setIsOpen(false);
+                setIsFontOpen(false);
+                setIsVoiceOpen(false);
             }
-        }
+        };
 
-        document.addEventListener('keydown', handleEscape)
-        return () => document.removeEventListener('keydown', handleEscape)
-    }, [isOpen, isFontOpen, isVoiceOpen])
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [isOpen, isFontOpen, isVoiceOpen]);
 
     return (
         <div className="flex h-full flex-col">
@@ -190,7 +190,7 @@ export default function SettingsPage() {
                                     aria-label={t('settings.language.title')}
                                 >
                                     {locales.map((loc) => {
-                                        const isSelected = locale === loc.value
+                                        const isSelected = locale === loc.value;
                                         return (
                                             <button
                                                 key={loc.value}
@@ -211,7 +211,7 @@ export default function SettingsPage() {
                                                     </span>
                                                 )}
                                             </button>
-                                        )
+                                        );
                                     })}
                                 </div>
                             )}
@@ -247,7 +247,7 @@ export default function SettingsPage() {
                                     aria-label={t('settings.display.fontSize')}
                                 >
                                     {fontScaleOptions.map((opt) => {
-                                        const isSelected = fontScale === opt.value
+                                        const isSelected = fontScale === opt.value;
                                         return (
                                             <button
                                                 key={opt.value}
@@ -268,7 +268,7 @@ export default function SettingsPage() {
                                                     </span>
                                                 )}
                                             </button>
-                                        )
+                                        );
                                     })}
                                 </div>
                             )}
@@ -310,11 +310,11 @@ export default function SettingsPage() {
                                     aria-label={t('settings.voice.title')}
                                 >
                                     {voiceLanguages.map((lang) => {
-                                        const isSelected = voiceLanguage === lang.code
+                                        const isSelected = voiceLanguage === lang.code;
                                         const displayName =
                                             lang.code === null
                                                 ? t('settings.voice.autoDetect')
-                                                : getLanguageDisplayName(lang)
+                                                : getLanguageDisplayName(lang);
                                         return (
                                             <button
                                                 key={lang.code ?? 'auto'}
@@ -335,7 +335,7 @@ export default function SettingsPage() {
                                                     </span>
                                                 )}
                                             </button>
-                                        )
+                                        );
                                     })}
                                 </div>
                             )}
@@ -370,5 +370,5 @@ export default function SettingsPage() {
                 </div>
             </div>
         </div>
-    )
+    );
 }

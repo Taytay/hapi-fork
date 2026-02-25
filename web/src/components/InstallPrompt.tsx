@@ -1,17 +1,17 @@
-import { useState } from 'react'
-import { usePWAInstall } from '@/hooks/usePWAInstall'
-import { usePlatform } from '@/hooks/usePlatform'
-import { CloseIcon, ShareIcon, PlusCircleIcon } from '@/components/icons'
-import { useTranslation } from '@/lib/use-translation'
+import { useState } from 'react';
+import { CloseIcon, PlusCircleIcon, ShareIcon } from '@/components/icons';
+import { usePlatform } from '@/hooks/usePlatform';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { useTranslation } from '@/lib/use-translation';
 
 export function InstallPrompt() {
-    const { t } = useTranslation()
-    const { canInstall, canInstallIOS, promptInstall, dismissInstall, isStandalone } = usePWAInstall()
-    const { isTelegram, haptic } = usePlatform()
-    const [showIOSGuide, setShowIOSGuide] = useState(false)
+    const { t } = useTranslation();
+    const { canInstall, canInstallIOS, promptInstall, dismissInstall, isStandalone } = usePWAInstall();
+    const { isTelegram, haptic } = usePlatform();
+    const [showIOSGuide, setShowIOSGuide] = useState(false);
 
     if (isTelegram || isStandalone) {
-        return null
+        return null;
     }
 
     // iOS Safari install guide
@@ -71,8 +71,8 @@ export function InstallPrompt() {
 
                         <button
                             onClick={() => {
-                                setShowIOSGuide(false)
-                                dismissInstall()
+                                setShowIOSGuide(false);
+                                dismissInstall();
                             }}
                             className="w-full py-3 text-sm text-[var(--app-hint)] active:opacity-60"
                         >
@@ -80,7 +80,7 @@ export function InstallPrompt() {
                         </button>
                     </div>
                 </div>
-            )
+            );
         }
 
         return (
@@ -92,8 +92,8 @@ export function InstallPrompt() {
                     </div>
                     <button
                         onClick={() => {
-                            haptic.impact('light')
-                            setShowIOSGuide(true)
+                            haptic.impact('light');
+                            setShowIOSGuide(true);
                         }}
                         className="shrink-0 px-4 py-2 bg-[var(--app-fg)] text-[var(--app-bg)] rounded-lg text-sm font-medium active:opacity-80"
                     >
@@ -101,8 +101,8 @@ export function InstallPrompt() {
                     </button>
                     <button
                         onClick={() => {
-                            haptic.impact('light')
-                            dismissInstall()
+                            haptic.impact('light');
+                            dismissInstall();
                         }}
                         className="shrink-0 p-2 text-[var(--app-hint)] active:opacity-60"
                         aria-label="Dismiss"
@@ -111,21 +111,21 @@ export function InstallPrompt() {
                     </button>
                 </div>
             </div>
-        )
+        );
     }
 
     // Chrome/Edge install prompt
     if (!canInstall) {
-        return null
+        return null;
     }
 
     const handleInstall = async () => {
-        haptic.impact('light')
-        const success = await promptInstall()
+        haptic.impact('light');
+        const success = await promptInstall();
         if (success) {
-            haptic.notification('success')
+            haptic.notification('success');
         }
-    }
+    };
 
     return (
         <div className="fixed bottom-4 left-4 right-4 bg-[var(--app-secondary-bg)] border border-[var(--app-border)] rounded-lg p-4 shadow-lg z-50">
@@ -142,8 +142,8 @@ export function InstallPrompt() {
                 </button>
                 <button
                     onClick={() => {
-                        haptic.impact('light')
-                        dismissInstall()
+                        haptic.impact('light');
+                        dismissInstall();
                     }}
                     className="shrink-0 p-2 text-[var(--app-hint)] active:opacity-60"
                     aria-label="Dismiss"
@@ -152,5 +152,5 @@ export function InstallPrompt() {
                 </button>
             </div>
         </div>
-    )
+    );
 }

@@ -1,31 +1,32 @@
-import React, { useEffect, useState } from 'react'
-import { Box, Text, useStdout } from 'ink'
-import { MessageBuffer, type BufferedMessage } from './messageBuffer'
-import { useSwitchControls } from './useSwitchControls'
+import { Box, Text, useStdout } from 'ink';
+import type React from 'react';
+import { useEffect, useState } from 'react';
+import type { BufferedMessage, MessageBuffer } from './messageBuffer';
+import { useSwitchControls } from './useSwitchControls';
 
 interface OpencodeDisplayProps {
-    messageBuffer: MessageBuffer
-    logPath?: string
-    onExit?: () => void
-    onSwitchToLocal?: () => void
+    messageBuffer: MessageBuffer;
+    logPath?: string;
+    onExit?: () => void;
+    onSwitchToLocal?: () => void;
 }
 
 function extractTag(messages: BufferedMessage[], tag: 'MODEL' | 'MODE'): string | null {
-    const prefix = `[${tag}:`
+    const prefix = `[${tag}:`;
     for (let index = messages.length - 1; index >= 0; index -= 1) {
-        const message = messages[index]
+        const message = messages[index];
         if (message.type !== 'system') {
-            continue
+            continue;
         }
         if (!message.content.startsWith(prefix)) {
-            continue
+            continue;
         }
-        const match = message.content.match(/\[\w+:(.+?)\]/)
-        if (match && match[1]) {
-            return match[1]
+        const match = message.content.match(/\[\w+:(.+?)\]/);
+        if (match?.[1]) {
+            return match[1];
         }
     }
-    return null
+    return null;
 }
 
 export const OpencodeDisplay: React.FC<OpencodeDisplayProps> = ({
@@ -34,80 +35,80 @@ export const OpencodeDisplay: React.FC<OpencodeDisplayProps> = ({
     onExit,
     onSwitchToLocal,
 }) => {
-    const [messages, setMessages] = useState<BufferedMessage[]>([])
-    const [model, setModel] = useState<string | null>(null)
-    const [permissionMode, setPermissionMode] = useState<string | null>(null)
+    const [messages, setMessages] = useState<BufferedMessage[]>([]);
+    const [model, setModel] = useState<string | null>(null);
+    const [permissionMode, setPermissionMode] = useState<string | null>(null);
     const { confirmationMode, actionInProgress } = useSwitchControls({
         onExit,
         onSwitch: onSwitchToLocal,
-    })
-    const { stdout } = useStdout()
-    const terminalWidth = stdout.columns || 80
-    const terminalHeight = stdout.rows || 24
+    });
+    const { stdout } = useStdout();
+    const terminalWidth = stdout.columns || 80;
+    const terminalHeight = stdout.rows || 24;
 
     useEffect(() => {
-        setMessages(messageBuffer.getMessages())
+        setMessages(messageBuffer.getMessages());
 
         const unsubscribe = messageBuffer.onUpdate((newMessages) => {
-            setMessages(newMessages)
-            const nextModel = extractTag(newMessages, 'MODEL')
+            setMessages(newMessages);
+            const nextModel = extractTag(newMessages, 'MODEL');
             if (nextModel) {
-                setModel(nextModel)
+                setModel(nextModel);
             }
-            const nextMode = extractTag(newMessages, 'MODE')
+            const nextMode = extractTag(newMessages, 'MODE');
             if (nextMode) {
-                setPermissionMode(nextMode)
+                setPermissionMode(nextMode);
             }
-        })
+        });
 
         return () => {
-            unsubscribe()
-        }
-    }, [messageBuffer])
+            unsubscribe();
+        };
+    }, [messageBuffer]);
 
     const getMessageColor = (type: BufferedMessage['type']): string => {
         switch (type) {
             case 'user':
-                return 'magenta'
+                return 'magenta';
             case 'assistant':
-                return 'cyan'
+                return 'cyan';
             case 'system':
-                return 'blue'
+                return 'blue';
             case 'tool':
-                return 'yellow'
+                return 'yellow';
             case 'result':
-                return 'green'
+                return 'green';
             case 'status':
-                return 'gray'
+                return 'gray';
             default:
-                return 'white'
+                return 'white';
         }
-    }
+    };
 
     const formatMessage = (msg: BufferedMessage): string => {
-        const lines = msg.content.split('\n')
-        const maxLineLength = Math.max(1, terminalWidth - 10)
+        const lines = msg.content.split('\n');
+        const maxLineLength = Math.max(1, terminalWidth - 10);
         return lines
             .map((line) => {
-                if (line.length <= maxLineLength) return line
-                const chunks: string[] = []
+                if (line.length <= maxLineLength) return line;
+                const chunks: string[] = [];
                 for (let i = 0; i < line.length; i += maxLineLength) {
-                    chunks.push(line.slice(i, i + maxLineLength))
+                    chunks.push(line.slice(i, i + maxLineLength));
                 }
-                return chunks.join('\n')
+                return chunks.join('\n');
             })
-            .join('\n')
-    }
+            .join('\n');
+    };
 
     const visibleMessages = messages.filter((msg) => {
         if (msg.type === 'system' && msg.content.startsWith('[MODEL:')) {
-            return false
+            return false;
         }
         if (msg.type === 'system' && msg.content.startsWith('[MODE:')) {
-            return false
+            return false;
         }
-        return true
-    })
+        return true;
+    });
 
     return (
         <Box flexDirection="column" width={terminalWidth} height={terminalHeight}>
@@ -201,5 +202,5 @@ export const OpencodeDisplay: React.FC<OpencodeDisplayProps> = ({
                 </Box>
             </Box>
         </Box>
-    )
-}
+    );
+};

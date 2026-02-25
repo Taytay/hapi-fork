@@ -1,55 +1,55 @@
-import { useState, useEffect, useRef } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { useTranslation } from '@/lib/use-translation'
+import { useEffect, useRef, useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useTranslation } from '@/lib/use-translation';
 
 type RenameSessionDialogProps = {
-    isOpen: boolean
-    onClose: () => void
-    currentName: string
-    onRename: (newName: string) => Promise<void>
-    isPending: boolean
-}
+    isOpen: boolean;
+    onClose: () => void;
+    currentName: string;
+    onRename: (newName: string) => Promise<void>;
+    isPending: boolean;
+};
 
 export function RenameSessionDialog(props: RenameSessionDialogProps) {
-    const { t } = useTranslation()
-    const { isOpen, onClose, currentName, onRename, isPending } = props
-    const [name, setName] = useState(currentName)
-    const [error, setError] = useState<string | null>(null)
-    const inputRef = useRef<HTMLInputElement>(null)
+    const { t } = useTranslation();
+    const { isOpen, onClose, currentName, onRename, isPending } = props;
+    const [name, setName] = useState(currentName);
+    const [error, setError] = useState<string | null>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (isOpen) {
-            setName(currentName)
-            setError(null)
+            setName(currentName);
+            setError(null);
             setTimeout(() => {
-                inputRef.current?.focus()
-                inputRef.current?.select()
-            }, 100)
+                inputRef.current?.focus();
+                inputRef.current?.select();
+            }, 100);
         }
-    }, [isOpen, currentName])
+    }, [isOpen, currentName]);
 
     const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
-        const trimmed = name.trim()
+        e.preventDefault();
+        const trimmed = name.trim();
         if (!trimmed || trimmed === currentName) {
-            onClose()
-            return
+            onClose();
+            return;
         }
-        setError(null)
+        setError(null);
         try {
-            await onRename(trimmed)
-            onClose()
-        } catch (err) {
-            setError(t('dialog.rename.error'))
+            await onRename(trimmed);
+            onClose();
+        } catch (_err) {
+            setError(t('dialog.rename.error'));
         }
-    }
+    };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Escape') {
-            onClose()
+            onClose();
         }
-    }
+    };
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -87,5 +87,5 @@ export function RenameSessionDialog(props: RenameSessionDialogProps) {
                 </form>
             </DialogContent>
         </Dialog>
-    )
+    );
 }

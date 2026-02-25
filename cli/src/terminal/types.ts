@@ -1,5 +1,5 @@
 export type TerminalSession = {
-    terminalId: string
-    cols: number
-    rows: number
-}
+    terminalId: string;
+    cols: number;
+    rows: number;
+};

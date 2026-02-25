@@ -11,4 +11,4 @@ export const queryKeys = {
         ['git-file-diff', sessionId, path, staged ? 'staged' : 'unstaged'] as const,
     slashCommands: (sessionId: string) => ['slash-commands', sessionId] as const,
     skills: (sessionId: string) => ['skills', sessionId] as const,
-}
+};

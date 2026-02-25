@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react'
-import { Box, Text, useStdout } from 'ink'
-import { MessageBuffer, type BufferedMessage } from './messageBuffer'
-import { useSwitchControls } from './useSwitchControls'
+import { Box, Text, useStdout } from 'ink';
+import type React from 'react';
+import { useEffect, useState } from 'react';
+import type { BufferedMessage, MessageBuffer } from './messageBuffer';
+import { useSwitchControls } from './useSwitchControls';
 
 interface RemoteModeDisplayProps {
-    messageBuffer: MessageBuffer
-    logPath?: string
-    onExit?: () => void
-    onSwitchToLocal?: () => void
+    messageBuffer: MessageBuffer;
+    logPath?: string;
+    onExit?: () => void;
+    onSwitchToLocal?: () => void;
 }
 
 export const RemoteModeDisplay: React.FC<RemoteModeDisplayProps> = ({
@@ -16,60 +17,60 @@ export const RemoteModeDisplay: React.FC<RemoteModeDisplayProps> = ({
     onExit,
     onSwitchToLocal,
 }) => {
-    const [messages, setMessages] = useState<BufferedMessage[]>([])
+    const [messages, setMessages] = useState<BufferedMessage[]>([]);
     const { confirmationMode, actionInProgress } = useSwitchControls({
         onExit,
         onSwitch: onSwitchToLocal,
-    })
-    const { stdout } = useStdout()
-    const terminalWidth = stdout.columns || 80
-    const terminalHeight = stdout.rows || 24
+    });
+    const { stdout } = useStdout();
+    const terminalWidth = stdout.columns || 80;
+    const terminalHeight = stdout.rows || 24;
 
     useEffect(() => {
-        setMessages(messageBuffer.getMessages())
+        setMessages(messageBuffer.getMessages());
 
         const unsubscribe = messageBuffer.onUpdate((newMessages) => {
-            setMessages(newMessages)
-        })
+            setMessages(newMessages);
+        });
 
         return () => {
-            unsubscribe()
-        }
-    }, [messageBuffer])
+            unsubscribe();
+        };
+    }, [messageBuffer]);
 
     const getMessageColor = (type: BufferedMessage['type']): string => {
         switch (type) {
             case 'user':
-                return 'magenta'
+                return 'magenta';
             case 'assistant':
-                return 'cyan'
+                return 'cyan';
             case 'system':
-                return 'blue'
+                return 'blue';
             case 'tool':
-                return 'yellow'
+                return 'yellow';
             case 'result':
-                return 'green'
+                return 'green';
             case 'status':
-                return 'gray'
+                return 'gray';
             default:
-                return 'white'
+                return 'white';
         }
-    }
+    };
 
     const formatMessage = (msg: BufferedMessage): string => {
-        const lines = msg.content.split('\n')
-        const maxLineLength = terminalWidth - 10 // Account for borders and padding
+        const lines = msg.content.split('\n');
+        const maxLineLength = terminalWidth - 10; // Account for borders and padding
         return lines
             .map((line) => {
-                if (line.length <= maxLineLength) return line
-                const chunks: string[] = []
+                if (line.length <= maxLineLength) return line;
+                const chunks: string[] = [];
                 for (let i = 0; i < line.length; i += maxLineLength) {
-                    chunks.push(line.slice(i, i + maxLineLength))
+                    chunks.push(line.slice(i, i + maxLineLength));
                 }
-                return chunks.join('\n')
+                return chunks.join('\n');
             })
-            .join('\n')
-    }
+            .join('\n');
+    };
 
     return (
         <Box flexDirection="column" width={terminalWidth} height={terminalHeight}>
@@ -146,11 +147,9 @@ export const RemoteModeDisplay: React.FC<RemoteModeDisplayProps> = ({
                             ⏸️ Press space again to switch to local mode
                         </Text>
                     ) : (
-                        <>
-                            <Text color="green" bold>
-                                📱 Press space to switch to local mode • Ctrl-C to exit
-                            </Text>
-                        </>
+                        <Text color="green" bold>
+                            📱 Press space to switch to local mode • Ctrl-C to exit
+                        </Text>
                     )}
                     {process.env.DEBUG && logPath && (
                         <Text color="gray" dimColor>
@@ -160,5 +159,5 @@ export const RemoteModeDisplay: React.FC<RemoteModeDisplayProps> = ({
                 </Box>
             </Box>
         </Box>
-    )
-}
+    );
+};

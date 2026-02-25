@@ -1,16 +1,16 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
-import { useTranslation } from '@/lib/use-translation'
+import { type CSSProperties, useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { useTranslation } from '@/lib/use-translation';
 
 type SessionActionMenuProps = {
-    isOpen: boolean
-    onClose: () => void
-    sessionActive: boolean
-    onRename: () => void
-    onArchive: () => void
-    onDelete: () => void
-    anchorPoint: { x: number; y: number }
-    menuId?: string
-}
+    isOpen: boolean;
+    onClose: () => void;
+    sessionActive: boolean;
+    onRename: () => void;
+    onArchive: () => void;
+    onDelete: () => void;
+    anchorPoint: { x: number; y: number };
+    menuId?: string;
+};
 
 function EditIcon(props: { className?: string }) {
     return (
@@ -29,7 +29,7 @@ function EditIcon(props: { className?: string }) {
             <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
             <path d="m15 5 4 4" />
         </svg>
-    )
+    );
 }
 
 function ArchiveIcon(props: { className?: string }) {
@@ -50,7 +50,7 @@ function ArchiveIcon(props: { className?: string }) {
             <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
             <path d="M10 12h4" />
         </svg>
-    )
+    );
 }
 
 function TrashIcon(props: { className?: string }) {
@@ -73,115 +73,115 @@ function TrashIcon(props: { className?: string }) {
             <line x1="10" x2="10" y1="11" y2="17" />
             <line x1="14" x2="14" y1="11" y2="17" />
         </svg>
-    )
+    );
 }
 
 type MenuPosition = {
-    top: number
-    left: number
-    transformOrigin: string
-}
+    top: number;
+    left: number;
+    transformOrigin: string;
+};
 
 export function SessionActionMenu(props: SessionActionMenuProps) {
-    const { t } = useTranslation()
-    const { isOpen, onClose, sessionActive, onRename, onArchive, onDelete, anchorPoint, menuId } = props
-    const menuRef = useRef<HTMLDivElement | null>(null)
-    const [menuPosition, setMenuPosition] = useState<MenuPosition | null>(null)
-    const internalId = useId()
-    const resolvedMenuId = menuId ?? `session-action-menu-${internalId}`
-    const headingId = `${resolvedMenuId}-heading`
+    const { t } = useTranslation();
+    const { isOpen, onClose, sessionActive, onRename, onArchive, onDelete, anchorPoint, menuId } = props;
+    const menuRef = useRef<HTMLDivElement | null>(null);
+    const [menuPosition, setMenuPosition] = useState<MenuPosition | null>(null);
+    const internalId = useId();
+    const resolvedMenuId = menuId ?? `session-action-menu-${internalId}`;
+    const headingId = `${resolvedMenuId}-heading`;
 
     const handleRename = () => {
-        onClose()
-        onRename()
-    }
+        onClose();
+        onRename();
+    };
 
     const handleArchive = () => {
-        onClose()
-        onArchive()
-    }
+        onClose();
+        onArchive();
+    };
 
     const handleDelete = () => {
-        onClose()
-        onDelete()
-    }
+        onClose();
+        onDelete();
+    };
 
     const updatePosition = useCallback(() => {
-        const menuEl = menuRef.current
-        if (!menuEl) return
+        const menuEl = menuRef.current;
+        if (!menuEl) return;
 
-        const menuRect = menuEl.getBoundingClientRect()
-        const viewportWidth = window.innerWidth
-        const viewportHeight = window.innerHeight
-        const padding = 8
-        const gap = 8
+        const menuRect = menuEl.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        const padding = 8;
+        const gap = 8;
 
-        const spaceBelow = viewportHeight - anchorPoint.y
-        const spaceAbove = anchorPoint.y
-        const openAbove = spaceBelow < menuRect.height + gap && spaceAbove > spaceBelow
+        const spaceBelow = viewportHeight - anchorPoint.y;
+        const spaceAbove = anchorPoint.y;
+        const openAbove = spaceBelow < menuRect.height + gap && spaceAbove > spaceBelow;
 
-        let top = openAbove ? anchorPoint.y - menuRect.height - gap : anchorPoint.y + gap
-        let left = anchorPoint.x - menuRect.width / 2
-        const transformOrigin = openAbove ? 'bottom center' : 'top center'
+        let top = openAbove ? anchorPoint.y - menuRect.height - gap : anchorPoint.y + gap;
+        let left = anchorPoint.x - menuRect.width / 2;
+        const transformOrigin = openAbove ? 'bottom center' : 'top center';
 
-        top = Math.min(Math.max(top, padding), viewportHeight - menuRect.height - padding)
-        left = Math.min(Math.max(left, padding), viewportWidth - menuRect.width - padding)
+        top = Math.min(Math.max(top, padding), viewportHeight - menuRect.height - padding);
+        left = Math.min(Math.max(left, padding), viewportWidth - menuRect.width - padding);
 
-        setMenuPosition({ top, left, transformOrigin })
-    }, [anchorPoint])
+        setMenuPosition({ top, left, transformOrigin });
+    }, [anchorPoint]);
 
     useLayoutEffect(() => {
-        if (!isOpen) return
-        updatePosition()
-    }, [isOpen, updatePosition])
+        if (!isOpen) return;
+        updatePosition();
+    }, [isOpen, updatePosition]);
 
     useEffect(() => {
         if (!isOpen) {
-            setMenuPosition(null)
-            return
+            setMenuPosition(null);
+            return;
         }
 
         const handlePointerDown = (event: PointerEvent) => {
-            const target = event.target as Node
-            if (menuRef.current?.contains(target)) return
-            onClose()
-        }
+            const target = event.target as Node;
+            if (menuRef.current?.contains(target)) return;
+            onClose();
+        };
 
         const handleKeyDown = (event: KeyboardEvent) => {
             if (event.key === 'Escape') {
-                onClose()
+                onClose();
             }
-        }
+        };
 
         const handleReflow = () => {
-            updatePosition()
-        }
+            updatePosition();
+        };
 
-        document.addEventListener('pointerdown', handlePointerDown)
-        document.addEventListener('keydown', handleKeyDown)
-        window.addEventListener('resize', handleReflow)
-        window.addEventListener('scroll', handleReflow, true)
+        document.addEventListener('pointerdown', handlePointerDown);
+        document.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('resize', handleReflow);
+        window.addEventListener('scroll', handleReflow, true);
 
         return () => {
-            document.removeEventListener('pointerdown', handlePointerDown)
-            document.removeEventListener('keydown', handleKeyDown)
-            window.removeEventListener('resize', handleReflow)
-            window.removeEventListener('scroll', handleReflow, true)
-        }
-    }, [isOpen, onClose, updatePosition])
+            document.removeEventListener('pointerdown', handlePointerDown);
+            document.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('resize', handleReflow);
+            window.removeEventListener('scroll', handleReflow, true);
+        };
+    }, [isOpen, onClose, updatePosition]);
 
     useEffect(() => {
-        if (!isOpen) return
+        if (!isOpen) return;
 
         const frame = window.requestAnimationFrame(() => {
-            const firstItem = menuRef.current?.querySelector<HTMLElement>('[role="menuitem"]')
-            firstItem?.focus()
-        })
+            const firstItem = menuRef.current?.querySelector<HTMLElement>('[role="menuitem"]');
+            firstItem?.focus();
+        });
 
-        return () => window.cancelAnimationFrame(frame)
-    }, [isOpen])
+        return () => window.cancelAnimationFrame(frame);
+    }, [isOpen]);
 
-    if (!isOpen) return null
+    if (!isOpen) return null;
 
     const menuStyle: CSSProperties | undefined = menuPosition
         ? {
@@ -189,10 +189,10 @@ export function SessionActionMenu(props: SessionActionMenuProps) {
               left: menuPosition.left,
               transformOrigin: menuPosition.transformOrigin,
           }
-        : undefined
+        : undefined;
 
     const baseItemClassName =
-        'flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-link)]'
+        'flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-base transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--app-link)]';
 
     return (
         <div
@@ -240,5 +240,5 @@ export function SessionActionMenu(props: SessionActionMenuProps) {
                 )}
             </div>
         </div>
-    )
+    );
 }

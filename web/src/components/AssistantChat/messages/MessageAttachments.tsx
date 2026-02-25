@@ -1,15 +1,15 @@
-import type { AttachmentMetadata } from '@/types/api'
-import { FileIcon } from '@/components/FileIcon'
-import { isImageMimeType } from '@/lib/fileAttachments'
+import { FileIcon } from '@/components/FileIcon';
+import { isImageMimeType } from '@/lib/fileAttachments';
+import type { AttachmentMetadata } from '@/types/api';
 
 function formatFileSize(bytes: number): string {
-    if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function ImageAttachment(props: { attachment: AttachmentMetadata }) {
-    const { attachment } = props
+    const { attachment } = props;
     return (
         <div className="relative overflow-hidden rounded-lg">
             <img src={attachment.previewUrl} alt={attachment.filename} className="max-h-48 max-w-full object-contain" />
@@ -17,11 +17,11 @@ function ImageAttachment(props: { attachment: AttachmentMetadata }) {
                 <span className="text-xs text-white/90 line-clamp-1">{attachment.filename}</span>
             </div>
         </div>
-    )
+    );
 }
 
 function FileAttachment(props: { attachment: AttachmentMetadata }) {
-    const { attachment } = props
+    const { attachment } = props;
     return (
         <div className="flex items-center gap-2 rounded-lg bg-[var(--app-bg)] px-3 py-2">
             <FileIcon fileName={attachment.filename} size={24} />
@@ -30,15 +30,15 @@ function FileAttachment(props: { attachment: AttachmentMetadata }) {
                 <div className="text-xs text-[var(--app-hint)]">{formatFileSize(attachment.size)}</div>
             </div>
         </div>
-    )
+    );
 }
 
 export function MessageAttachments(props: { attachments: AttachmentMetadata[] }) {
-    const { attachments } = props
-    if (!attachments || attachments.length === 0) return null
+    const { attachments } = props;
+    if (!attachments || attachments.length === 0) return null;
 
-    const images = attachments.filter((a) => isImageMimeType(a.mimeType) && a.previewUrl)
-    const files = attachments.filter((a) => !isImageMimeType(a.mimeType) || !a.previewUrl)
+    const images = attachments.filter((a) => isImageMimeType(a.mimeType) && a.previewUrl);
+    const files = attachments.filter((a) => !isImageMimeType(a.mimeType) || !a.previewUrl);
 
     return (
         <div className="mt-2 flex flex-col gap-2">
@@ -57,5 +57,5 @@ export function MessageAttachments(props: { attachments: AttachmentMetadata[] })
                 </div>
             )}
         </div>
-    )
+    );
 }

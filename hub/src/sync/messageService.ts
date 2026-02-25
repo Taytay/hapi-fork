@@ -1,47 +1,47 @@
-import type { AttachmentMetadata, DecryptedMessage } from '@hapi/protocol/types'
-import type { Server } from 'socket.io'
-import type { Store } from '../store'
-import { EventPublisher } from './eventPublisher'
+import type { AttachmentMetadata, DecryptedMessage } from '@hapi/protocol/types';
+import type { Server } from 'socket.io';
+import type { Store } from '../store';
+import type { EventPublisher } from './eventPublisher';
 
 export class MessageService {
     constructor(
         private readonly store: Store,
         private readonly io: Server,
-        private readonly publisher: EventPublisher
+        private readonly publisher: EventPublisher,
     ) {}
 
     getMessagesPage(
         sessionId: string,
-        options: { limit: number; beforeSeq: number | null }
+        options: { limit: number; beforeSeq: number | null },
     ): {
-        messages: DecryptedMessage[]
+        messages: DecryptedMessage[];
         page: {
-            limit: number
-            beforeSeq: number | null
-            nextBeforeSeq: number | null
-            hasMore: boolean
-        }
+            limit: number;
+            beforeSeq: number | null;
+            nextBeforeSeq: number | null;
+            hasMore: boolean;
+        };
     } {
-        const stored = this.store.messages.getMessages(sessionId, options.limit, options.beforeSeq ?? undefined)
+        const stored = this.store.messages.getMessages(sessionId, options.limit, options.beforeSeq ?? undefined);
         const messages: DecryptedMessage[] = stored.map((message) => ({
             id: message.id,
             seq: message.seq,
             localId: message.localId,
             content: message.content,
             createdAt: message.createdAt,
-        }))
+        }));
 
-        let oldestSeq: number | null = null
+        let oldestSeq: number | null = null;
         for (const message of messages) {
-            if (typeof message.seq !== 'number') continue
+            if (typeof message.seq !== 'number') continue;
             if (oldestSeq === null || message.seq < oldestSeq) {
-                oldestSeq = message.seq
+                oldestSeq = message.seq;
             }
         }
 
-        const nextBeforeSeq = oldestSeq
+        const nextBeforeSeq = oldestSeq;
         const hasMore =
-            nextBeforeSeq !== null && this.store.messages.getMessages(sessionId, 1, nextBeforeSeq).length > 0
+            nextBeforeSeq !== null && this.store.messages.getMessages(sessionId, 1, nextBeforeSeq).length > 0;
 
         return {
             messages,
@@ -51,30 +51,30 @@ export class MessageService {
                 nextBeforeSeq,
                 hasMore,
             },
-        }
+        };
     }
 
     getMessagesAfter(sessionId: string, options: { afterSeq: number; limit: number }): DecryptedMessage[] {
-        const stored = this.store.messages.getMessagesAfter(sessionId, options.afterSeq, options.limit)
+        const stored = this.store.messages.getMessagesAfter(sessionId, options.afterSeq, options.limit);
         return stored.map((message) => ({
             id: message.id,
             seq: message.seq,
             localId: message.localId,
             content: message.content,
             createdAt: message.createdAt,
-        }))
+        }));
     }
 
     async sendMessage(
         sessionId: string,
         payload: {
-            text: string
-            localId?: string | null
-            attachments?: AttachmentMetadata[]
-            sentFrom?: 'telegram-bot' | 'webapp'
-        }
+            text: string;
+            localId?: string | null;
+            attachments?: AttachmentMetadata[];
+            sentFrom?: 'telegram-bot' | 'webapp';
+        },
     ): Promise<void> {
-        const sentFrom = payload.sentFrom ?? 'webapp'
+        const sentFrom = payload.sentFrom ?? 'webapp';
 
         const content = {
             role: 'user',
@@ -86,9 +86,9 @@ export class MessageService {
             meta: {
                 sentFrom,
             },
-        }
+        };
 
-        const msg = this.store.messages.addMessage(sessionId, content, payload.localId ?? undefined)
+        const msg = this.store.messages.addMessage(sessionId, content, payload.localId ?? undefined);
 
         const update = {
             id: msg.id,
@@ -105,8 +105,8 @@ export class MessageService {
                     content: msg.content,
                 },
             },
-        }
-        this.io.of('/cli').to(`session:${sessionId}`).emit('update', update)
+        };
+        this.io.of('/cli').to(`session:${sessionId}`).emit('update', update);
 
         this.publisher.emit({
             type: 'message-received',
@@ -118,6 +118,6 @@ export class MessageService {
                 content: msg.content,
                 createdAt: msg.createdAt,
             },
-        })
+        });
     }
 }

@@ -1,4 +1,11 @@
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  ArrowLeftRight,
+  Laptop,
+  RefreshCw,
+  Smartphone,
+  Wifi,
+} from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   Carousel,
   CarouselContent,
@@ -6,14 +13,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import {
-  Laptop,
-  Smartphone,
-  RefreshCw,
-  Wifi,
-  ArrowLeftRight,
-} from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 export default function AppShowcase() {
   const { t } = useTranslation();

@@ -5,8 +5,8 @@
  * ensuring consistency between server-side auto-creation and client-side usage.
  */
 
-export const ELEVENLABS_API_BASE = 'https://api.elevenlabs.io/v1'
-export const VOICE_AGENT_NAME = 'Hapi Voice Assistant'
+export const ELEVENLABS_API_BASE = 'https://api.elevenlabs.io/v1';
+export const VOICE_AGENT_NAME = 'Hapi Voice Assistant';
 
 export const VOICE_SYSTEM_PROMPT = `# Identity
 
@@ -136,9 +136,9 @@ For builds, tests, or large file operations:
 - Treat garbled input as phonetic hints and ask for clarification
 - Correct yourself immediately if you realize you made an error
 - Keep conversations forward-moving with fresh insights
-- Assume a technical software developer audience`
+- Assume a technical software developer audience`;
 
-export const VOICE_FIRST_MESSAGE = 'Hey! Hapi here.'
+export const VOICE_FIRST_MESSAGE = 'Hey! Hapi here.';
 
 export const VOICE_TOOLS = [
     {
@@ -178,42 +178,42 @@ export const VOICE_TOOLS = [
             },
         },
     },
-]
+];
 
 export interface VoiceAgentConfig {
-    name: string
+    name: string;
     conversation_config: {
         agent: {
-            first_message: string
-            language: string
+            first_message: string;
+            language: string;
             prompt: {
-                prompt: string
-                llm: string
-                temperature: number
-                max_tokens: number
-                tools: typeof VOICE_TOOLS
-            }
-        }
+                prompt: string;
+                llm: string;
+                temperature: number;
+                max_tokens: number;
+                tools: typeof VOICE_TOOLS;
+            };
+        };
         turn: {
-            turn_timeout: number
-            silence_end_call_timeout: number
-        }
+            turn_timeout: number;
+            silence_end_call_timeout: number;
+        };
         tts: {
-            voice_id: string
-            model_id: string
-            speed: number
-        }
-    }
+            voice_id: string;
+            model_id: string;
+            speed: number;
+        };
+    };
     platform_settings?: {
         overrides?: {
             conversation_config_override?: {
                 agent?: {
-                    language?: boolean
-                    first_message?: boolean
-                }
-            }
-        }
-    }
+                    language?: boolean;
+                    first_message?: boolean;
+                };
+            };
+        };
+    };
 }
 
 /**
@@ -256,5 +256,5 @@ export function buildVoiceAgentConfig(): VoiceAgentConfig {
                 },
             },
         },
-    }
+    };
 }

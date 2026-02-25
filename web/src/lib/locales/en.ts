@@ -269,4 +269,4 @@ export default {
     'misc.permissionRequired': 'permission required',
     'misc.percentLeft': '{percent}% left',
     'misc.online': 'online',
-} as const
+} as const;

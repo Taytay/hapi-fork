@@ -5,24 +5,24 @@
  * while allowing delayed messages to be released early when needed.
  */
 
-import { AsyncLock } from '@/utils/lock'
+import { AsyncLock } from '@/utils/lock';
 
 interface QueueItem {
-    id: number // Incremental ID for ordering
-    logMessage: any
-    delayed: boolean // Whether this message should be delayed
-    delayMs: number // Delay duration (e.g., 250ms)
-    toolCallIds?: string[] // Tool calls to track for early release
-    released: boolean // Whether delay has been released
-    sent: boolean // Whether message has been sent
+    id: number; // Incremental ID for ordering
+    logMessage: any;
+    delayed: boolean; // Whether this message should be delayed
+    delayMs: number; // Delay duration (e.g., 250ms)
+    toolCallIds?: string[]; // Tool calls to track for early release
+    released: boolean; // Whether delay has been released
+    sent: boolean; // Whether message has been sent
 }
 
 export class OutgoingMessageQueue {
-    private queue: QueueItem[] = []
-    private nextId = 1
-    private lock = new AsyncLock()
-    private processTimer?: NodeJS.Timeout
-    private delayTimers = new Map<number, NodeJS.Timeout>()
+    private queue: QueueItem[] = [];
+    private nextId = 1;
+    private lock = new AsyncLock();
+    private processTimer?: NodeJS.Timeout;
+    private delayTimers = new Map<number, NodeJS.Timeout>();
 
     constructor(private sendFunction: (message: any) => void) {}
 
@@ -32,9 +32,9 @@ export class OutgoingMessageQueue {
     enqueue(
         logMessage: any,
         options?: {
-            delay?: number
-            toolCallIds?: string[]
-        }
+            delay?: number;
+            toolCallIds?: string[];
+        },
     ) {
         this.lock.inLock(async () => {
             const item: QueueItem = {
@@ -45,21 +45,21 @@ export class OutgoingMessageQueue {
                 toolCallIds: options?.toolCallIds,
                 released: !options?.delay, // Not delayed = already released
                 sent: false,
-            }
+            };
 
-            this.queue.push(item)
+            this.queue.push(item);
 
             // If delayed, set timer to release it
             if (item.delayed) {
                 const timer = setTimeout(() => {
-                    this.releaseItem(item.id)
-                }, item.delayMs)
-                this.delayTimers.set(item.id, timer)
+                    this.releaseItem(item.id);
+                }, item.delayMs);
+                this.delayTimers.set(item.id, timer);
             }
-        })
+        });
 
         // Try to process queue
-        this.scheduleProcessing()
+        this.scheduleProcessing();
     }
 
     /**
@@ -67,20 +67,20 @@ export class OutgoingMessageQueue {
      */
     private async releaseItem(itemId: number): Promise<void> {
         await this.lock.inLock(async () => {
-            const item = this.queue.find((i) => i.id === itemId)
+            const item = this.queue.find((i) => i.id === itemId);
             if (item && !item.released) {
-                item.released = true
+                item.released = true;
 
                 // Clear timer if exists
-                const timer = this.delayTimers.get(itemId)
+                const timer = this.delayTimers.get(itemId);
                 if (timer) {
-                    clearTimeout(timer)
-                    this.delayTimers.delete(itemId)
+                    clearTimeout(timer);
+                    this.delayTimers.delete(itemId);
                 }
             }
-        })
+        });
 
-        this.scheduleProcessing()
+        this.scheduleProcessing();
     }
 
     /**
@@ -90,19 +90,19 @@ export class OutgoingMessageQueue {
         await this.lock.inLock(async () => {
             for (const item of this.queue) {
                 if (item.toolCallIds?.includes(toolCallId) && !item.released) {
-                    item.released = true
+                    item.released = true;
 
                     // Clear timer if exists
-                    const timer = this.delayTimers.get(item.id)
+                    const timer = this.delayTimers.get(item.id);
                     if (timer) {
-                        clearTimeout(timer)
-                        this.delayTimers.delete(item.id)
+                        clearTimeout(timer);
+                        this.delayTimers.delete(item.id);
                     }
                 }
             }
-        })
+        });
 
-        this.scheduleProcessing()
+        this.scheduleProcessing();
     }
 
     /**
@@ -111,27 +111,27 @@ export class OutgoingMessageQueue {
      */
     private processQueueInternal(): void {
         // Sort by ID to ensure order
-        this.queue.sort((a, b) => a.id - b.id)
+        this.queue.sort((a, b) => a.id - b.id);
 
         // Process from front of queue
         while (this.queue.length > 0) {
-            const item = this.queue[0]
+            const item = this.queue[0];
 
             // If not released yet, stop processing (maintain order)
             if (!item.released) {
-                break
+                break;
             }
 
             // Send if not already sent
             if (!item.sent) {
                 if (item.logMessage.type !== 'system') {
-                    this.sendFunction(item.logMessage)
+                    this.sendFunction(item.logMessage);
                 }
-                item.sent = true
+                item.sent = true;
             }
 
             // Remove from queue
-            this.queue.shift()
+            this.queue.shift();
         }
     }
 
@@ -140,8 +140,8 @@ export class OutgoingMessageQueue {
      */
     private async processQueue(): Promise<void> {
         await this.lock.inLock(async () => {
-            this.processQueueInternal()
-        })
+            this.processQueueInternal();
+        });
     }
 
     /**
@@ -151,18 +151,18 @@ export class OutgoingMessageQueue {
         await this.lock.inLock(async () => {
             // Clear all delay timers
             for (const timer of this.delayTimers.values()) {
-                clearTimeout(timer)
+                clearTimeout(timer);
             }
-            this.delayTimers.clear()
+            this.delayTimers.clear();
 
             // Mark all as released
             for (const item of this.queue) {
-                item.released = true
+                item.released = true;
             }
 
             // Process everything - use internal method since we already have the lock
-            this.processQueueInternal()
-        })
+            this.processQueueInternal();
+        });
     }
 
     /**
@@ -170,12 +170,12 @@ export class OutgoingMessageQueue {
      */
     private scheduleProcessing(): void {
         if (this.processTimer) {
-            clearTimeout(this.processTimer)
+            clearTimeout(this.processTimer);
         }
 
         this.processTimer = setTimeout(() => {
-            this.processQueue()
-        }, 0)
+            this.processQueue();
+        }, 0);
     }
 
     /**
@@ -183,12 +183,12 @@ export class OutgoingMessageQueue {
      */
     destroy(): void {
         if (this.processTimer) {
-            clearTimeout(this.processTimer)
+            clearTimeout(this.processTimer);
         }
 
         for (const timer of this.delayTimers.values()) {
-            clearTimeout(timer)
+            clearTimeout(timer);
         }
-        this.delayTimers.clear()
+        this.delayTimers.clear();
     }
 }

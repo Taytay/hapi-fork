@@ -1,12 +1,12 @@
-import type { AttachmentMetadata, MessageStatus } from '@/types/api'
+import type { AttachmentMetadata, MessageStatus } from '@/types/api';
 
 export type UsageData = {
-    input_tokens: number
-    output_tokens: number
-    cache_creation_input_tokens?: number
-    cache_read_input_tokens?: number
-    service_tier?: string
-}
+    input_tokens: number;
+    output_tokens: number;
+    cache_creation_input_tokens?: number;
+    cache_read_input_tokens?: number;
+    service_tier?: string;
+};
 
 export type AgentEvent =
     | { type: 'switch'; mode: 'local' | 'remote' }
@@ -18,169 +18,161 @@ export type AgentEvent =
     | { type: 'turn-duration'; durationMs: number }
     | { type: 'microcompact'; trigger: string; preTokens: number; tokensSaved: number }
     | { type: 'compact'; trigger: string; preTokens: number }
-    | ({ type: string } & Record<string, unknown>)
+    | ({ type: string } & Record<string, unknown>);
 
 export type ToolResultPermission = {
-    date: number
-    result: 'approved' | 'denied'
-    mode?: string
-    allowedTools?: string[]
-    decision?: 'approved' | 'approved_for_session' | 'denied' | 'abort'
-}
+    date: number;
+    result: 'approved' | 'denied';
+    mode?: string;
+    allowedTools?: string[];
+    decision?: 'approved' | 'approved_for_session' | 'denied' | 'abort';
+};
 
 export type ToolUse = {
-    type: 'tool-call'
-    id: string
-    name: string
-    input: unknown
-    description: string | null
-    uuid: string
-    parentUUID: string | null
-}
+    type: 'tool-call';
+    id: string;
+    name: string;
+    input: unknown;
+    description: string | null;
+    uuid: string;
+    parentUUID: string | null;
+};
 
 export type ToolResult = {
-    type: 'tool-result'
-    tool_use_id: string
-    content: unknown
-    is_error: boolean
-    uuid: string
-    parentUUID: string | null
-    permissions?: ToolResultPermission
-}
+    type: 'tool-result';
+    tool_use_id: string;
+    content: unknown;
+    is_error: boolean;
+    uuid: string;
+    parentUUID: string | null;
+    permissions?: ToolResultPermission;
+};
 
 export type NormalizedAgentContent =
     | {
-          type: 'text'
-          text: string
-          uuid: string
-          parentUUID: string | null
+          type: 'text';
+          text: string;
+          uuid: string;
+          parentUUID: string | null;
       }
     | {
-          type: 'reasoning'
-          text: string
-          uuid: string
-          parentUUID: string | null
+          type: 'reasoning';
+          text: string;
+          uuid: string;
+          parentUUID: string | null;
       }
     | ToolUse
     | ToolResult
     | { type: 'summary'; summary: string }
-    | { type: 'sidechain'; uuid: string; prompt: string }
+    | { type: 'sidechain'; uuid: string; prompt: string };
 
 export type NormalizedMessage = (
     | {
-          role: 'user'
-          content: { type: 'text'; text: string; attachments?: AttachmentMetadata[] }
+          role: 'user';
+          content: { type: 'text'; text: string; attachments?: AttachmentMetadata[] };
       }
     | {
-          role: 'agent'
-          content: NormalizedAgentContent[]
+          role: 'agent';
+          content: NormalizedAgentContent[];
       }
     | {
-          role: 'event'
-          content: AgentEvent
+          role: 'event';
+          content: AgentEvent;
       }
 ) & {
-    id: string
-    localId: string | null
-    createdAt: number
-    isSidechain: boolean
-    meta?: unknown
-    usage?: UsageData
-    status?: MessageStatus
-    originalText?: string
-    turnId?: string | null
-}
+    id: string;
+    localId: string | null;
+    createdAt: number;
+    isSidechain: boolean;
+    meta?: unknown;
+    usage?: UsageData;
+    status?: MessageStatus;
+    originalText?: string;
+};
 
 export type ToolPermission = {
-    id: string
-    status: 'pending' | 'approved' | 'denied' | 'canceled'
-    reason?: string
-    mode?: string
-    allowedTools?: string[]
-    decision?: 'approved' | 'approved_for_session' | 'denied' | 'abort'
-    answers?: Record<string, string[]> | Record<string, { answers: string[] }>
-    date?: number
-    createdAt?: number | null
-    completedAt?: number | null
-}
+    id: string;
+    status: 'pending' | 'approved' | 'denied' | 'canceled';
+    reason?: string;
+    mode?: string;
+    allowedTools?: string[];
+    decision?: 'approved' | 'approved_for_session' | 'denied' | 'abort';
+    answers?: Record<string, string[]> | Record<string, { answers: string[] }>;
+    date?: number;
+    createdAt?: number | null;
+    completedAt?: number | null;
+};
 
 export type ChatToolCall = {
-    id: string
-    name: string
-    state: 'pending' | 'running' | 'completed' | 'error'
-    input: unknown
-    createdAt: number
-    startedAt: number | null
-    completedAt: number | null
-    description: string | null
-    result?: unknown
-    permission?: ToolPermission
-}
+    id: string;
+    name: string;
+    state: 'pending' | 'running' | 'completed' | 'error';
+    input: unknown;
+    createdAt: number;
+    startedAt: number | null;
+    completedAt: number | null;
+    description: string | null;
+    result?: unknown;
+    permission?: ToolPermission;
+};
 
 export type UserTextBlock = {
-    kind: 'user-text'
-    id: string
-    localId: string | null
-    createdAt: number
-    text: string
-    attachments?: AttachmentMetadata[]
-    status?: MessageStatus
-    originalText?: string
-    meta?: unknown
-}
+    kind: 'user-text';
+    id: string;
+    localId: string | null;
+    createdAt: number;
+    text: string;
+    attachments?: AttachmentMetadata[];
+    status?: MessageStatus;
+    originalText?: string;
+    meta?: unknown;
+};
 
 export type AgentTextBlock = {
-    kind: 'agent-text'
-    id: string
-    localId: string | null
-    createdAt: number
-    text: string
-    meta?: unknown
-}
+    kind: 'agent-text';
+    id: string;
+    localId: string | null;
+    createdAt: number;
+    text: string;
+    meta?: unknown;
+};
 
 export type AgentReasoningBlock = {
-    kind: 'agent-reasoning'
-    id: string
-    localId: string | null
-    createdAt: number
-    text: string
-    meta?: unknown
-}
+    kind: 'agent-reasoning';
+    id: string;
+    localId: string | null;
+    createdAt: number;
+    text: string;
+    meta?: unknown;
+};
 
 export type CliOutputBlock = {
-    kind: 'cli-output'
-    id: string
-    localId: string | null
-    createdAt: number
-    text: string
-    source: 'user' | 'assistant'
-    meta?: unknown
-}
+    kind: 'cli-output';
+    id: string;
+    localId: string | null;
+    createdAt: number;
+    text: string;
+    source: 'user' | 'assistant';
+    meta?: unknown;
+};
 
 export type AgentEventBlock = {
-    kind: 'agent-event'
-    id: string
-    createdAt: number
-    event: AgentEvent
-    meta?: unknown
-}
+    kind: 'agent-event';
+    id: string;
+    createdAt: number;
+    event: AgentEvent;
+    meta?: unknown;
+};
 
 export type ToolCallBlock = {
-    kind: 'tool-call'
-    id: string
-    localId: string | null
-    createdAt: number
-    tool: ChatToolCall
-    children: ChatBlock[]
-    meta?: unknown
-}
-
-export type TurnSeparatorBlock = {
-    kind: 'turn-separator'
-    id: string
-    createdAt: number
-    turnId: string
-}
+    kind: 'tool-call';
+    id: string;
+    localId: string | null;
+    createdAt: number;
+    tool: ChatToolCall;
+    children: ChatBlock[];
+    meta?: unknown;
+};
 
 export type ChatBlock =
     | UserTextBlock
@@ -188,5 +180,4 @@ export type ChatBlock =
     | AgentReasoningBlock
     | CliOutputBlock
     | ToolCallBlock
-    | AgentEventBlock
-    | TurnSeparatorBlock
+    | AgentEventBlock;
