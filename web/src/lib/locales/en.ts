@@ -64,6 +64,7 @@ export default {
     'session.action.archive': 'Archive',
     'session.action.delete': 'Delete',
     'session.action.copy': 'Copy',
+    'session.action.fork': 'Fork',
 
     // Dialogs
     'dialog.rename.title': 'Rename Session',
@@ -80,6 +81,16 @@ export default {
     'dialog.delete.confirm': 'Delete',
     'dialog.delete.confirming': 'Deleting…',
     'dialog.error.default': 'Operation failed. Please try again.',
+    'dialog.fork.title': 'Fork Session',
+    'dialog.fork.description': 'Create a new session based on "{name}".',
+    'dialog.fork.directory': 'Directory',
+    'dialog.fork.agent': 'Agent',
+    'dialog.fork.model': 'Model',
+    'dialog.fork.yolo': 'YOLO mode',
+    'dialog.fork.resume': 'Resume conversation',
+    'dialog.fork.resume.desc': 'Continue from where this session left off (true fork).',
+    'dialog.fork.confirm': 'Fork',
+    'dialog.fork.confirming': 'Forking…',
 
     // Common buttons
     'button.cancel': 'Cancel',

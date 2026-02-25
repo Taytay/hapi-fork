@@ -8,6 +8,7 @@ type SessionActionMenuProps = {
     onRename: () => void;
     onArchive: () => void;
     onDelete: () => void;
+    onFork: () => void;
     anchorPoint: { x: number; y: number };
     menuId?: string;
 };
@@ -76,6 +77,29 @@ function TrashIcon(props: { className?: string }) {
     );
 }
 
+function ForkIcon(props: { className?: string }) {
+    return (
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={props.className}
+        >
+            <circle cx="12" cy="18" r="3" />
+            <circle cx="6" cy="6" r="3" />
+            <circle cx="18" cy="6" r="3" />
+            <path d="M18 9v2c0 .6-.4 1-1 1H7c-.6 0-1-.4-1-1V9" />
+            <path d="M12 12v3" />
+        </svg>
+    );
+}
+
 type MenuPosition = {
     top: number;
     left: number;
@@ -84,7 +108,7 @@ type MenuPosition = {
 
 export function SessionActionMenu(props: SessionActionMenuProps) {
     const { t } = useTranslation();
-    const { isOpen, onClose, sessionActive, onRename, onArchive, onDelete, anchorPoint, menuId } = props;
+    const { isOpen, onClose, sessionActive, onRename, onArchive, onDelete, onFork, anchorPoint, menuId } = props;
     const menuRef = useRef<HTMLDivElement | null>(null);
     const [menuPosition, setMenuPosition] = useState<MenuPosition | null>(null);
     const internalId = useId();
@@ -104,6 +128,11 @@ export function SessionActionMenu(props: SessionActionMenuProps) {
     const handleDelete = () => {
         onClose();
         onDelete();
+    };
+
+    const handleFork = () => {
+        onClose();
+        onFork();
     };
 
     const updatePosition = useCallback(() => {
@@ -215,6 +244,16 @@ export function SessionActionMenu(props: SessionActionMenuProps) {
                 >
                     <EditIcon className="text-[var(--app-hint)]" />
                     {t('session.action.rename')}
+                </button>
+
+                <button
+                    type="button"
+                    role="menuitem"
+                    className={`${baseItemClassName} hover:bg-[var(--app-subtle-bg)]`}
+                    onClick={handleFork}
+                >
+                    <ForkIcon className="text-[var(--app-hint)]" />
+                    {t('session.action.fork')}
                 </button>
 
                 {sessionActive ? (

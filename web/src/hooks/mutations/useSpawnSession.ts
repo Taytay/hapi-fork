@@ -11,6 +11,7 @@ type SpawnInput = {
     yolo?: boolean;
     sessionType?: 'simple' | 'worktree';
     worktreeName?: string;
+    resumeSessionId?: string;
 };
 
 export function useSpawnSession(api: ApiClient | null): {
@@ -33,6 +34,7 @@ export function useSpawnSession(api: ApiClient | null): {
                 input.yolo,
                 input.sessionType,
                 input.worktreeName,
+                input.resumeSessionId,
             );
         },
         onSuccess: () => {
