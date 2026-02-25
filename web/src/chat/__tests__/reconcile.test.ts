@@ -7,7 +7,6 @@ import type {
     ChatBlock,
     CliOutputBlock,
     ToolCallBlock,
-    TurnSeparatorBlock,
     UserTextBlock,
 } from '@/chat/types';
 
@@ -87,12 +86,12 @@ function makeToolCallBlock(overrides: Partial<ToolCallBlock> = {}): ToolCallBloc
     };
 }
 
-function makeTurnSeparator(overrides: Partial<TurnSeparatorBlock> = {}): TurnSeparatorBlock {
+function makeAgentEventBlock(overrides: Partial<AgentEventBlock> = {}): AgentEventBlock {
     return {
-        kind: 'turn-separator',
-        id: 'ts1',
+        kind: 'agent-event',
+        id: 'ev1',
         createdAt: 1000,
-        turnId: 'turn1',
+        event: { type: 'message', message: 'thinking' },
         ...overrides,
     };
 }
@@ -273,8 +272,8 @@ describe('reconcileChatBlocks', () => {
         expect(byId.get('child1')).toBeDefined();
     });
 
-    it('preserves identity for unchanged turn-separator via reference check', () => {
-        const original = makeTurnSeparator();
+    it('preserves identity for unchanged agent-event via reference check', () => {
+        const original = makeAgentEventBlock();
         const prevById = prevByIdFrom([original]);
         // Same reference — should be preserved
         const { blocks: result } = reconcileChatBlocks([original], prevById);

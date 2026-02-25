@@ -112,7 +112,7 @@ export class ReasoningProcessor {
         } else if (this.hasTitle) {
             // We have a title, accumulate content after title
             this.contentBuffer = this.accumulator.substring(
-                this.accumulator.indexOf('**') + 2 + this.currentTitle?.length + 2,
+                this.accumulator.indexOf('**') + 2 + this.currentTitle!.length + 2,
             );
         } else {
             // Untitled reasoning, just accumulate

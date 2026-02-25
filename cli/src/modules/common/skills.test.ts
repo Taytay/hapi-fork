@@ -35,18 +35,33 @@ describe('skills', () => {
         await mkdir(amisDir, { recursive: true });
         await writeFile(
             join(amisDir, 'SKILL.md'),
-            ['---', 'name: amis', 'description: AMIS guide', '---', '', '# AMIS'].join('\n'),
+            `---
+name: amis
+description: AMIS guide
+---
+
+# AMIS`,
         );
 
         const helloAgentsDir = join(skillsRoot, 'hello-agents');
         await mkdir(join(helloAgentsDir, 'analyze'), { recursive: true });
         await writeFile(
             join(helloAgentsDir, 'SKILL.md'),
-            ['---', 'name: helloagents', 'description: Main skill', '---', '', '# HelloAGENTS'].join('\n'),
+            `---
+name: helloagents
+description: Main skill
+---
+
+# HelloAGENTS`,
         );
         await writeFile(
             join(helloAgentsDir, 'analyze', 'SKILL.md'),
-            ['---', 'name: analyze', 'description: Sub skill', '---', '', '# Analyze'].join('\n'),
+            `---
+name: analyze
+description: Sub skill
+---
+
+# Analyze`,
         );
 
         const systemRoot = join(skillsRoot, '.system');
@@ -54,7 +69,12 @@ describe('skills', () => {
         await mkdir(systemSkillDir, { recursive: true });
         await writeFile(
             join(systemSkillDir, 'SKILL.md'),
-            ['---', 'name: skill-creator', 'description: Create skills', '---', '', '# Skill Creator'].join('\n'),
+            `---
+name: skill-creator
+description: Create skills
+---
+
+# Skill Creator`,
         );
 
         const skills = await listSkills();
