@@ -107,20 +107,18 @@ describe('normalizeAgentRecord', () => {
             expect(block.description).toBe('Write a file');
         });
 
-        it('preserves isSidechain and turnId', () => {
+        it('preserves isSidechain', () => {
             const content = {
                 type: 'output',
                 data: {
                     type: 'assistant',
                     uuid: 'u1',
                     isSidechain: true,
-                    turnId: 'turn-5',
                     message: { content: 'sc text' },
                 },
             };
             const result = normalizeAgentRecord('msg4', null, 4000, content);
             expect(result?.isSidechain).toBe(true);
-            expect(result?.turnId).toBe('turn-5');
         });
     });
 

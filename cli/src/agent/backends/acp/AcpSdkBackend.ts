@@ -61,7 +61,7 @@ export class AcpSdkBackend implements AgentBackend {
 
         const response = await withRetry(
             () =>
-                this.transport?.sendRequest('initialize', {
+                this.transport!.sendRequest('initialize', {
                     protocolVersion: 1,
                     clientCapabilities: {
                         fs: { readTextFile: false, writeTextFile: false },
@@ -94,7 +94,7 @@ export class AcpSdkBackend implements AgentBackend {
 
         const response = await withRetry(
             () =>
-                this.transport?.sendRequest('session/new', {
+                this.transport!.sendRequest('session/new', {
                     cwd: config.cwd,
                     mcpServers: config.mcpServers,
                 }),
@@ -122,7 +122,7 @@ export class AcpSdkBackend implements AgentBackend {
 
         const response = await withRetry(
             () =>
-                this.transport?.sendRequest('session/load', {
+                this.transport!.sendRequest('session/load', {
                     sessionId: config.sessionId,
                     cwd: config.cwd,
                     mcpServers: config.mcpServers,

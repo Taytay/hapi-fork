@@ -15,7 +15,7 @@ export function trimIdent(text: string): string {
         if (line.trim() === '') {
             return min;
         }
-        const leadingSpaces = line.match(/^\s*/)?.[0].length;
+        const leadingSpaces = line.match(/^\s*/)![0].length;
         return Math.min(min, leadingSpaces);
     }, Infinity);
 
