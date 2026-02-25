@@ -16,6 +16,8 @@ hub/tools/tunwg/*.exe
 **/.env
 **/.env.*
 **/.env*.local
+# Exception: integration test env (no real secrets)
+!cli/.env.integration-test
 
 # Logs
 **/*.log

@@ -1,24 +1,17 @@
 /**
  * Integration tests for runner HTTP control system
  *
- * Tests the full flow of runner startup, session tracking, and shutdown
+ * Tests the full flow of runner startup, session tracking, and shutdown.
  *
- * IMPORTANT: These tests MUST be run with the integration test environment:
- * yarn test:integration-test-env
- *
- * DO NOT run with regular 'npm test' or 'yarn test' - it will use the wrong environment
- * and the runner will not work properly!
- *
- * The integration test environment uses .env.integration-test which sets:
- * - HAPI_HOME=~/.hapi-dev-test (DIFFERENT from dev's ~/.hapi-dev!)
- * - HAPI_API_URL=http://localhost:3006 (local hapi-hub)
- * - CLI_API_TOKEN=... (must match the hub)
+ * The test suite automatically starts a hub server (on port 13006) with a
+ * hardcoded test token before running. Environment variables are loaded from
+ * cli/.env.integration-test by vitest.config.ts.
  */
 
 import { execSync, spawn } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { Metadata } from '@/api/types';
 import { configuration } from '@/configuration';
 import { clearRunnerState, readRunnerState } from '@/persistence';
@@ -30,9 +23,9 @@ import {
     stopRunnerHttp,
     stopRunnerSession,
 } from '@/runner/controlClient';
+import { spawnCliWithBun, startIntegrationHub, stopIntegrationHub } from '@/runner/integration-hub';
 import { getLatestRunnerLog } from '@/ui/logger';
 import { isProcessAlive, isWindows, killProcess, killProcessByChildProcess } from '@/utils/process';
-import { spawnHappyCLI } from '@/utils/spawnHappyCLI';
 
 // Utility to wait for condition
 async function waitFor(condition: () => Promise<boolean>, timeout = 5000, interval = 100): Promise<void> {
@@ -44,46 +37,23 @@ async function waitFor(condition: () => Promise<boolean>, timeout = 5000, interv
     throw new Error('Timeout waiting for condition');
 }
 
-// Check if dev hub is running and properly configured
-async function isServerHealthy(): Promise<boolean> {
-    try {
-        if (!configuration.cliApiToken) {
-            console.log('[TEST] Missing CLI_API_TOKEN (required for direct-connect integration tests)');
-            return false;
-        }
+describe('Runner Integration Tests', { timeout: 30_000 }, () => {
+    beforeAll(async () => {
+        await startIntegrationHub();
+    }, 20_000);
 
-        const url = `${configuration.apiUrl}/cli/machines/__healthcheck__`;
-        const response = await fetch(url, {
-            headers: { Authorization: `Bearer ${configuration.cliApiToken}` },
-            signal: AbortSignal.timeout(1000),
-        });
-
-        if (response.status === 401) {
-            console.log('[TEST] Bot health check failed: invalid CLI_API_TOKEN');
-            return false;
-        }
-        if (response.status === 503) {
-            console.log('[TEST] Bot health check failed: bot not ready (503)');
-            return false;
-        }
-
-        return true;
-    } catch (error) {
-        console.log('[TEST] Bot not reachable:', error);
-        return false;
-    }
-}
-
-describe.skipIf(!(await isServerHealthy()))('Runner Integration Tests', { timeout: 20_000 }, () => {
+    afterAll(async () => {
+        await stopRunner();
+        await stopIntegrationHub();
+    }, 15_000);
     let runnerPid: number;
 
     beforeEach(async () => {
         // First ensure no runner is running by checking PID in metadata file
         await stopRunner();
 
-        // Start fresh runner for this test
-        // This will return and start a background process - we don't need to wait for it
-        void spawnHappyCLI(['runner', 'start'], {
+        // Start fresh runner for this test (use spawnCliWithBun since vitest runs under node)
+        void spawnCliWithBun(['runner', 'start'], {
             stdio: 'ignore',
         });
 
@@ -93,9 +63,9 @@ describe.skipIf(!(await isServerHealthy()))('Runner Integration Tests', { timeou
                 const state = await readRunnerState();
                 return state !== null;
             },
-            10_000,
+            15_000,
             250,
-        ); // Wait up to 10 seconds, checking every 250ms
+        ); // Wait up to 15 seconds, checking every 250ms
 
         const runnerState = await readRunnerState();
         if (!runnerState) {
@@ -105,7 +75,7 @@ describe.skipIf(!(await isServerHealthy()))('Runner Integration Tests', { timeou
 
         console.log(`[TEST] Runner started for test: PID=${runnerPid}`);
         console.log(`[TEST] Runner log file: ${runnerState?.runnerLogPath}`);
-    });
+    }, 20_000);
 
     afterEach(async () => {
         await stopRunner();
@@ -195,7 +165,7 @@ describe.skipIf(!(await isServerHealthy()))('Runner Integration Tests', { timeou
 
     it('should track both runner-spawned and terminal sessions', async () => {
         // Spawn a real hapi process that looks like it was started from terminal
-        const terminalHappyProcess = spawnHappyCLI(['--hapi-starting-mode', 'remote', '--started-by', 'terminal'], {
+        const terminalHappyProcess = spawnCliWithBun(['--hapi-starting-mode', 'remote', '--started-by', 'terminal'], {
             cwd: '/tmp',
             detached: true,
             stdio: 'ignore',
@@ -437,7 +407,7 @@ describe.skipIf(!(await isServerHealthy()))('Runner Integration Tests', { timeou
             // and we want to avoid that,
             // otherwise runner will spawn a non existing happy js script.
             // We need to remove index, but not the other files, otherwise some of our code might fail when called from within the runner.
-            execSync('yarn build', { stdio: 'ignore' });
+            execSync('bun run build:cli', { stdio: 'ignore' });
 
             console.log(`[TEST] Current runner running with version ${originalVersion}, PID: ${initialPid}`);
 
@@ -461,7 +431,7 @@ describe.skipIf(!(await isServerHealthy()))('Runner Integration Tests', { timeou
             console.log(`[TEST] Restored package.json version to ${originalVersion}`);
 
             // Lets rebuild it so we keep it as we found it
-            execSync('yarn build', { stdio: 'ignore' });
+            execSync('bun run build:cli', { stdio: 'ignore' });
         }
     });
 
