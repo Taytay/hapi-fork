@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ApiClient } from '@/api/client';
+import { ForkSessionDialog } from '@/components/ForkSessionDialog';
 import { RenameSessionDialog } from '@/components/RenameSessionDialog';
 import { SessionActionMenu } from '@/components/SessionActionMenu';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useSessionActions } from '@/hooks/mutations/useSessionActions';
+import { useSpawnSession } from '@/hooks/mutations/useSpawnSession';
 import { useLongPress } from '@/hooks/useLongPress';
 import { usePlatform } from '@/hooks/usePlatform';
 import { useTranslation } from '@/lib/use-translation';
@@ -147,6 +149,12 @@ function getAgentLabel(session: SessionSummary): string {
     return 'unknown';
 }
 
+function getAgentType(session: SessionSummary): 'claude' | 'codex' | 'gemini' | 'opencode' {
+    const flavor = session.metadata?.flavor?.trim();
+    if (flavor === 'codex' || flavor === 'gemini' || flavor === 'opencode') return flavor;
+    return 'claude';
+}
+
 function formatRelativeTime(
     value: number,
     t: (key: string, params?: Record<string, string | number>) => string,
@@ -167,24 +175,55 @@ function formatRelativeTime(
 function SessionItem(props: {
     session: SessionSummary;
     onSelect: (sessionId: string) => void;
+    onForkSuccess: (sessionId: string) => void;
     showPath?: boolean;
     api: ApiClient | null;
     selected?: boolean;
 }) {
     const { t } = useTranslation();
-    const { session: s, onSelect, showPath = true, api, selected = false } = props;
+    const { session: s, onSelect, onForkSuccess, showPath = true, api, selected = false } = props;
     const { haptic } = usePlatform();
     const [menuOpen, setMenuOpen] = useState(false);
     const [menuAnchorPoint, setMenuAnchorPoint] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
     const [renameOpen, setRenameOpen] = useState(false);
     const [archiveOpen, setArchiveOpen] = useState(false);
     const [deleteOpen, setDeleteOpen] = useState(false);
+    const [forkOpen, setForkOpen] = useState(false);
 
     const { archiveSession, renameSession, deleteSession, isPending } = useSessionActions(
         api,
         s.id,
         s.metadata?.flavor ?? null,
     );
+
+    const { spawnSession, isPending: isForkPending } = useSpawnSession(api);
+
+    const handleFork = async (options: {
+        directory: string;
+        agent: 'claude' | 'codex' | 'gemini' | 'opencode';
+        model: string;
+        yolo: boolean;
+        resumeSessionId?: string;
+    }) => {
+        if (!s.metadata?.machineId) {
+            throw new Error('No machine available for this session');
+        }
+        const resolvedModel = options.model !== 'auto' ? options.model : undefined;
+        const result = await spawnSession({
+            machineId: s.metadata.machineId,
+            directory: options.directory,
+            agent: options.agent,
+            model: resolvedModel,
+            yolo: options.yolo,
+            resumeSessionId: options.resumeSessionId,
+        });
+        if (result.type === 'success') {
+            haptic.notification('success');
+            onForkSuccess(result.sessionId);
+        } else {
+            throw new Error(result.message);
+        }
+    };
 
     const longPressHandlers = useLongPress({
         onLongPress: (point) => {
@@ -272,6 +311,7 @@ function SessionItem(props: {
                 onRename={() => setRenameOpen(true)}
                 onArchive={() => setArchiveOpen(true)}
                 onDelete={() => setDeleteOpen(true)}
+                onFork={() => setForkOpen(true)}
                 anchorPoint={menuAnchorPoint}
             />
 
@@ -306,6 +346,18 @@ function SessionItem(props: {
                 isPending={isPending}
                 destructive
             />
+
+            <ForkSessionDialog
+                isOpen={forkOpen}
+                onClose={() => setForkOpen(false)}
+                sessionName={sessionName}
+                sessionId={s.id}
+                directory={s.metadata?.path ?? ''}
+                agent={getAgentType(s)}
+                model={s.modelMode ?? 'auto'}
+                onFork={handleFork}
+                isPending={isForkPending}
+            />
         </>
     );
 }
@@ -319,6 +371,7 @@ export function SessionList(props: {
     renderHeader?: boolean;
     api: ApiClient | null;
     selectedSessionId?: string | null;
+    onForkSuccess?: (sessionId: string) => void;
 }) {
     const { t } = useTranslation();
     const { renderHeader = true, api, selectedSessionId } = props;
@@ -399,6 +452,7 @@ export function SessionList(props: {
                                             key={s.id}
                                             session={s}
                                             onSelect={props.onSelect}
+                                            onForkSuccess={props.onForkSuccess ?? props.onSelect}
                                             showPath={false}
                                             api={api}
                                             selected={s.id === selectedSessionId}

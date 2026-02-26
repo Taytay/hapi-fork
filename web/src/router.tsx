@@ -158,6 +158,12 @@ function SessionsPage() {
                                 params: { sessionId },
                             })
                         }
+                        onForkSuccess={(sessionId) =>
+                            navigate({
+                                to: '/sessions/$sessionId',
+                                params: { sessionId },
+                            })
+                        }
                         onNewSession={() => navigate({ to: '/sessions/new' })}
                         onRefresh={handleRefresh}
                         isLoading={isLoading}

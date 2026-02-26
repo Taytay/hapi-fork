@@ -64,6 +64,7 @@ export default {
     'session.action.archive': '归档',
     'session.action.delete': '删除',
     'session.action.copy': '复制',
+    'session.action.fork': '分叉',
 
     // Dialogs
     'dialog.rename.title': '重命名会话',
@@ -82,6 +83,16 @@ export default {
     'dialog.delete.confirm': '删除',
     'dialog.delete.confirming': '删除中…',
     'dialog.error.default': '操作失败，请重试。',
+    'dialog.fork.title': '分叉会话',
+    'dialog.fork.description': '基于 "{name}" 创建新会话。',
+    'dialog.fork.directory': '目录',
+    'dialog.fork.agent': '代理',
+    'dialog.fork.model': '模型',
+    'dialog.fork.yolo': 'YOLO 模式',
+    'dialog.fork.resume': '恢复对话',
+    'dialog.fork.resume.desc': '从当前会话中断处继续（真正的分叉）。',
+    'dialog.fork.confirm': '分叉',
+    'dialog.fork.confirming': '分叉中…',
 
     // Common buttons
     'button.cancel': '取消',
